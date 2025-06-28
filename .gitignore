@@ -140,3 +140,6 @@ dist
 
 # Turborepo cache directory
 node_modules/.cache/turbo
+
+# Moveable library repo is meant only for LLM to use as reference.
+moveable-library-repo/
