@@ -34,14 +34,14 @@ The app is styled using **Tailwind CSS**, enhanced with **Tabler Icons**, and po
 ```ts
 // packages/shared/src/types.ts
 interface FrameData {
-  id: string;
+  id: string;             // Sequential ID (e.g., "frame-1", "frame-2")
   label: string;
   x: number;              // X position relative to Page top-left origin (0 to page.width)
   y: number;              // Y position relative to Page top-left origin (0 to page.height)
   width: number;          // Frame width (minimum: 20)
   height: number;         // Frame height (minimum: 20)
-  rotation: number;       // Relative to page (free angle), rotation center is frame center
-  orientation: number;    // "Up" direction indicator: 0, 90, 180, -90
+  rotation: number;       // Relative to page (free angle, no snapping), rotation center is frame center
+  orientation: 0 | 90 | 180 | -90;  // "Up" direction indicator, 0 is default
 }
 ```
 
@@ -51,10 +51,9 @@ interface FrameData {
 // packages/shared/src/types.ts
 interface PageData {
   id: string;
-  width: number;
-  height: number;
-  imageData: string;  // base64 image data
-  // TODO: Render imageData as background image in Page component
+  width: number;      // Set to match image dimensions
+  height: number;     // Set to match image dimensions
+  imageData: string;  // base64 image data, rendered at 1:1 scale
 }
 ```
 
@@ -107,7 +106,6 @@ interface UIContextState extends UIContextSnapshot {
   history: {
     undoStack: HistoryEntry[];
     redoStack: HistoryEntry[];
-    maxHistorySize: number; // Default: 16
   };
 }
 ```
@@ -163,18 +161,23 @@ type Action =
   | { type: 'SET_ORIENTATION'; id: string; orientation: 90 | 180 | -90 }
   // ... other action types
 
-const MAX_HISTORY_SIZE = 16; // Configurable
+const MAX_HISTORY_SIZE = 16;
 const MIN_FRAME_SIZE = 20;
 const TRANSLATION_STEP = 10; // pixels
+const ROTATION_INCREMENT = 0.5; // degrees
 
-// Validate frame bounds
+// Validate frame bounds - only x,y coordinates must stay within page
 const isFrameWithinBounds = (frame: Partial<FrameData>, page: PageData): boolean => {
-  if (frame.x !== undefined && frame.x < 0) return false;
-  if (frame.y !== undefined && frame.y < 0) return false;
-  if (frame.x !== undefined && frame.width !== undefined && frame.x + frame.width > page.width) return false;
-  if (frame.y !== undefined && frame.height !== undefined && frame.y + frame.height > page.height) return false;
+  if (frame.x !== undefined && (frame.x < 0 || frame.x > page.width)) return false;
+  if (frame.y !== undefined && (frame.y < 0 || frame.y > page.height)) return false;
   return true;
 };
+
+// Generate sequential frame ID
+const generateId = (() => {
+  let counter = 0;
+  return () => `frame-${++counter}`;
+})();
 
 // History management
 const pushHistory = (state: UIContextState, label: string): UIContextState => {
@@ -191,7 +194,7 @@ const pushHistory = (state: UIContextState, label: string): UIContextState => {
     };
     
     // Remove oldest if at max capacity
-    if (draft.history.undoStack.length >= draft.history.maxHistorySize) {
+    if (draft.history.undoStack.length >= MAX_HISTORY_SIZE) {
       draft.history.undoStack.shift();
     }
     
@@ -212,7 +215,7 @@ const reducer = (state: UIContextState, action: Action): UIContextState => {
           width: draft.page.width * 0.1,  // 10% of page width
           height: draft.page.height * 0.1  // 10% of page height
         };
-        // Ensure frame stays within page bounds
+        // Ensure frame position stays within page bounds
         const frame = {
           id,
           label: `Frame ${draft.nextFrameNumber}`,
@@ -220,8 +223,8 @@ const reducer = (state: UIContextState, action: Action): UIContextState => {
           ...defaultSize,
           ...action.payload
         };
-        frame.x = Math.max(0, Math.min(frame.x, draft.page.width - frame.width));
-        frame.y = Math.max(0, Math.min(frame.y, draft.page.height - frame.height));
+        frame.x = Math.max(0, Math.min(frame.x, draft.page.width));
+        frame.y = Math.max(0, Math.min(frame.y, draft.page.height));
         draft.frames[id] = frame;
         draft.nextFrameNumber++;
       });
@@ -237,9 +240,9 @@ const reducer = (state: UIContextState, action: Action): UIContextState => {
           if (updatedFrame.width < MIN_FRAME_SIZE) updatedFrame.width = MIN_FRAME_SIZE;
           if (updatedFrame.height < MIN_FRAME_SIZE) updatedFrame.height = MIN_FRAME_SIZE;
           
-          // Validate entire frame stays within bounds
+          // Validate frame position stays within bounds (width/height can exceed)
           if (!isFrameWithinBounds(updatedFrame, draft.page)) {
-            // Reject update if it would exceed page bounds
+            // Reject update if position would exceed page bounds
             return;
           }
           
@@ -320,7 +323,7 @@ const translateFrameRelative = (id: string, vector: Vector2) => {
 // Save frames implementation
 const saveFrames = (ids: string[]) => {
   console.log('Saving frames:', ids);
-  // TODO: Future implementation will trigger extraction logic
+  // Future implementation will trigger extraction logic
 };
 ```
 
@@ -412,12 +415,12 @@ Editor
 ### 🔸 `Page`
 
 * Container for the scanned image and frames
-* Fixed dimensions based on `PageData.width` and `PageData.height`
-* Acts as boundary container for all frames
+* Fixed dimensions based on `PageData.width` and `PageData.height` (matching image dimensions)
+* Renders `PageData.imageData` as background at 1:1 scale (no stretching/skewing)
+* Acts as boundary container for frame positions (x,y)
 * `overflow: hidden` to clip frames extending beyond boundaries
 * Origin (0,0) at top-left corner
 * Has `data-page="true"` attribute for click detection in add mode
-* TODO: Render `PageData.imageData` as background
 
 ---
 
@@ -427,10 +430,12 @@ Editor
 * Moveable/resizable element with free rotation (no snapping)
 * Rotation center is frame center
 * Minimum size: 20x20 pixels
-* Can overlap with other frames (click selects topmost)
-* Clipped by Page boundaries (overflow hidden)
+* Can overlap with other frames
+* Position (x,y) constrained to page bounds, but size/rotation can exceed
+* Clipped visually by Page boundaries (overflow hidden)
 * Contains orientation arrow as child element
 * Different visual states for selection types
+* Has `data-frame-id="[id]"` attribute for click detection
 
 ---
 
@@ -447,16 +452,18 @@ Editor
 
 #### Select Mode
 - Click on frame to select it (adds to selectedFrameIds)
+- When clicking overlapping frames, selects the first frame found via `data-frame-id` attribute in event target hierarchy
 - When only 1 frame selected: can transform (move/resize/rotate)
 - When multiple frames selected: batch operations only
 - Click on empty space deselects all
 - Switching tools clears all selections
+- Multi-selection only via checkboxes in FrameControlPanel
 
 #### Add Mode  
 - Click to place frame at click position (top-left corner)
 - Only valid when click target or its ancestors have `data-page="true"`
 - Default size: 10% of page dimensions
-- Frame constrained to stay within page bounds
+- Frame position (x,y) constrained to stay within page bounds
 - Switching tools clears all selections
 
 ---
@@ -489,8 +496,8 @@ Contains interactive controls:
 | Selection Box  | Checkbox for frame selection in batch operations     |
 | Label Input    | `renameFrame(id, newLabel)`                          |
 | Translate ↑↓←→ | `translateFrameRelative(id, vector)` with step = 10px |
-| Rotate ±       | `rotateFrame(id, delta)`                             |
-| Orientation    | `setOrientation(id, value)` - sets "up" direction    |
+| Rotate ±       | `rotateFrame(id, ±0.5)` - increments by 0.5 degrees  |
+| Orientation    | `setOrientation(id, value)` - sets "up" direction (90, 180, -90) |
 | Save Button    | `saveFrames([id])`                                   |
 | Delete Button  | `removeFrame(id)`                                    |
 
@@ -524,9 +531,9 @@ produce(state, draft => {
     const newX = frame.x + rotated.x;
     const newY = frame.y + rotated.y;
     
-    // Validate new position stays within bounds
-    const updatedFrame = { ...frame, x: newX, y: newY };
-    if (isFrameWithinBounds(updatedFrame, draft.page)) {
+    // Validate new position stays within bounds (0 to page dimensions)
+    if (newX >= 0 && newX <= draft.page.width && 
+        newY >= 0 && newY <= draft.page.height) {
       frame.x = newX;
       frame.y = newY;
     }
@@ -543,18 +550,21 @@ Moveable component re-renders with new props → smooth transition via Tailwind 
 | Interaction         | Frame Affected                     | Notes |
 | ------------------- | ---------------------------------- | ----- |
 | Move/Resize/Rotate  | Single active frame only           | Only when 1 frame selected |
-| Save / Remove       | Can apply to multiple selected frames | Multi-select via checkboxes |
-| Orientation         | One frame at a time                | Fixed angles: 0°, 90°, 180°, -90° |
+| Save / Remove       | Can apply to multiple selected frames | Multi-select via checkboxes only |
+| Orientation         | One frame at a time                | Fixed angles: 90°, 180°, -90° (0° is default) |
 | Selection Highlight | Visual indicator on selected frames | Different states for single vs batch |
 
 ### Rotation vs Orientation
 
 - **Rotation**: Free angle transformation of the frame relative to the page
+  - No snapping behavior
   - Rotation center is frame center
   - Applied to entire Frame component
+  - Controlled via ±0.5° increment buttons
 - **Orientation**: Indicates the "up" direction within the frame (for future image extraction)
   - Shown as arrow child element of frame
-  - Arrow points up at 0° orientation
+  - Arrow points up at 0° orientation (default)
+  - Can be set to 90°, 180°, or -90° via UI
   - Rotated relative to frame's rotation
   - Will be used to correct image orientation during extraction
 
@@ -601,6 +611,7 @@ export const MIN_FRAME_SIZE = 20;
 export const DEFAULT_FRAME_SIZE_RATIO = 0.1; // 10% of page dimensions
 export const MAX_HISTORY_SIZE = 16;
 export const TRANSLATION_STEP = 10; // pixels for arrow key movement
+export const ROTATION_INCREMENT = 0.5; // degrees for rotation buttons
 ```
 
 ---
@@ -633,7 +644,7 @@ packages/ui/src/
 
 packages/shared/src/
 ├── types.ts          → FrameData, PageData, Vector2, ToolMode, UIContextState, UIContextActions, HistoryEntry, etc.
-├── constants.ts      → MIN_FRAME_SIZE, DEFAULT_FRAME_SIZE_RATIO, TRANSLATION_STEP, etc.
+├── constants.ts      → MIN_FRAME_SIZE, DEFAULT_FRAME_SIZE_RATIO, TRANSLATION_STEP, ROTATION_INCREMENT, MAX_HISTORY_SIZE, etc.
 ├── api.ts           → BackendAPI interface (existing)
 └── index.ts         → Re-exports
 ```
