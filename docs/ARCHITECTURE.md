@@ -80,6 +80,8 @@ export interface BackendAPI {
 
 The React UI is wrapped with an `AppProvider` that accepts any `BackendAPI`.
 
+> **📋 For detailed UI component architecture, visual editor design patterns, and React component structure, see the [UI Architecture Documentation](UI_ARCHITECTURE.md).**
+
 ### Key Components
 
 #### `AppProvider`

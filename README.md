@@ -130,6 +130,7 @@ pnpm package:electron
 ## 📚 Documentation
 
 - [Architecture Documentation](docs/ARCHITECTURE.md) - Detailed architecture and implementation guide
+- [UI Architecture Documentation](docs/UI_ARCHITECTURE.md) - Visual editor UI design and component structure
 - [Development Guide](docs/ARCHITECTURE.md#-development-commands) - Build system and workflow
 - [Testing Strategy](docs/ARCHITECTURE.md#-testing-strategy) - Test architecture and practices
 
