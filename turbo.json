@@ -1,0 +1,41 @@
+{
+  "$schema": "https://turborepo.org/schema.json",
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "build/**", "lib/**"]
+    },
+    "build:prod": {
+      "dependsOn": ["^build", "type-check", "lint"],
+      "outputs": ["dist/**", "build/**", "release/**"],
+      "env": ["NODE_ENV", "VITE_*", "ELECTRON_*"]
+    },
+    "package": {
+      "dependsOn": ["build:prod"],
+      "outputs": ["release/**", "dist/**"]
+    },
+    "release": {
+      "dependsOn": ["package"],
+      "outputs": ["release/**"],
+      "env": ["GH_TOKEN", "APPLE_*", "CSC_*", "WIN_CSC_*"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "type-check": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+} 

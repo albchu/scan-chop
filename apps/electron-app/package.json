@@ -1,0 +1,39 @@
+{
+  "name": "electron-app",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "concurrently --kill-others \"npm run build:watch\" \"wait-on dist/main.js && electron .\"",
+    "build": "tsc && vite build",
+    "build:prod": "tsc && vite build --mode production",
+    "build:watch": "concurrently \"tsc --watch\" \"vite build --watch\"",
+    "package": "electron-builder",
+    "release": "electron-builder --publish=always",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "clean": "rm -rf dist release"
+  },
+  "dependencies": {
+    "@workspace/ui": "workspace:*",
+    "@workspace/backend-electron": "workspace:*",
+    "@workspace/shared": "workspace:*",
+    "electron": "^28.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/node": "^20.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "concurrently": "^8.0.0",
+    "electron-builder": "^24.0.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "wait-on": "^7.0.0"
+  }
+} 
