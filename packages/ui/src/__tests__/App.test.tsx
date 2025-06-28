@@ -8,11 +8,11 @@ import { INITIAL_STATE } from '@workspace/shared';
 // Mock backend for testing
 class MockBackend implements BackendAPI {
   private state: AppState = { ...INITIAL_STATE };
-  private listeners = new Map<keyof AppState, Set<(value: any) => void>>();
+  private listeners = new Map<keyof AppState, Set<(_value: any) => void>>();
 
   constructor() {
     Object.keys(this.state).forEach(key => {
-      this.listeners.set(key, new Set());
+      this.listeners.set(key as keyof AppState, new Set());
     });
   }
 
@@ -35,7 +35,7 @@ class MockBackend implements BackendAPI {
       async getValue() {
         return self.state[key];
       },
-      subscribe: (callback: (value: AppState[K]) => void) => {
+      subscribe: (callback: (_value: AppState[K]) => void) => {
         const listeners = self.listeners.get(key);
         if (listeners) {
           listeners.add(callback);

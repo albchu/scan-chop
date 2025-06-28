@@ -11,5 +11,7 @@ module.exports = {
   ignorePatterns: ['dist', '.eslintrc.js'],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
-  rules: {},
+  rules: {
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+  },
 }; 
