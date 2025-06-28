@@ -1,6 +1,6 @@
 {
-  "appId": "com.yourcompany.platform-agnostic-react-ui",
-  "productName": "Platform-Agnostic React UI",
+  "appId": "com.albchu.scan-chop",
+  "productName": "Scan Chop",
   "directories": {
     "output": "release",
     "buildResources": "build-resources"

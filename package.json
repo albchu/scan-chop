@@ -1,13 +1,20 @@
 {
-  "name": "platform-agnostic-react-ui",
+  "name": "scan-chop",
   "version": "1.0.0",
-  "description": "A modular, type-safe monorepo template for building React applications that run on both Electron and Web with backend-managed state",
-  "keywords": ["react", "electron", "typescript", "monorepo", "template", "cross-platform", "turborepo"],
-  "author": "Your Name <your.email@example.com>",
+  "description": "A desktop application for automatically detecting and extracting individual images from scanned documents containing multiple photos or images",
+  "keywords": [
+    "image-processing",
+    "electron",
+    "typescript",
+    "computer-vision",
+    "photo-scanning",
+    "image-splitting"
+  ],
+  "author": "Albert Chu <albertchu539@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/platform-agnostic-react-ui.git"
+    "url": "https://github.com/albchu/scan-chop.git"
   },
   "private": true,
   "scripts": {
@@ -27,10 +34,10 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.57.0",
-    "eslint-plugin-react-refresh": "^0.4.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
     "prettier": "^3.0.0",
     "turbo": "^1.13.0",
     "typescript": "^5.0.0"
@@ -39,4 +46,4 @@
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   }
-} 
+}

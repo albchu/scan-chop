@@ -7,15 +7,9 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
   ],
   ignorePatterns: ['dist', '.eslintrc.js'],
   parser: '@typescript-eslint/parser',
-  plugins: ['react-refresh'],
-  rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
-  },
+  plugins: ['@typescript-eslint'],
+  rules: {},
 }; 

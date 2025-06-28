@@ -22,7 +22,7 @@ export function App() {
       maxWidth: '600px',
       margin: '0 auto'
     }}>
-      <h1>🚀 Platform-Agnostic React UI</h1>
+              <h1>🖼️ Scan Chop</h1>
       <p>Counter value: <strong>{counter}</strong></p>
       
       <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>

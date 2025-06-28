@@ -1,19 +1,21 @@
-# 📘 Technical Specification: Cross-Platform React Application with Backend-Managed State (Electron + Web)
+# 📘 Technical Specification: Scan Chop Application Architecture
 
 ---
 
 ## 🧭 Overview
 
-This project is a **modular, type-safe, and testable monorepo** designed to run a React application across:
+This document describes the technical architecture of **Scan Chop**, an image splitting tool built as a **modular, type-safe, and testable monorepo** designed to run across:
 
 * 🖥 **Electron (desktop)** with Node.js backend and IPC
 * 🌐 **Web browser** with local in-memory state backend
 
-The React UI is **purely declarative and view-focused**:
+The Scan Chop application uses a **backend-managed state architecture** where the React UI is **purely declarative and view-focused**:
 
 * All application state is **exclusively owned and managed by the backend**
 * The UI **dispatches typed actions** and **subscribes to backend state updates**
 * **State access and reactivity** are handled through a **type-safe `BackendAPI`** interface injected at runtime
+
+This architecture enables consistent image processing logic across platforms while maintaining clean separation between the UI layer and platform-specific implementations.
 
 ---
 
@@ -489,8 +491,8 @@ export default defineConfig({
 
 ```json
 {
-  "appId": "com.yourcompany.platform-agnostic-react-ui",
-  "productName": "Platform-Agnostic React UI",
+  "appId": "com.albchu.scan-chop",
+  "productName": "Scan Chop",
   "directories": {
     "output": "release",
     "buildResources": "build-resources"

@@ -68,7 +68,7 @@ describe('App', () => {
       </AppProvider>
     );
 
-    expect(screen.getByText('🚀 Platform-Agnostic React UI')).toBeInTheDocument();
+    expect(screen.getByText('🖼️ Scan Chop')).toBeInTheDocument();
     expect(screen.getByText(/Counter value:/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Increment/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Reset/ })).toBeInTheDocument();
