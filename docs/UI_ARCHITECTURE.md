@@ -32,6 +32,7 @@ The app is styled using **Tailwind CSS**, enhanced with **Tabler Icons**, and po
 ### `FrameData`
 
 ```ts
+// packages/shared/src/types.ts
 interface FrameData {
   id: string;
   label: string;
@@ -47,7 +48,7 @@ interface FrameData {
 ### `Vector2`
 
 ```ts
-// types/geometry.ts
+// packages/shared/src/types.ts
 export interface Vector2 {
   x: number;
   y: number;
@@ -58,9 +59,12 @@ export interface Vector2 {
 
 ## 4. ⚙️ UI Context
 
+The UI Context uses **Immer** for immutable state updates, ensuring predictable state changes and enabling efficient React re-renders.
+
 ### `UIContextState`
 
 ```ts
+// packages/shared/src/types.ts
 interface UIContextSnapshot {
   mode: ToolMode;
   page: PageData;
@@ -82,6 +86,7 @@ interface UIContextState extends UIContextSnapshot {
 ### `UIContextActions`
 
 ```ts
+// packages/shared/src/types.ts
 interface UIContextActions {
   setMode: (mode: ToolMode) => void;
 
@@ -108,12 +113,45 @@ interface UIContextActions {
 }
 ```
 
----
-
-## 5. 🧠 Geometry Utilities (`utils/geometry.ts`)
+### State Management with Immer
 
 ```ts
-import { Vector2 } from "../types/geometry";
+// packages/ui/src/context/UIContext.tsx
+import { produce } from 'immer';
+
+// Example reducer action using Immer
+const reducer = (state: UIContextState, action: Action): UIContextState => {
+  return produce(state, draft => {
+    switch (action.type) {
+      case 'ADD_FRAME':
+        const id = generateId();
+        draft.frames[id] = {
+          id,
+          label: `Frame ${draft.nextFrameNumber}`,
+          orientation: 0,
+          ...action.payload
+        };
+        draft.nextFrameNumber++;
+        break;
+        
+      case 'UPDATE_FRAME':
+        if (draft.frames[action.id]) {
+          Object.assign(draft.frames[action.id], action.updates);
+        }
+        break;
+        
+      // ... other actions
+    }
+  });
+};
+```
+
+---
+
+## 5. 🧠 Geometry Utilities (`packages/ui/src/utils/geometry.ts`)
+
+```ts
+import { Vector2 } from "@workspace/shared";
 
 export function rotateVector(vector: Vector2, degrees: number): Vector2 {
   const { x, y } = vector;
@@ -132,7 +170,7 @@ export function rotateVector(vector: Vector2, degrees: number): Vector2 {
 ## 6. 🔁 FrameRef Registry
 
 ```ts
-// FrameRefRegistryContext.tsx
+// packages/ui/src/context/FrameRefRegistryContext.tsx
 const FrameRefRegistryContext = createContext<React.MutableRefObject<Record<string, Moveable | null>> | null>(null);
 
 // Used locally, not in UIContext
@@ -145,6 +183,7 @@ Used for imperative control (e.g. focus, scroll, updateRect) from actions or eff
 ## 7. 🧩 Shared Hook: `useFrameTransform(id: string)`
 
 ```ts
+// packages/ui/src/hooks/useFrameTransform.ts
 interface UseFrameTransformReturn {
   frame: FrameData;
   transformStyle: string;     // `translate(...) rotate(...)`
@@ -179,7 +218,7 @@ Editor
 
 ### 🔸 `FrameCard`
 
-* Visual wrapper for each frame’s UI block
+* Visual wrapper for each frame's UI block
 * Uses Tailwind `bg-gray-800 rounded-lg p-4 shadow transition`
 
 ---
@@ -216,12 +255,17 @@ Contains interactive controls:
 translateFrameRelative(id, { x: 0, y: -10 });
 ```
 
-Inside reducer:
+Inside reducer with Immer:
 
 ```ts
-const rotated = rotateVector(vector, frame.rotation);
-frame.x += rotated.x;
-frame.y += rotated.y;
+produce(state, draft => {
+  const frame = draft.frames[id];
+  if (frame) {
+    const rotated = rotateVector(vector, frame.rotation);
+    frame.x += rotated.x;
+    frame.y += rotated.y;
+  }
+});
 ```
 
 Moveable component re-renders with new props → smooth transition via Tailwind `transition-transform`.
@@ -253,7 +297,7 @@ Moveable component re-renders with new props → smooth transition via Tailwind 
 ## 11. 🗂 File Structure
 
 ```
-src/
+packages/ui/src/
 ├── components/
 │   ├── Editor.tsx
 │   ├── Sidebar.tsx
@@ -268,12 +312,17 @@ src/
 │       └── FrameControlPanel.tsx
 ├── context/
 │   ├── UIContext.tsx
-│   └── FrameRefRegistry.tsx
+│   └── FrameRefRegistryContext.tsx
 ├── hooks/
-│   └── useFrameTransform.ts
-├── utils/
-│   └── geometry.ts
-├── types/
-│   ├── UI.ts
-│   └── geometry.ts
+│   ├── useFrameTransform.ts
+│   ├── useBackend.ts
+│   └── useReactiveSelector.ts
+└── utils/
+    └── geometry.ts
+
+packages/shared/src/
+├── types.ts          → FrameData, Vector2, UIContextState, UIContextActions, etc.
+├── constants.ts      → Tool modes, orientation values, etc.
+├── api.ts           → BackendAPI interface (existing)
+└── index.ts         → Re-exports
 ```
