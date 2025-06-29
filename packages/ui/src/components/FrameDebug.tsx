@@ -4,11 +4,13 @@ import { FrameData } from '@workspace/shared';
 
 interface FrameDebugProps {
   frame: FrameData;
+  updateFrame: (id: string, updates: Partial<FrameData>) => void;
 }
 
 const RENDER_DIRECTIONS = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se'];
 
-export const FrameDebug: React.FC<FrameDebugProps> = ({ frame }) => {
+// TODO: Might need to debounce updateFrame later if rendering gets chuggy with a lot of frames. Lez find out.
+export const FrameDebug: React.FC<FrameDebugProps> = ({ frame, updateFrame }) => {
   // The frame position, size, and rotation can be initialized from frame data but frame data
   // cannot actively drive the moveable component because the moveable component is driving
   // and needs instant UI feedback to drive the experience.
@@ -31,10 +33,12 @@ export const FrameDebug: React.FC<FrameDebugProps> = ({ frame }) => {
   });
   const [rotation, setRotation] = useState(initialRotation);
 
-  const handleDrag = useCallback(({target, transform}: OnDrag) => {
+  const handleDrag = useCallback(({target, transform, translate, width, height}: OnDrag) => {
     if (target && transform) {
       target.style.transform = transform;
+      const [x, y] = translate;
       setTransform(transform);
+      updateFrame(id, { x, y, width, height });
     }
   }, []);
 
@@ -43,17 +47,22 @@ export const FrameDebug: React.FC<FrameDebugProps> = ({ frame }) => {
       target.style.width = `${width}px`;
       target.style.height = `${height}px`;
       target.style.transform = drag.transform;
+      const [x, y] = drag.translate;
+
       setSize({ width, height });
       setTransform(drag.transform);
+      updateFrame(id, { x, y, width, height });
     }
   }, []);
 
   const handleRotate = useCallback(({target, transform, rotation}: OnRotate) => {
     if (target && transform) {
       target.style.transform = transform;
+      console.log('Rotate debug', {transform, rotation});
       setTransform(transform);
       if (rotation !== undefined) {
         setRotation(rotation);
+        updateFrame(id, { rotation });
       }
     }
   }, []);
