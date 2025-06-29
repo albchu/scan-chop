@@ -32,32 +32,41 @@ export const Frame: React.FC<FrameProps> = ({ id, isActive }) => {
   const handleDrag = (e: any) => {
     const { left, top } = e;
     
-    // Validate bounds (0 to page dimensions)
-    const newX = Math.max(0, Math.min(left, page.width));
-    const newY = Math.max(0, Math.min(top, page.height));
-    
-    updateFrame(id, { x: newX, y: newY });
+    // Only update if values are defined
+    if (left !== undefined && top !== undefined) {
+      // Validate bounds (0 to page dimensions)
+      const newX = Math.max(0, Math.min(left, page.width));
+      const newY = Math.max(0, Math.min(top, page.height));
+      
+      updateFrame(id, { x: newX, y: newY });
+    }
   };
 
   const handleResize = (e: any) => {
     const { width, height, drag } = e;
     const { left, top } = drag;
     
-    // Validate position stays in bounds
-    const newX = Math.max(0, Math.min(left, page.width));
-    const newY = Math.max(0, Math.min(top, page.height));
-    
-    updateFrame(id, {
-      x: newX,
-      y: newY,
-      width: Math.max(MIN_FRAME_SIZE, width),
-      height: Math.max(MIN_FRAME_SIZE, height)
-    });
+    // Only update if values are defined
+    if (width !== undefined && height !== undefined && left !== undefined && top !== undefined) {
+      // Validate position stays in bounds
+      const newX = Math.max(0, Math.min(left, page.width));
+      const newY = Math.max(0, Math.min(top, page.height));
+      
+      updateFrame(id, {
+        x: newX,
+        y: newY,
+        width: Math.max(MIN_FRAME_SIZE, width),
+        height: Math.max(MIN_FRAME_SIZE, height)
+      });
+    }
   };
 
   const handleRotate = (e: any) => {
     const { rotation } = e;
-    updateFrame(id, { rotation });
+    // Only update if rotation is defined to prevent undefined values
+    if (rotation !== undefined) {
+      updateFrame(id, { rotation });
+    }
   };
 
   return (

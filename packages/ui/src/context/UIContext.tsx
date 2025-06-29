@@ -159,7 +159,16 @@ const reducer = (state: UIContextState, action: Action): UIContextState => {
       const modifiedState = produce(state, draft => {
         if (draft.frames[action.id]) {
           const currentFrame = draft.frames[action.id];
-          const updatedFrame = { ...currentFrame, ...action.updates };
+          
+          // Filter out undefined values from updates to prevent overwriting existing values
+          const filteredUpdates = Object.entries(action.updates).reduce((acc, [key, value]) => {
+            if (value !== undefined) {
+              (acc as any)[key] = value;
+            }
+            return acc;
+          }, {} as Partial<FrameData>);
+          
+          const updatedFrame = { ...currentFrame, ...filteredUpdates };
           
           // Enforce minimum dimensions
           if (updatedFrame.width < MIN_FRAME_SIZE) updatedFrame.width = MIN_FRAME_SIZE;
