@@ -4,8 +4,12 @@
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "style": "dist/styles/index.css",
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm build:js && pnpm build:css",
+    "build:js": "tsc",
+    "build:css": "pnpm dlx @tailwindcss/cli -i ./src/styles/index.css -o ./dist/styles/index.css",
+    "dev:css": "pnpm dlx @tailwindcss/cli -i ./src/styles/index.css -o ./dist/styles/index.css --watch",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
@@ -20,15 +24,19 @@
     "react-moveable": "^0.56.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.11",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.21",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.33.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-vitest-globals": "^1.5.0",
     "jsdom": "^23.0.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   },

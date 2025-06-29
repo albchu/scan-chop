@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* Custom styles for react-moveable control box */
 .moveable-frame .moveable-control {
   width: 12px !important;

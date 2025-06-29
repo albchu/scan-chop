@@ -1,7 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { AppProvider, App } from '@workspace/ui';
+import { App, AppProvider } from '@workspace/ui';
 import type { BackendAPI } from '@workspace/shared';
+
+// Import the CSS styles from the UI package
+import '@workspace/ui/dist/styles/index.css';
 
 // Type declaration for the API exposed by preload
 declare global {
@@ -16,4 +19,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <App />
     </AppProvider>
   </React.StrictMode>
-); 
+);
