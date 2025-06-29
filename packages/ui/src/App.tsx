@@ -1,4 +1,12 @@
 import React from 'react';
+import { Editor } from './components/Editor';
+
+export function App() {
+  return <Editor />;
+}
+
+/* Legacy App component - kept for reference
+import React from 'react';
 import { useReactiveSelector } from './hooks/useReactiveSelector';
 import { useBackend } from './hooks/useBackend';
 
@@ -64,4 +72,5 @@ export function App() {
       </div>
     </div>
   );
-} 
+}
+*/ 
