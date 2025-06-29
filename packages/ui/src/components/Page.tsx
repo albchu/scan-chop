@@ -1,13 +1,14 @@
 import React from 'react';
 import { FrameDebug } from './FrameDebug';
-// import { useUIContext } from '../context/UIContext';
+import { useUIContext } from '../context/UIContext';
+import { Frame } from './Frame';
 // import { Frame } from './Frame';
 
 export const Page: React.FC = () => {
   // Sample page dimensions
   const pageWidth = 800;
   const pageHeight = 600;
-  
+
   // Sample frames for testing
   const sampleFrames = [
     { id: '1', x: 100, y: 100, width: 200, height: 150, rotation: 0 },
@@ -16,8 +17,8 @@ export const Page: React.FC = () => {
   ];
 
   // Original implementation (commented out):
-  // const { page, frames, selectedFrameIds } = useUIContext();
-  
+  const { page, frames, selectedFrameIds } = useUIContext();
+
   return (
     <div
       data-page="true"
@@ -25,7 +26,7 @@ export const Page: React.FC = () => {
       style={{
         width: `${pageWidth}px`,
         height: `${pageHeight}px`,
-        position: 'relative'
+        position: 'relative',
       }}
       // Original style:
       // style={{
@@ -39,36 +40,26 @@ export const Page: React.FC = () => {
     >
       {/* Page background pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div 
+        <div
           className="w-full h-full"
           style={{
             backgroundImage: `
               linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
               linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
             `,
-            backgroundSize: '20px 20px'
+            backgroundSize: '20px 20px',
           }}
         />
       </div>
-      
+
       {/* Page title */}
       <div className="absolute top-4 left-4 text-lg font-bold text-gray-700 bg-white/80 px-3 py-1 rounded shadow">
         Moveable Debug Page
       </div>
-      
-      {/* Render sample frames */}
-      {sampleFrames.map(frame => (
-        <FrameDebug
-          key={frame.id}
-          id={frame.id}
-          initialX={frame.x}
-          initialY={frame.y}
-          initialWidth={frame.width}
-          initialHeight={frame.height}
-          initialRotation={frame.rotation}
-        />
-      ))}
 
+      {Object.values(frames).map((frame) => (
+        <FrameDebug key={frame.id} frame={frame} />
+      ))}
       {/* Original frame rendering (commented out): */}
       {/* {Object.values(frames).map(frame => (
         <Frame
@@ -79,4 +70,4 @@ export const Page: React.FC = () => {
       ))} */}
     </div>
   );
-}; 
+};

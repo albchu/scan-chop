@@ -1,27 +1,62 @@
-import React, { useRef, useState } from 'react';
-import Moveable from 'react-moveable';
+import React, { useCallback, useRef, useState } from 'react';
+import Moveable, { OnDrag, OnResize, OnRotate } from 'react-moveable';
+import { FrameData } from '@workspace/shared';
 
 interface FrameDebugProps {
-  id: string;
-  initialX?: number;
-  initialY?: number;
-  initialWidth?: number;
-  initialHeight?: number;
-  initialRotation?: number;
+  frame: FrameData;
 }
 
-export const FrameDebug: React.FC<FrameDebugProps> = ({ 
-  id, 
-  initialX = 100, 
-  initialY = 100, 
-  initialWidth = 200, 
-  initialHeight = 150,
-  initialRotation = 0
-}) => {
+const RENDER_DIRECTIONS = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se'];
+
+export const FrameDebug: React.FC<FrameDebugProps> = ({ frame }) => {
+  // The frame position, size, and rotation can be initialized from frame data but frame data
+  // cannot actively drive the moveable component because the moveable component is driving
+  // and needs instant UI feedback to drive the experience.
+  const {
+    id,
+    x: initialX,
+    y: initialY,
+    width: initialWidth,
+    height: initialHeight,
+    rotation: initialRotation,
+  } = frame;
+
   const targetRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState(`translate(${initialX}px, ${initialY}px) rotate(${initialRotation}deg)`);
-  const [size, setSize] = useState({ width: initialWidth, height: initialHeight });
+  const [transform, setTransform] = useState(
+    `translate(${initialX}px, ${initialY}px) rotate(${initialRotation}deg)`
+  );
+  const [size, setSize] = useState({
+    width: initialWidth,
+    height: initialHeight,
+  });
   const [rotation, setRotation] = useState(initialRotation);
+
+  const handleDrag = useCallback(({target, transform}: OnDrag) => {
+    if (target && transform) {
+      target.style.transform = transform;
+      setTransform(transform);
+    }
+  }, []);
+
+  const handleResize = useCallback(({target, width, height, drag}: OnResize) => {
+    if (target && width !== undefined && height !== undefined) {
+      target.style.width = `${width}px`;
+      target.style.height = `${height}px`;
+      target.style.transform = drag.transform;
+      setSize({ width, height });
+      setTransform(drag.transform);
+    }
+  }, []);
+
+  const handleRotate = useCallback(({target, transform, rotation}: OnRotate) => {
+    if (target && transform) {
+      target.style.transform = transform;
+      setTransform(transform);
+      if (rotation !== undefined) {
+        setRotation(rotation);
+      }
+    }
+  }, []);
 
   return (
     <>
@@ -32,7 +67,7 @@ export const FrameDebug: React.FC<FrameDebugProps> = ({
           width: `${size.width}px`,
           height: `${size.height}px`,
           transform: transform,
-          transformOrigin: 'center center'
+          transformOrigin: 'center center',
         }}
       >
         <div className="p-4 h-full flex flex-col justify-center items-center">
@@ -40,61 +75,31 @@ export const FrameDebug: React.FC<FrameDebugProps> = ({
           <div className="text-xs text-blue-600 mt-1">
             {size.width} × {size.height}
           </div>
-          <div className="text-xs text-blue-600">
-            {rotation.toFixed(1)}°
-          </div>
+          <div className="text-xs text-blue-600">{rotation.toFixed(1)}°</div>
           <div className="text-2xl mt-2">📦</div>
         </div>
       </div>
-      
+
       <Moveable
         target={targetRef}
         container={null}
-        
         // Enable basic abilities
         draggable={true}
         resizable={true}
         rotatable={true}
-        
         // Keep ratio during resize
         keepRatio={false}
-        
         // Show all resize handles
-        renderDirections={["nw", "n", "ne", "w", "e", "sw", "s", "se"]}
-        
+        renderDirections={RENDER_DIRECTIONS}
         // Event handlers
-        onDrag={({ target, transform }) => {
-          if (target && transform) {
-            target.style.transform = transform;
-            setTransform(transform);
-          }
-        }}
-        
-        onResize={({ target, width, height, drag }) => {
-          if (target && width !== undefined && height !== undefined) {
-            target.style.width = `${width}px`;
-            target.style.height = `${height}px`;
-            target.style.transform = drag.transform;
-            setSize({ width, height });
-            setTransform(drag.transform);
-          }
-        }}
-        
-        onRotate={({ target, transform, rotation }) => {
-          if (target && transform) {
-            target.style.transform = transform;
-            setTransform(transform);
-            if (rotation !== undefined) {
-              setRotation(rotation);
-            }
-          }
-        }}
-        
+        onDrag={handleDrag}
+        onResize={handleResize}
+        onRotate={handleRotate}
         // Styling
         origin={true}
         edge={true}
-        className="frame-debug-moveable"
+        className="moveable-frame"
       />
     </>
   );
-}; 
+};
