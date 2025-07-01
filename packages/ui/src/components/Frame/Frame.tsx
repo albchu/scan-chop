@@ -1,16 +1,21 @@
 import React, { useCallback, useRef, useState, useMemo } from 'react';
 import Moveable, { OnDrag, OnResize, OnRotate, OnDragStart, OnDragEnd } from 'react-moveable';
-import { IconArrowUp } from '@tabler/icons-react';
 import { FrameData } from '@workspace/shared';
 import { useZoomContext } from '../../context/ZoomContext';
+import { FrameInfo } from './FrameInfo';
+import {
+  createTransformString,
+  calculateMoveableZoom,
+  addGrabbingCursor,
+  removeGrabbingCursor,
+  RENDER_DIRECTIONS,
+} from './frameUtils';
 import styles from './Frame.module.css';
 
 interface FrameProps {
   frame: FrameData;
   updateFrame: (id: string, updates: Partial<FrameData>) => void;
 }
-
-const RENDER_DIRECTIONS = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se'];
 
 // TODO: Might need to debounce updateFrame later if rendering gets chuggy with a lot of frames. Lez find out.
 export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
@@ -29,20 +34,8 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
   } = frame;
 
   // Get zoom context and calculate moveable zoom
-  const { zoom, baseScale, totalScale } = useZoomContext();
-  
-  // Calculate the zoom value for Moveable
-  // When totalScale is small (zoomed out), we want larger handles (higher zoom)
-  // When totalScale is large (zoomed in), we want smaller handles (lower zoom)
-  // This creates an inverse relationship to maintain consistent visual size
-  const moveableZoom = useMemo(() => {
-    // Inverse of totalScale, but clamped to reasonable bounds
-    const inverseZoom = 1 / totalScale;
-    // Clamp range to prevent handles from being too small or too large
-    return Math.max(0.5, Math.min(16, inverseZoom));
-  }, [totalScale]);
-  
-  console.log('Frame scale values:', { zoom, baseScale, totalScale, moveableZoom });
+  const { totalScale } = useZoomContext();
+  const moveableZoom = useMemo(() => calculateMoveableZoom(totalScale), [totalScale]);
 
   // TODO: Figure out parity with features I want from frame.
   // Control panel can be mostly removed as I move to finalize that design. Is just metadata I need to show on a list.
@@ -50,7 +43,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
 
   const targetRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState(
-    `translate(${initialX}px, ${initialY}px) rotate(${initialRotation}deg)`
+    createTransformString(initialX, initialY, initialRotation)
   );
   const [size, setSize] = useState({
     width: initialWidth,
@@ -58,54 +51,60 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
   });
   const [rotation, setRotation] = useState(initialRotation);
 
-  const handleDragStart = useCallback(({target}: OnDragStart) => {
+  const handleDragStart = useCallback(({ target }: OnDragStart) => {
     if (target) {
-      target.classList.add('cursor-grabbing');
-      target.classList.remove('cursor-grab');
+      addGrabbingCursor(target as HTMLElement);
     }
   }, []);
 
-  const handleDrag = useCallback(({target, transform, translate, width, height}: OnDrag) => {
-    if (target && transform) {
-      target.style.transform = transform;
-      // Cursor should already be grabbing from dragStart
-      const [x, y] = translate;
-      setTransform(transform);
-      updateFrame(id, { x, y, width, height });
-    }
-  }, [id, updateFrame]);
-
-  const handleDragEnd = useCallback(({target}: OnDragEnd) => {
-    if (target) {
-      target.classList.remove('cursor-grabbing');
-      target.classList.add('cursor-grab'); // Return to grab cursor
-    }
-  }, []);
-
-  const handleResize = useCallback(({target, width, height, drag}: OnResize) => {
-    if (target && width !== undefined && height !== undefined) {
-      target.style.width = `${width}px`;
-      target.style.height = `${height}px`;
-      target.style.transform = drag.transform;
-      const [x, y] = drag.translate;
-
-      setSize({ width, height });
-      setTransform(drag.transform);
-      updateFrame(id, { x, y, width, height });
-    }
-  }, [id, updateFrame]);
-
-  const handleRotate = useCallback(({target, transform, rotation}: OnRotate) => {
-    if (target && transform) {
-      target.style.transform = transform;
-
-      setTransform(transform);
-      if (rotation !== undefined) {
-        setRotation(rotation);
-        updateFrame(id, { rotation });
+  const handleDrag = useCallback(
+    ({ target, transform, translate, width, height }: OnDrag) => {
+      if (target && transform) {
+        target.style.transform = transform;
+        const [x, y] = translate;
+        setTransform(transform);
+        updateFrame(id, { x, y, width, height });
       }
+    },
+    [id, updateFrame]
+  );
+
+  const handleDragEnd = useCallback(({ target }: OnDragEnd) => {
+    if (target) {
+      removeGrabbingCursor(target as HTMLElement);
     }
-  }, [id, updateFrame]);
+  }, []);
+
+  const handleResize = useCallback(
+    ({ target, width, height, drag }: OnResize) => {
+      if (target && width !== undefined && height !== undefined) {
+        target.style.width = `${width}px`;
+        target.style.height = `${height}px`;
+        target.style.transform = drag.transform;
+        const [x, y] = drag.translate;
+
+        setSize({ width, height });
+        setTransform(drag.transform);
+        updateFrame(id, { x, y, width, height });
+      }
+    },
+    [id, updateFrame]
+  );
+
+  const handleRotate = useCallback(
+    ({ target, transform, rotation }: OnRotate) => {
+      if (target && transform) {
+        target.style.transform = transform;
+
+        setTransform(transform);
+        if (rotation !== undefined) {
+          setRotation(rotation);
+          updateFrame(id, { rotation });
+        }
+      }
+    },
+    [id, updateFrame]
+  );
 
   return (
     <>
@@ -120,25 +119,13 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
         }}
         data-frame-id={id}
       >
-        <div className="p-4 h-full flex flex-col justify-center items-center relative">
-          {/* Orientation Arrow */}
-          <div 
-            className="absolute top-2 right-2"
-            style={{
-              transform: `rotate(${orientation}deg)`,
-              transformOrigin: 'center',
-            }}
-          >
-            <IconArrowUp size={16} className="text-blue-600" />
-          </div>
-          
-          <div className="text-sm font-semibold text-blue-800">{label}</div>
-          <div className="text-xs text-blue-600 mt-1">
-            {size.width} × {size.height}
-          </div>
-          <div className="text-xs text-blue-600">{rotation.toFixed(1)}°</div>
-          <div className="text-2xl mt-2">📦</div>
-        </div>
+        <FrameInfo
+          label={label}
+          width={size.width}
+          height={size.height}
+          rotation={rotation}
+          orientation={orientation}
+        />
       </div>
 
       <Moveable
