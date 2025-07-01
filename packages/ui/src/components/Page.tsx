@@ -1,7 +1,6 @@
 import React from 'react';
-import { FrameDebug } from './FrameDebug';
-import { useUIContext } from '../context/UIContext';
 import { Frame } from './Frame';
+import { useUIContext } from '../context/UIContext';
 
 export const Page: React.FC = () => {
   const { page, frames, selectedFrameIds, updateFrame } = useUIContext();
@@ -35,16 +34,8 @@ export const Page: React.FC = () => {
       </div>
 
       {Object.values(frames).map((frame) => (
-        <FrameDebug key={frame.id} frame={frame} updateFrame={updateFrame} />
+        <Frame key={frame.id} frame={frame} updateFrame={updateFrame} />
       ))}
-      {/* Original frame rendering (commented out): */}
-      {/* {Object.values(frames).map(frame => (
-        <Frame
-          key={frame.id}
-          id={frame.id}
-          isActive={selectedFrameIds.length === 1 && selectedFrameIds[0] === frame.id}
-        />
-      ))} */}
     </div>
   );
 };

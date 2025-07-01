@@ -20,7 +20,6 @@ The visual editor follows a **component-based architecture** with centralized UI
 ```
 Editor
 ├── UIContextProvider          → Manages all UI state and actions (using Immer)
-├── FrameRefRegistryProvider   → Handles imperative frame controls
 ├── Sidebar                    → Tool selection and controls
 ├── Canvas                     → Main editing area with scanned image
 │   └── Page                   → Transformable container
@@ -50,8 +49,7 @@ packages/ui/src/
 │   ├── Frame.tsx        → Individual frame component
 │   └── FramesPreview/   → Frame management components
 ├── context/             → React context providers
-│   ├── UIContext.tsx    → UI state management (Immer-based)
-│   └── FrameRefRegistryContext.tsx → Frame reference registry
+│   └── UIContext.tsx    → UI state management (Immer-based)
 ├── hooks/               → Custom React hooks
 │   ├── useFrameTransform.ts → Frame transformation logic
 │   ├── useBackend.ts        → Backend API integration
@@ -74,7 +72,6 @@ packages/ui/src/
 - ✅ **Multi-selection** with batch extraction operations
 - ✅ **Frame orientation controls** (0°, 90°, 180°, -90°)
 - ✅ **Real-time preview** of extraction boundaries
-- ✅ **Undo/redo history** for all frame operations
 - ✅ **Performance optimized** with selective re-renders
 - ✅ **Responsive layout** for various screen sizes
 

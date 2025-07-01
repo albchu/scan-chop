@@ -12,20 +12,29 @@
 export { App } from './App';
 export { AppProvider } from './AppProvider';
 
-// Components
+// Core components
 export { Editor } from './components/Editor';
+export { Canvas } from './components/Canvas';
+export { Page } from './components/Page';
+export { Frame } from './components/Frame';
 
-// Contexts
+// Preview components
+export { FramesPreview } from './components/FramesPreview/FramesPreview';
+export { FrameList } from './components/FramesPreview/FrameList';
+export { FrameCard } from './components/FramesPreview/FrameCard';
+export { FrameControlPanel } from './components/FramesPreview/FrameControlPanel';
+export { BatchControls } from './components/FramesPreview/BatchControls';
+
+// Context and providers
 export { UIContextProvider, useUIContext } from './context/UIContext';
-export { FrameRefRegistryProvider, useFrameRefRegistry } from './context/FrameRefRegistryContext';
 
 // Hooks
 export { useBackend } from './hooks/useBackend';
-export { useReactiveSelector } from './hooks/useReactiveSelector';
 export { useFrameTransform } from './hooks/useFrameTransform';
+export { useReactiveSelector } from './hooks/useReactiveSelector';
 
 // Utils
 export { rotateVector } from './utils/geometry';
 
 // Examples
-export { EditorExample, imageToBase64 } from './examples/EditorExample'; 
+export { EditorExample } from './examples/EditorExample'; 
