@@ -19,12 +19,12 @@ export const ZoomSlider: React.FC<ZoomSliderProps> = ({
   };
 
   const handleZoomOut = () => {
-    const newZoom = Math.max(50, zoom - 10);
+    const newZoom = Math.max(25, zoom - 10);
     onZoomChange(newZoom);
   };
 
   const handleZoomIn = () => {
-    const newZoom = Math.min(200, zoom + 10);
+    const newZoom = Math.min(400, zoom + 10);
     onZoomChange(newZoom);
   };
 
@@ -38,18 +38,24 @@ export const ZoomSlider: React.FC<ZoomSliderProps> = ({
   // Use zoom value directly for the slider
   const sliderValue = zoom;
 
+  // Get zoom label
+  const getZoomLabel = () => {
+    if (zoom === 100) return 'Fit';
+    return `${zoom}%`;
+  };
+
   return (
     <div className={`flex flex-col items-center gap-3 ${className}`}>
       {/* Zoom Percentage */}
-      <div className="text-sm font-mono text-gray-300 text-center">
-        {zoom}%
+      <div className="text-sm font-mono text-gray-300 text-center min-w-[3rem]">
+        {getZoomLabel()}
       </div>
 
       {/* Reset Button */}
       <button
         onClick={handleReset}
         className="p-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
-        title="Reset Zoom & Pan"
+        title="Reset Zoom & Pan (Fit to viewport)"
       >
         <IconRefresh size={16} className="text-white" />
       </button>
@@ -59,18 +65,18 @@ export const ZoomSlider: React.FC<ZoomSliderProps> = ({
         onClick={handleZoomIn}
         className="p-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
         title="Zoom In"
-        disabled={zoom >= 200}
+        disabled={zoom >= 400}
       >
-        <IconPlus size={16} className={zoom >= 200 ? 'text-gray-500' : 'text-white'} />
+        <IconPlus size={16} className={zoom >= 400 ? 'text-gray-500' : 'text-white'} />
       </button>
 
       {/* Zoom Slider (Vertical) */}
       <div className="relative flex items-center justify-center" style={{ width: '20px', height: '120px' }}>
         <input
           type="range"
-          min="50"
-          max="200"
-          step="10"
+          min="25"
+          max="400"
+          step="5"
           value={sliderValue}
           onChange={handleSliderChange}
           className="slider-vertical"
@@ -88,9 +94,9 @@ export const ZoomSlider: React.FC<ZoomSliderProps> = ({
         onClick={handleZoomOut}
         className="p-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
         title="Zoom Out"
-        disabled={zoom <= 50}
+        disabled={zoom <= 25}
       >
-        <IconMinus size={16} className={zoom <= 50 ? 'text-gray-500' : 'text-white'} />
+        <IconMinus size={16} className={zoom <= 25 ? 'text-gray-500' : 'text-white'} />
       </button>
     </div>
   );

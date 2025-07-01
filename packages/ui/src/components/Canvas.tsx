@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useCallback } from 'react';
+import React, { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import { useUIContext } from '../context/UIContext';
 import { Page } from './Page';
 import { ZoomSlider } from './ZoomSlider';
@@ -12,6 +12,7 @@ export const Canvas: React.FC = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isCommandPressed, setIsCommandPressed] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   const [defaultFrameWidth, defaultFrameHeight] = useMemo(() => {
     return [
@@ -20,8 +21,38 @@ export const Canvas: React.FC = () => {
     ];
   }, [page]);
 
+  // Calculate the base scale to fit the page in the viewport
+  const baseScale = useMemo(() => {
+    if (!canvasSize.width || !canvasSize.height || !page.width || !page.height) {
+      return 1;
+    }
+
+    // Calculate scale factors for both dimensions
+    const padding = 100; // Padding around the page in pixels
+    const scaleX = (canvasSize.width - padding) / page.width;
+    const scaleY = (canvasSize.height - padding) / page.height;
+    
+    // Use the smaller scale to ensure the entire page fits
+    return Math.min(scaleX, scaleY, 1); // Cap at 1 to avoid upscaling small images
+  }, [canvasSize, page.width, page.height]);
+
+  // Update canvas size on mount and resize
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        setCanvasSize({ width: rect.width, height: rect.height });
+      }
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, []);
+
   const handleReset = useCallback(() => {
     setPanOffset({ x: 0, y: 0 });
+    setZoom(100); // Reset to fit-to-viewport zoom
   }, []);
 
   // Track Command key state
@@ -118,16 +149,16 @@ export const Canvas: React.FC = () => {
         const pageElement = target.closest('[data-page="true"]') as HTMLElement;
         const rect = pageElement.getBoundingClientRect();
         
-        // Account for zoom when calculating click position
-        const zoomFactor = zoom / 100;
+        // Account for both base scale and zoom when calculating click position
+        const totalScale = baseScale * (zoom / 100);
         
         // Add frame at click position with default size
         // Container coordinates in html start at top left corner.
         // UX should feel better if the frame origin is spawned at the click position instead of top left corner.
         // Thats why we subtract half the frame size from the click position.
         // TODO: Control panel might need to add the frame size to the click position to trick UI into thinking the origin offset is the truth.
-        const x = (e.clientX - rect.left) / zoomFactor - defaultFrameWidth / 2;
-        const y = (e.clientY - rect.top) / zoomFactor - defaultFrameHeight / 2;
+        const x = (e.clientX - rect.left) / totalScale - defaultFrameWidth / 2;
+        const y = (e.clientY - rect.top) / totalScale - defaultFrameHeight / 2;
 
         addFrame({
           x,
@@ -158,7 +189,7 @@ export const Canvas: React.FC = () => {
       >
         <div
           style={{
-            transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom / 100})`,
+            transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${baseScale * (zoom / 100)})`,
             transformOrigin: 'center center',
             transition: isDragging ? 'none' : 'transform 0.1s ease-out',
           }}
@@ -175,6 +206,16 @@ export const Canvas: React.FC = () => {
           onReset={handleReset}
         />
       </div>
+
+      {/* Debug info - remove in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute top-4 left-4 bg-gray-800/90 backdrop-blur-sm rounded p-2 text-xs text-gray-300">
+          <div>Page: {page.width} x {page.height}</div>
+          <div>Canvas: {canvasSize.width.toFixed(0)} x {canvasSize.height.toFixed(0)}</div>
+          <div>Base Scale: {(baseScale * 100).toFixed(1)}%</div>
+          <div>Total Scale: {(baseScale * zoom).toFixed(1)}%</div>
+        </div>
+      )}
     </div>
   );
 };
