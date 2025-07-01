@@ -20,7 +20,7 @@ export type Action =
   | { type: 'RENAME_FRAME'; id: string; label: string }
   | { type: 'SELECT_FRAME'; id: string }
   | { type: 'CLEAR_SELECTION' }
-  | { type: 'SET_ORIENTATION'; id: string; orientation: 90 | 180 | -90 }
+  | { type: 'SET_ORIENTATION'; id: string; orientation: 0 | 90 | 180 | 270 }
   | { type: 'TRANSLATE_FRAME_RELATIVE'; id: string; vector: Vector2 }
   | { type: 'ROTATE_FRAME'; id: string; dAngle: number }
   | { type: 'SAVE_FRAMES'; ids: string[] };

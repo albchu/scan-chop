@@ -44,7 +44,7 @@ export const FrameControlPanel: React.FC<FrameControlPanelProps> = ({ frame }) =
   };
   
   const handleOrientationChange = (value: string) => {
-    const orientation = parseInt(value) as 90 | 180 | -90;
+    const orientation = parseInt(value) as 0 | 90 | 180 | 270;
     setOrientation(frame.id, orientation);
   };
   
@@ -172,7 +172,7 @@ export const FrameControlPanel: React.FC<FrameControlPanelProps> = ({ frame }) =
           <option value="0">0° (Default)</option>
           <option value="90">90°</option>
           <option value="180">180°</option>
-          <option value="-90">-90°</option>
+          <option value="270">270°</option>
         </select>
       </div>
       

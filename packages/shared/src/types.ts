@@ -12,7 +12,7 @@ export interface FrameData {
   width: number;          // Frame width (minimum: 20)
   height: number;         // Frame height (minimum: 20)
   rotation: number;       // Relative to page (free angle, no snapping), rotation center is frame center
-  orientation: 0 | 90 | 180 | -90;  // "Up" direction indicator, 0 is default
+  orientation: 0 | 90 | 180 | 270;  // "Up" direction indicator, 0 is default
 }
 
 export interface PageData {
@@ -48,7 +48,7 @@ export interface UIContextActions {
 
   translateFrameRelative(id: string, vector: Vector2): void;
   rotateFrame(id: string, dAngle: number): void;
-  setOrientation(id: string, orientation: 90 | 180 | -90): void;
+  setOrientation(id: string, orientation: 0 | 90 | 180 | 270): void;
 
   saveFrames(ids: string[]): void; // Logs frame IDs for now
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useUIContext } from '../../context/UIContext';
 import { FrameCard } from './FrameCard';
+// import { FrameCard as FrameCardOld } from './FrameCardOld';
 
 export const FrameList: React.FC = () => {
   const { frames } = useUIContext();
@@ -19,10 +20,19 @@ export const FrameList: React.FC = () => {
   }
   
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-      {frameList.map(frame => (
-        <FrameCard key={frame.id} frame={frame} />
-      ))}
+    <div className="flex-1 overflow-y-auto p-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,400px))] gap-4 justify-center">
+        {frameList.map(frame => (
+          <FrameCard key={frame.id} frame={frame} />
+        ))}
+      </div>
+      {/* Old FrameCard usage commented out:
+      <div className="space-y-3">
+        {frameList.map(frame => (
+          <FrameCardOld key={frame.id} frame={frame} />
+        ))}
+      </div>
+      */}
     </div>
   );
 }; 

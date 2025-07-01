@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import Moveable, { OnDrag, OnResize, OnRotate, OnDragStart, OnDragEnd } from 'react-moveable';
+import { IconArrowUp } from '@tabler/icons-react';
 import { FrameData } from '@workspace/shared';
 
 interface FrameProps {
@@ -22,6 +23,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
     width: initialWidth,
     height: initialHeight,
     rotation: initialRotation,
+    orientation,
   } = frame;
 
   // TODO: Figure out parity with features I want from frame.
@@ -98,8 +100,20 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
           transform: transform,
           transformOrigin: 'center center',
         }}
+        data-frame-id={id}
       >
-        <div className="p-4 h-full flex flex-col justify-center items-center">
+        <div className="p-4 h-full flex flex-col justify-center items-center relative">
+          {/* Orientation Arrow */}
+          <div 
+            className="absolute top-2 right-2"
+            style={{
+              transform: `rotate(${orientation}deg)`,
+              transformOrigin: 'center',
+            }}
+          >
+            <IconArrowUp size={16} className="text-blue-600" />
+          </div>
+          
           <div className="text-sm font-semibold text-blue-800">{label}</div>
           <div className="text-xs text-blue-600 mt-1">
             {size.width} × {size.height}

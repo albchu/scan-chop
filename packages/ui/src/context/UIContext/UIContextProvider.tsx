@@ -79,7 +79,7 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const setOrientation = useCallback(
-    (id: string, orientation: 90 | 180 | -90) => {
+    (id: string, orientation: 0 | 90 | 180 | 270) => {
       dispatch({ type: 'SET_ORIENTATION', id, orientation });
     },
     []
