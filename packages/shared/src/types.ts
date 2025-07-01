@@ -22,6 +22,14 @@ export interface PageData {
   imageData: string;  // base64 image data, rendered at 1:1 scale
 }
 
+export interface ImageData {
+  filepath: string;
+  size: string;
+  width: number;
+  height: number;
+  imageData: string;
+}
+
 // UI Context types
 export interface UIContextSnapshot {
   page: PageData;

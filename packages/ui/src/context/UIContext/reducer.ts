@@ -9,6 +9,7 @@ import {
   DEFAULT_FRAME_SIZE_RATIO,
 } from '@workspace/shared';
 import { rotateVector } from '../../utils/geometry';
+import pageDataJson from './pageData.json';
 
 // Action types for reducer
 export type Action =
@@ -48,12 +49,13 @@ export const createSnapshot = (state: UIContextState): UIContextSnapshot => ({
 
 // Initial state
 export const initialState: UIContextState = {
-  page: {
-    id: 'page-1',
-    width: 800,
-    height: 600,
-    imageData: ''
-  },
+  page: pageDataJson.page,
+  // page: {
+  //   id: 'page-1',
+  //   width: 800,
+  //   height: 600,
+  //   imageData: ''
+  // },
   frames: {},
   selectedFrameIds: [],
   nextFrameNumber: 1
