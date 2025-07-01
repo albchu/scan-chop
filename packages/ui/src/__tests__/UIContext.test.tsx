@@ -10,7 +10,6 @@ describe('UIContext', () => {
   it('provides initial state', () => {
     const { result } = renderHook(() => useUIContext(), { wrapper });
     
-    expect(result.current.mode).toBe('select');
     expect(result.current.frames).toEqual({});
     expect(result.current.selectedFrameIds).toEqual([]);
     expect(result.current.nextFrameNumber).toBe(1);
@@ -113,59 +112,6 @@ describe('UIContext', () => {
     // Clear selection
     act(() => {
       result.current.clearSelection();
-    });
-    
-    expect(result.current.selectedFrameIds).toEqual([]);
-  });
-
-  it('supports undo/redo', () => {
-    const { result } = renderHook(() => useUIContext(), { wrapper });
-    
-    // Add a frame
-    act(() => {
-      result.current.addFrame({ x: 100, y: 100, width: 200, height: 150, rotation: 0 });
-    });
-    
-    expect(Object.values(result.current.frames)).toHaveLength(1);
-    expect(result.current.history.undoStack).toHaveLength(1);
-    
-    // Undo
-    act(() => {
-      result.current.undo();
-    });
-    
-    expect(result.current.frames).toEqual({});
-    expect(result.current.history.redoStack).toHaveLength(1);
-    
-    // Redo
-    act(() => {
-      result.current.redo();
-    });
-    
-    expect(Object.values(result.current.frames)).toHaveLength(1);
-  });
-
-  it('switches tool modes', () => {
-    const { result } = renderHook(() => useUIContext(), { wrapper });
-    
-    expect(result.current.mode).toBe('select');
-    
-    act(() => {
-      result.current.setMode('add');
-    });
-    
-    expect(result.current.mode).toBe('add');
-    
-    // Should clear selection when switching modes
-    act(() => {
-      result.current.addFrame({ x: 100, y: 100, width: 200, height: 150, rotation: 0 });
-    });
-    
-    const frameId = Object.keys(result.current.frames)[0];
-    
-    act(() => {
-      result.current.selectFrame(frameId);
-      result.current.setMode('select');
     });
     
     expect(result.current.selectedFrameIds).toEqual([]);

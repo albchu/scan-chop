@@ -4,8 +4,6 @@ export type {
   Vector2,
   FrameData,
   PageData,
-  ToolMode,
-  HistoryEntry,
   UIContextSnapshot,
   UIContextState,
   UIContextActions
@@ -18,7 +16,6 @@ export { INITIAL_STATE, APP_CONSTANTS } from './constants';
 export { 
   MIN_FRAME_SIZE,
   DEFAULT_FRAME_SIZE_RATIO,
-  MAX_HISTORY_SIZE,
   TRANSLATION_STEP,
   ROTATION_INCREMENT
 } from './constants'; 

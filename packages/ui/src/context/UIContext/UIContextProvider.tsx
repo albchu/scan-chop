@@ -8,7 +8,6 @@ import {
   UIContextState,
   UIContextActions,
   FrameData,
-  ToolMode,
   Vector2,
 } from '@workspace/shared';
 import { reducer, initialState } from './reducer';
@@ -30,10 +29,6 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [state, dispatch] = useReducer(reducer, initialState);
 
   // Action creators
-  const setMode = useCallback((mode: ToolMode) => {
-    dispatch({ type: 'SET_MODE', mode });
-  }, []);
-
   const addFrame = useCallback(
     (frame: Omit<FrameData, 'id' | 'label' | 'orientation'>) => {
       dispatch({ type: 'ADD_FRAME', payload: frame });
@@ -58,19 +53,9 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const updateFrame = useCallback(
     (id: string, updates: Partial<FrameData>) => {
-      const frame = state.frames[id];
-      const historyLabel =
-        updates.x !== undefined || updates.y !== undefined
-          ? `Move ${frame?.label || 'Frame'}`
-          : updates.width !== undefined || updates.height !== undefined
-            ? `Resize ${frame?.label || 'Frame'}`
-            : updates.rotation !== undefined
-              ? `Rotate ${frame?.label || 'Frame'}`
-              : `Update ${frame?.label || 'Frame'}`;
-
-      dispatch({ type: 'UPDATE_FRAME', id, updates, historyLabel });
+      dispatch({ type: 'UPDATE_FRAME', id, updates });
     },
-    [state.frames]
+    []
   );
 
   const renameFrame = useCallback((id: string, label: string) => {
@@ -104,17 +89,8 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
     dispatch({ type: 'SAVE_FRAMES', ids });
   }, []);
 
-  const undo = useCallback(() => {
-    dispatch({ type: 'UNDO' });
-  }, []);
-
-  const redo = useCallback(() => {
-    dispatch({ type: 'REDO' });
-  }, []);
-
   const value: UIContextState & UIContextActions = {
     ...state,
-    setMode,
     addFrame,
     addMagicFrame,
     removeFrame,
@@ -127,8 +103,6 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
     rotateFrame,
     setOrientation,
     saveFrames,
-    undo,
-    redo,
   };
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

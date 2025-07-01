@@ -4,7 +4,7 @@ import { Page } from './Page';
 import { DEFAULT_FRAME_SIZE_RATIO } from '@workspace/shared';
 
 export const Canvas: React.FC = () => {
-  const { mode, page, addFrame, selectFrame, clearSelection } = useUIContext();
+  const { page, addFrame, selectFrame, clearSelection } = useUIContext();
 
   const [defaultFrameWidth, defaultFrameHeight] = useMemo(() => {
     return [

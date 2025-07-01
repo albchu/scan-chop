@@ -27,6 +27,5 @@ export const APP_CONSTANTS = {
  */
 export const MIN_FRAME_SIZE = 20;
 export const DEFAULT_FRAME_SIZE_RATIO = 0.1; // 10% of page dimensions
-export const MAX_HISTORY_SIZE = 16;
 export const TRANSLATION_STEP = 10; // pixels for arrow key movement
 export const ROTATION_INCREMENT = 0.5; // degrees for rotation buttons 

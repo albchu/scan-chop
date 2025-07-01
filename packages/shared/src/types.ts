@@ -22,17 +22,8 @@ export interface PageData {
   imageData: string;  // base64 image data, rendered at 1:1 scale
 }
 
-export type ToolMode = 'select' | 'add';
-
-// History tracking
-export interface HistoryEntry {
-  snapshot: UIContextSnapshot;
-  label: string;  // e.g., "Move Frame 1", "Rotate Frame 3", "Resize Frame 2"
-}
-
 // UI Context types
 export interface UIContextSnapshot {
-  mode: ToolMode;
   page: PageData;
   frames: Record<string, FrameData>;
   selectedFrameIds: string[]; // Multi-selection for batch operations
@@ -40,15 +31,9 @@ export interface UIContextSnapshot {
 }
 
 export interface UIContextState extends UIContextSnapshot {
-  history: {
-    undoStack: HistoryEntry[];
-    redoStack: HistoryEntry[];
-  };
 }
 
 export interface UIContextActions {
-  setMode: (mode: ToolMode) => void;
-
   addFrame(frame: Omit<FrameData, "id" | "label" | "orientation">): void;
   addMagicFrame(frame: Omit<FrameData, "id" | "label" | "orientation">): void;
 
@@ -66,9 +51,6 @@ export interface UIContextActions {
   setOrientation(id: string, orientation: 90 | 180 | -90): void;
 
   saveFrames(ids: string[]): void; // Logs frame IDs for now
-
-  undo(): void;
-  redo(): void;
 }
 
 // Legacy types (kept for backward compatibility)
