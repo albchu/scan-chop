@@ -68,4 +68,49 @@
 
 .slider::-moz-range-thumb:hover {
   background: #2563eb;
+}
+
+/* Vertical slider styles */
+.slider-vertical {
+  appearance: none;
+  background: #4b5563; /* gray-600 */
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.slider-vertical::-webkit-slider-thumb {
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid white;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider-vertical::-webkit-slider-thumb:hover {
+  background: #2563eb;
+}
+
+.slider-vertical::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid white;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: none;
+}
+
+.slider-vertical::-moz-range-thumb:hover {
+  background: #2563eb;
+}
+
+.slider-vertical::-moz-range-track {
+  background: #4b5563;
+  height: 4px;
+  border-radius: 4px;
 } 

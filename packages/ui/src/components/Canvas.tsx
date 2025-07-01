@@ -10,6 +10,7 @@ export const Canvas: React.FC = () => {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isCommandPressed, setIsCommandPressed] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const [defaultFrameWidth, defaultFrameHeight] = useMemo(() => {
@@ -23,12 +24,40 @@ export const Canvas: React.FC = () => {
     setPanOffset({ x: 0, y: 0 });
   }, []);
 
+  // Track Command key state
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey) { // metaKey for Mac Command, ctrlKey for Windows Ctrl
+        setIsCommandPressed(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (!e.metaKey && !e.ctrlKey) {
+        setIsCommandPressed(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Only start dragging if we're not clicking on the page itself (for adding frames)
     const target = e.target as HTMLElement;
     const isOnPage = target.closest('[data-page="true"]');
     
-    if (!isOnPage) {
+    // Start dragging if:
+    // 1. Not clicking on the page itself (for adding frames), OR
+    // 2. Command key is pressed, OR  
+    // 3. Right mouse button is pressed
+    const shouldStartPan = !isOnPage || isCommandPressed || e.button === 2;
+    
+    if (shouldStartPan) {
       setIsDragging(true);
       setDragStart({
         x: e.clientX - panOffset.x,
@@ -36,7 +65,12 @@ export const Canvas: React.FC = () => {
       });
       e.preventDefault();
     }
-  }, [panOffset]);
+  }, [panOffset, isCommandPressed]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // Prevent context menu when right-clicking for pan
+    e.preventDefault();
+  }, []);
 
   console.log('isDragging', {isDragging, zoom});
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -65,8 +99,8 @@ export const Canvas: React.FC = () => {
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Don't add frames if we were dragging
-    if (isDragging) return;
+    // Don't add frames if we were dragging or if Command key is pressed
+    if (isDragging || isCommandPressed) return;
 
     // Check if we clicked on a frame
     const target = e.target as HTMLElement;
@@ -105,15 +139,21 @@ export const Canvas: React.FC = () => {
     }
   };
 
+  // Determine cursor based on state
+  const getCursor = () => {
+    if (isDragging) return 'cursor-grabbing select-none';
+    if (isCommandPressed) return 'cursor-grab';
+    return 'cursor-grab';
+  };
+
   return (
     <div className="h-full bg-gray-700 flex flex-col relative">
       {/* Main canvas area with zoom and pan */}
       <div
         ref={canvasRef}
-        className={`flex-1 flex items-center justify-center overflow-hidden cursor-grab ${
-          isDragging ? 'cursor-grabbing select-none' : ''
-        }`}
+        className={`flex-1 flex items-center justify-center overflow-hidden ${getCursor()}`}
         onMouseDown={handleMouseDown}
+        onContextMenu={handleContextMenu}
         onClick={handleCanvasClick}
       >
         <div
@@ -127,9 +167,8 @@ export const Canvas: React.FC = () => {
         </div>
       </div>
 
-      {/* Zoom slider positioned at bottom */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800/90 backdrop-blur-sm rounded-lg p-3 border border-gray-600 group hover:opacity-100 opacity-25 transition-opacity duration-300"
-           style={{ width: '80%' }}>
+      {/* Zoom slider positioned at bottom right */}
+      <div className="absolute bottom-4 right-4 bg-gray-800/90 backdrop-blur-sm rounded-lg p-3 border border-gray-600 group hover:opacity-100 opacity-35 transition-opacity duration-300">
         <ZoomSlider
           zoom={zoom}
           onZoomChange={setZoom}
