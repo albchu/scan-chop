@@ -2,7 +2,8 @@ import React, { useCallback, useRef, useState, useMemo } from 'react';
 import Moveable, { OnDrag, OnResize, OnRotate, OnDragStart, OnDragEnd } from 'react-moveable';
 import { IconArrowUp } from '@tabler/icons-react';
 import { FrameData } from '@workspace/shared';
-import { useZoomContext } from '../context/ZoomContext';
+import { useZoomContext } from '../../context/ZoomContext';
+import styles from './Frame.module.css';
 
 interface FrameProps {
   frame: FrameData;
@@ -161,7 +162,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
         // Styling
         origin={true}
         edge={true}
-        className="moveable-frame"
+        className={styles.moveableFrame}
       />
     </>
   );

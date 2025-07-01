@@ -1,0 +1,47 @@
+/* Moveable frame styles */
+
+/* 
+ * We use :global() because Moveable creates its own DOM elements with predefined class names
+ * (.moveable-control, .moveable-line, etc). CSS Modules would normally transform these class names,
+ * preventing our styles from matching. The :global() pseudo-class preserves the original class names
+ * so we can target Moveable's elements while keeping .moveableFrame scoped.
+ */
+
+.moveableFrame :global(.moveable-control) {
+  width: 12px !important;
+  height: 12px !important;
+  margin-top: -6px !important;
+  margin-left: -6px !important;
+  background-color: #3b82f6 !important; /* Tailwind blue-500 */
+  border: 2px solid white !important;
+  border-radius: 50% !important;
+}
+
+.moveableFrame :global(.moveable-line) {
+  background: #3b82f6 !important; /* Tailwind blue-500 */
+  height: 1px !important;
+}
+
+.moveableFrame :global(.moveable-rotation-line) {
+  height: 30px !important;
+  background: #3b82f6 !important;
+}
+
+.moveableFrame :global(.moveable-rotation-control) {
+  width: 16px !important;
+  height: 16px !important;
+  margin-top: -8px !important;
+  margin-left: -8px !important;
+  background-color: #3b82f6 !important;
+  border: 2px solid white !important;
+  border-radius: 50% !important;
+}
+
+/* Hide specific handles if needed */
+.moveableFrame :global(.moveable-n),
+.moveableFrame :global(.moveable-s),
+.moveableFrame :global(.moveable-e),
+.moveableFrame :global(.moveable-w) {
+  /* Uncomment to hide edge handles and only show corner handles */
+  /* display: none !important; */
+} 

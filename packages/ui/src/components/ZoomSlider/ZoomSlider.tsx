@@ -1,5 +1,6 @@
 import React from 'react';
 import { IconMinus, IconPlus, IconRefresh } from '@tabler/icons-react';
+import styles from './ZoomSlider.module.css';
 
 interface ZoomSliderProps {
   zoom: number;
@@ -79,7 +80,7 @@ export const ZoomSlider: React.FC<ZoomSliderProps> = ({
           step="5"
           value={sliderValue}
           onChange={handleSliderChange}
-          className="slider-vertical"
+          className={styles.sliderVertical}
           style={{
             width: '120px',
             height: '20px',

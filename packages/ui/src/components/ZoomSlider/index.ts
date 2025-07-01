@@ -1,0 +1,1 @@
+export { ZoomSlider } from './ZoomSlider'; 

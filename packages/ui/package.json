@@ -6,9 +6,10 @@
   "types": "dist/index.d.ts",
   "style": "dist/styles/index.css",
   "scripts": {
-    "build": "pnpm build:js && pnpm build:css",
+    "build": "pnpm build:js && pnpm build:css && pnpm build:modules",
     "build:js": "tsc",
     "build:css": "pnpm dlx @tailwindcss/cli -i ./src/styles/index.css -o ./dist/styles/index.css",
+    "build:modules": "find src -name '*.module.css' -exec sh -c 'mkdir -p dist/$(dirname {} | cut -d/ -f2-) && cp {} dist/$(dirname {} | cut -d/ -f2-)/' \\;",
     "dev:css": "pnpm dlx @tailwindcss/cli -i ./src/styles/index.css -o ./dist/styles/index.css --watch",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
