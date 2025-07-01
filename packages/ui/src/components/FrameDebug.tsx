@@ -23,6 +23,13 @@ export const FrameDebug: React.FC<FrameDebugProps> = ({ frame, updateFrame }) =>
     rotation: initialRotation,
   } = frame;
 
+  // TODO: Figure out parity with features I want from frame.
+  // I dont think we need the ref registry anymore.
+  // I want the ability to delete frames from inside the frame. This will allow me to get rid of select vs add modes.
+  // I think I can remove the history stack stuff.
+  // Control panel can be mostly removed as I move to finalize that design. Is just metadata I need to show on a list.
+  // The list can have different view types.
+
   const targetRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState(
     `translate(${initialX}px, ${initialY}px) rotate(${initialRotation}deg)`
@@ -58,7 +65,7 @@ export const FrameDebug: React.FC<FrameDebugProps> = ({ frame, updateFrame }) =>
   const handleRotate = useCallback(({target, transform, rotation}: OnRotate) => {
     if (target && transform) {
       target.style.transform = transform;
-      console.log('Rotate debug', {transform, rotation});
+
       setTransform(transform);
       if (rotation !== undefined) {
         setRotation(rotation);

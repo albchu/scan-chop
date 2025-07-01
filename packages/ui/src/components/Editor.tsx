@@ -1,7 +1,6 @@
 import React from 'react';
 import { UIContextProvider } from '../context/UIContext';
 import { FrameRefRegistryProvider } from '../context/FrameRefRegistryContext';
-import { Sidebar } from './Sidebar';
 import { Canvas } from './Canvas';
 import { FramesPreview } from './FramesPreview/FramesPreview';
 
@@ -10,9 +9,6 @@ export const Editor: React.FC = () => {
     <UIContextProvider>
       <FrameRefRegistryProvider>
         <div className="flex h-screen bg-gray-900 text-white">
-          {/* Left Sidebar */}
-          <Sidebar />
-          
           {/* Main Canvas Area */}
           <div className="flex-1 overflow-hidden">
             <Canvas />

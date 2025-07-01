@@ -14,19 +14,19 @@ export const Canvas: React.FC = () => {
   }, [page]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // TODO: Might be good if all clicks on the page will directly put us into add frame mode and add a frame.
     // Check if we clicked on a frame
     const target = e.target as HTMLElement;
     const frameElement = target.closest('[data-frame-id]');
 
     if (frameElement) {
       const frameId = frameElement.getAttribute('data-frame-id');
-      if (mode === 'select' && frameId) {
+      if(frameId){
         selectFrame(frameId);
       }
-    } else if (target.closest('[data-page="true"]')) {
+    } 
+    // Clicked on the page
+    else if (target.closest('[data-page="true"]')) {
       // Clicked on page background
-      if (mode === 'add') {
         const pageElement = target.closest('[data-page="true"]') as HTMLElement;
         const rect = pageElement.getBoundingClientRect();
         
@@ -45,18 +45,12 @@ export const Canvas: React.FC = () => {
           height: defaultFrameHeight,
           rotation: 0,
         });
-      } else if (mode === 'select') {
-        clearSelection();
-      }
     }
   };
 
   return (
     <div
-      className={`
-        h-full bg-gray-700 flex items-center justify-center overflow-auto
-        ${mode === 'add' ? 'cursor-crosshair' : 'cursor-default'}
-      `}
+      className="h-full bg-gray-700 flex items-center justify-center overflow-auto cursor-crosshair"
       onClick={handleCanvasClick}
     >
       <Page />
