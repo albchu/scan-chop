@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useMemo } from 'react';
 import Moveable, { OnDrag, OnResize, OnRotate, OnDragStart, OnDragEnd } from 'react-moveable';
 import { IconArrowUp } from '@tabler/icons-react';
 import { FrameData } from '@workspace/shared';
@@ -27,9 +27,21 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
     orientation,
   } = frame;
 
-  // Get zoom context and log scale values
+  // Get zoom context and calculate moveable zoom
   const { zoom, baseScale, totalScale } = useZoomContext();
-  console.log('Frame scale values:', { zoom, baseScale, totalScale });
+  
+  // Calculate the zoom value for Moveable
+  // When totalScale is small (zoomed out), we want larger handles (higher zoom)
+  // When totalScale is large (zoomed in), we want smaller handles (lower zoom)
+  // This creates an inverse relationship to maintain consistent visual size
+  const moveableZoom = useMemo(() => {
+    // Inverse of totalScale, but clamped to reasonable bounds
+    const inverseZoom = 1 / totalScale;
+    // Clamp range to prevent handles from being too small or too large
+    return Math.max(0.5, Math.min(16, inverseZoom));
+  }, [totalScale]);
+  
+  console.log('Frame scale values:', { zoom, baseScale, totalScale, moveableZoom });
 
   // TODO: Figure out parity with features I want from frame.
   // Control panel can be mostly removed as I move to finalize that design. Is just metadata I need to show on a list.
@@ -60,7 +72,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
       setTransform(transform);
       updateFrame(id, { x, y, width, height });
     }
-  }, []);
+  }, [id, updateFrame]);
 
   const handleDragEnd = useCallback(({target}: OnDragEnd) => {
     if (target) {
@@ -80,7 +92,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
       setTransform(drag.transform);
       updateFrame(id, { x, y, width, height });
     }
-  }, []);
+  }, [id, updateFrame]);
 
   const handleRotate = useCallback(({target, transform, rotation}: OnRotate) => {
     if (target && transform) {
@@ -92,7 +104,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
         updateFrame(id, { rotation });
       }
     }
-  }, []);
+  }, [id, updateFrame]);
 
   return (
     <>
@@ -129,6 +141,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
       </div>
 
       <Moveable
+        zoom={moveableZoom}
         target={targetRef}
         container={null}
         // Enable basic abilities
