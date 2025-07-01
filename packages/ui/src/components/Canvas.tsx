@@ -1,18 +1,28 @@
 import React, { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import { useUIContext } from '../context/UIContext';
+import { ZoomContextProvider, useZoomContext } from '../context/ZoomContext';
 import { Page } from './Page';
 import { ZoomSlider } from './ZoomSlider';
 import { DEFAULT_FRAME_SIZE_RATIO } from '@workspace/shared';
 
-export const Canvas: React.FC = () => {
+// Inner Canvas component that uses the zoom context
+const CanvasInner: React.FC = () => {
   const { page, addFrame, selectFrame, clearSelection } = useUIContext();
-  const [zoom, setZoom] = useState(100);
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const { 
+    zoom, 
+    baseScale, 
+    totalScale, 
+    panOffset, 
+    setZoom, 
+    setPanOffset, 
+    setCanvasSize, 
+    resetView 
+  } = useZoomContext();
+  
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isCommandPressed, setIsCommandPressed] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   const [defaultFrameWidth, defaultFrameHeight] = useMemo(() => {
     return [
@@ -20,21 +30,6 @@ export const Canvas: React.FC = () => {
       page.height * DEFAULT_FRAME_SIZE_RATIO,
     ];
   }, [page]);
-
-  // Calculate the base scale to fit the page in the viewport
-  const baseScale = useMemo(() => {
-    if (!canvasSize.width || !canvasSize.height || !page.width || !page.height) {
-      return 1;
-    }
-
-    // Calculate scale factors for both dimensions
-    const padding = 100; // Padding around the page in pixels
-    const scaleX = (canvasSize.width - padding) / page.width;
-    const scaleY = (canvasSize.height - padding) / page.height;
-    
-    // Use the smaller scale to ensure the entire page fits
-    return Math.min(scaleX, scaleY, 1); // Cap at 1 to avoid upscaling small images
-  }, [canvasSize, page.width, page.height]);
 
   // Update canvas size on mount and resize
   useEffect(() => {
@@ -48,12 +43,11 @@ export const Canvas: React.FC = () => {
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
     return () => window.removeEventListener('resize', updateCanvasSize);
-  }, []);
+  }, [setCanvasSize]);
 
   const handleReset = useCallback(() => {
-    setPanOffset({ x: 0, y: 0 });
-    setZoom(100); // Reset to fit-to-viewport zoom
-  }, []);
+    resetView();
+  }, [resetView]);
 
   // Track Command key state
   React.useEffect(() => {
@@ -111,7 +105,7 @@ export const Canvas: React.FC = () => {
         y: e.clientY - dragStart.y,
       });
     }
-  }, [isDragging, dragStart]);
+  }, [isDragging, dragStart, setPanOffset]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -189,7 +183,7 @@ export const Canvas: React.FC = () => {
       >
         <div
           style={{
-            transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${baseScale * (zoom / 100)})`,
+            transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${totalScale})`,
             transformOrigin: 'center center',
             transition: isDragging ? 'none' : 'transform 0.1s ease-out',
           }}
@@ -211,11 +205,19 @@ export const Canvas: React.FC = () => {
       {process.env.NODE_ENV === 'development' && (
         <div className="absolute top-4 left-4 bg-gray-800/90 backdrop-blur-sm rounded p-2 text-xs text-gray-300">
           <div>Page: {page.width} x {page.height}</div>
-          <div>Canvas: {canvasSize.width.toFixed(0)} x {canvasSize.height.toFixed(0)}</div>
           <div>Base Scale: {(baseScale * 100).toFixed(1)}%</div>
-          <div>Total Scale: {(baseScale * zoom).toFixed(1)}%</div>
+          <div>Total Scale: {(totalScale * 100).toFixed(1)}%</div>
         </div>
       )}
     </div>
+  );
+};
+
+// Main Canvas component that provides the zoom context
+export const Canvas: React.FC = () => {
+  return (
+    <ZoomContextProvider>
+      <CanvasInner />
+    </ZoomContextProvider>
   );
 };

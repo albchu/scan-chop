@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import Moveable, { OnDrag, OnResize, OnRotate, OnDragStart, OnDragEnd } from 'react-moveable';
 import { IconArrowUp } from '@tabler/icons-react';
 import { FrameData } from '@workspace/shared';
+import { useZoomContext } from '../context/ZoomContext';
 
 interface FrameProps {
   frame: FrameData;
@@ -25,6 +26,10 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
     rotation: initialRotation,
     orientation,
   } = frame;
+
+  // Get zoom context and log scale values
+  const { zoom, baseScale, totalScale } = useZoomContext();
+  console.log('Frame scale values:', { zoom, baseScale, totalScale });
 
   // TODO: Figure out parity with features I want from frame.
   // Control panel can be mostly removed as I move to finalize that design. Is just metadata I need to show on a list.
