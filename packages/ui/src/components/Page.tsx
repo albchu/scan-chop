@@ -8,7 +8,7 @@ export const Page: React.FC = () => {
   return (
     <div
       data-page="true"
-      className="relative bg-gray-100 overflow-hidden shadow-2xl border-2 border-gray-300"
+      className="relative bg-gray-100 overflow-hidden shadow-2xl border-2 border-gray-300 cursor-crosshair"
       style={{
         width: `${page.width}px`,
         height: `${page.height}px`,

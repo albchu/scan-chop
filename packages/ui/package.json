@@ -17,6 +17,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@tabler/icons-react": "^3.34.0",
     "@workspace/shared": "workspace:*",
     "immer": "^10.0.3",
     "react": "^18.2.0",

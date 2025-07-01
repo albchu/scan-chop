@@ -17,6 +17,7 @@ export { Editor } from './components/Editor';
 export { Canvas } from './components/Canvas';
 export { Page } from './components/Page';
 export { Frame } from './components/Frame';
+export { ZoomSlider } from './components/ZoomSlider';
 
 // Preview components
 export { FramesPreview } from './components/FramesPreview/FramesPreview';
@@ -32,6 +33,7 @@ export { UIContextProvider, useUIContext } from './context/UIContext';
 export { useBackend } from './hooks/useBackend';
 export { useFrameTransform } from './hooks/useFrameTransform';
 export { useReactiveSelector } from './hooks/useReactiveSelector';
+export { useResizablePanels } from './hooks/useResizablePanels';
 
 // Utils
 export { rotateVector } from './utils/geometry';
