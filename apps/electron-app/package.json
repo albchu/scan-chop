@@ -4,7 +4,7 @@
   "private": true,
   "main": "dist/main.js",
   "scripts": {
-    "dev": "concurrently --kill-others \"npm run build:watch\" \"wait-on dist/main.js && electron .\"",
+    "dev": "concurrently --kill-others \"npm run build:watch\" \"wait-on dist/main.js dist/renderer/renderer.html && electron .\"",
     "build": "tsc && vite build",
     "build:prod": "tsc && vite build --mode production",
     "build:watch": "concurrently \"tsc --watch\" \"vite build --watch\"",
