@@ -1,5 +1,11 @@
 import React, { useCallback, useRef, useState, useMemo } from 'react';
-import Moveable, { OnDrag, OnResize, OnRotate, OnDragStart, OnDragEnd } from 'react-moveable';
+import Moveable, {
+  OnDrag,
+  OnResize,
+  OnRotate,
+  OnDragStart,
+  OnDragEnd,
+} from 'react-moveable';
 import { FrameData } from '@workspace/shared';
 import { useZoomContext } from '../../context/ZoomContext';
 import { FrameInfo } from './FrameInfo';
@@ -35,7 +41,10 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
 
   // Get zoom context and calculate moveable zoom
   const { totalScale } = useZoomContext();
-  const moveableZoom = useMemo(() => calculateMoveableZoom(totalScale), [totalScale]);
+  const moveableZoom = useMemo(
+    () => calculateMoveableZoom(totalScale),
+    [totalScale]
+  );
 
   // TODO: Figure out parity with features I want from frame.
   // Control panel can be mostly removed as I move to finalize that design. Is just metadata I need to show on a list.
@@ -110,7 +119,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
     <>
       <div
         ref={targetRef}
-        className="absolute bg-blue-200 border-2 border-blue-400 rounded-lg shadow-lg cursor-grab"
+        className="absolute rounded-lg cursor-grab"
         style={{
           width: `${size.width}px`,
           height: `${size.height}px`,
@@ -123,8 +132,8 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
           label={label}
           width={size.width}
           height={size.height}
-          rotation={rotation}
           orientation={orientation}
+          moveableZoom={moveableZoom}
         />
       </div>
 

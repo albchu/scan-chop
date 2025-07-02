@@ -38,7 +38,7 @@ export const removeGrabbingCursor = (target: HTMLElement): void => {
  * Formats size display string
  */
 export const formatSizeDisplay = (width: number, height: number): string => {
-  return `${width} × ${height}`;
+  return `${Math.round(width)} × ${Math.round(height)}`;
 };
 
 /**

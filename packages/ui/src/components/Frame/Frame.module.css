@@ -38,10 +38,11 @@
 }
 
 /* Hide specific handles if needed */
-.moveableFrame :global(.moveable-n),
+/* .moveableFrame :global(.moveable-n),
 .moveableFrame :global(.moveable-s),
 .moveableFrame :global(.moveable-e),
-.moveableFrame :global(.moveable-w) {
+.moveableFrame :global(.moveable-w)  */
+.moveableFrame :global(.moveable-origin) {
   /* Uncomment to hide edge handles and only show corner handles */
-  /* display: none !important; */
-} 
+  display: none !important;
+}

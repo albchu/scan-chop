@@ -6,36 +6,66 @@ interface FrameInfoProps {
   label: string;
   width: number;
   height: number;
-  rotation: number;
   orientation: number;
+  moveableZoom: number;
 }
 
 export const FrameInfo: React.FC<FrameInfoProps> = ({
   label,
   width,
   height,
-  rotation,
   orientation,
+  moveableZoom,
 }) => {
+  // Keep the info container always in the bottom left corner of the frame
+  const getPositioningStyles = (orientation: number, moveableZoom: number) => {
+    switch (orientation) {
+      case 0:
+        return {
+          transform: `scale(${moveableZoom}) rotate(${orientation}deg)`,
+          transformOrigin: 'bottom left',
+          bottom: 0,
+          left: 0,
+        };
+      case 90:
+        return {
+          transform: `scale(${moveableZoom}) rotate(${orientation}deg) translateY(-100%)`,
+          transformOrigin: 'top left',
+        };
+
+      case 180:
+        return {
+          transform: `scale(${moveableZoom}) rotate(${orientation}deg) translate(100%, -100%)`,
+          transformOrigin: 'top right',
+          right: 0,
+          top: 0,
+        };
+      case 270:
+        return {
+          transform: `scale(${moveableZoom}) rotate(${orientation}deg) translateX(100%)`,
+          transformOrigin: 'bottom right',
+          right: 0,
+          bottom: 0,
+        };
+    }
+
+    return {};
+  };
+
   return (
-    <div className="p-4 h-full flex flex-col justify-center items-center relative">
-      {/* Orientation Arrow */}
-      <div 
-        className="absolute top-2 right-2"
-        style={{
-          transform: `rotate(${orientation}deg)`,
-          transformOrigin: 'center',
-        }}
+    // The positioning needs a stable backing to orient to.
+    <div className="h-full w-full relative">
+      {/* The internal positioned info container */}
+      <div
+        className="absolute flex-col items-center items-baseline gap-2 bg-white p-2"
+        style={getPositioningStyles(orientation, moveableZoom)}
       >
-        <IconArrowUp size={16} className="text-blue-600" />
+        <div className="text-sm font-semibold text-blue-800">{label}</div>
+
+        <div className="text-xs text-blue-600">
+          {formatSizeDisplay(width, height)}
+        </div>
       </div>
-      
-      <div className="text-sm font-semibold text-blue-800">{label}</div>
-      <div className="text-xs text-blue-600 mt-1">
-        {formatSizeDisplay(width, height)}
-      </div>
-      <div className="text-xs text-blue-600">{formatRotationDisplay(rotation)}</div>
-      <div className="text-2xl mt-2">📦</div>
     </div>
   );
-}; 
+};
