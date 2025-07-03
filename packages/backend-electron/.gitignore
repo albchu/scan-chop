@@ -1,0 +1,10 @@
+# Debug files
+debug-output/
+test-input.png
+*.png
+
+# Build output
+dist/
+
+# Dependencies
+node_modules/ 
