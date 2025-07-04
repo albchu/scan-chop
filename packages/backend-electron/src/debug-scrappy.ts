@@ -32,9 +32,9 @@ type FloodFillConfig = {
 /** Configuration for image processing */
 type ProcessingConfig = {
   downsampleFactor?: number;
-  brightnessThreshold?: number;
-  brightSeedThreshold?: number;
+  whiteThreshold?: number;  // Minimum brightness to consider as white boundary (0-255)
   minArea?: number;
+  maxPixels?: number;  // Maximum pixels allowed in flood fill region
   padding?: number;
   minRotation?: number;  // Minimum rotation angle to apply (in degrees)
   enableAngleRefine?: boolean;  // Enable angle refinement search
@@ -70,6 +70,26 @@ const calculateBrightness = (color: RGB): number =>
 const createBrightnessPredicate = (threshold: number): ColorPredicate => 
   (target, reference) => 
     Math.abs(calculateBrightness(target) - calculateBrightness(reference)) < threshold;
+
+/**
+ * Create a white-boundary color predicate
+ * Stops propagation only when reaching white or near-white pixels
+ * @param whiteThreshold - Minimum brightness to consider as white (0-255)
+ * @returns Predicate function that returns false for white pixels
+ */
+const createWhiteBoundaryPredicate = (whiteThreshold: number = 250): ColorPredicate => {
+  let boundaryHits = 0;
+  return (target, reference) => {
+    const targetBrightness = calculateBrightness(target);
+    // Log when we hit potential boundaries
+    if (targetBrightness >= whiteThreshold && boundaryHits < 5) {
+      console.log(`🚧 Hit boundary pixel: RGB(${target.join(', ')}), brightness=${targetBrightness.toFixed(1)}`);
+      boundaryHits++;
+    }
+    // Continue flood fill unless we hit a white/near-white pixel
+    return targetBrightness < whiteThreshold;
+  };
+};
 
 // ============================================================================
 // Geometric Utilities
@@ -738,9 +758,9 @@ const processSeedPoint = async (
 ): Promise<void> => {
   const {
     downsampleFactor = 0.5,
-    brightnessThreshold = 50,
-    brightSeedThreshold = 30,
+    whiteThreshold = 230,  // Lowered to detect off-white/light gray boundaries
     minArea = 100,
+    maxPixels = 2000000,  // Increased default to 2 million pixels
     padding = 0,
     minRotation = 0.2  // Default to 0.2° to suppress float noise
   } = config;
@@ -753,17 +773,11 @@ const processSeedPoint = async (
     y: Math.round(seed.y * downsampleFactor)
   };
 
-  // Determine flood fill strategy based on seed brightness
-  const seedPixel = scaled.getPixelXY(scaledSeed.x, scaledSeed.y).slice(0, 3) as unknown as RGB;
-  const seedBrightness = calculateBrightness(seedPixel);
-  const isBrightSeed = seedBrightness > 180;
-  
-  // Configure flood fill based on seed characteristics
-  const threshold = isBrightSeed ? brightSeedThreshold : brightnessThreshold;
-  const predicate = createBrightnessPredicate(threshold);
+  // Use white boundary predicate since images are separated by white background
+  const predicate = createWhiteBoundaryPredicate(whiteThreshold); // Stop at pixels with brightness >= whiteThreshold
   const floodFillConfig: FloodFillConfig = {
     step: 1,
-    maxPixels: 500000
+    maxPixels: maxPixels
   };
   
   // Perform flood fill (returns points in original coordinates)
@@ -914,7 +928,10 @@ const main = async (): Promise<void> => {
       await fs.mkdir(imageOutputDir, { recursive: true });
       console.log(`📁 Output directory: ${imageOutputDir}`);
       
-      await processImage(input.imagePath, input.seedCoordinates, imageOutputDir, input.basename, {});
+      await processImage(input.imagePath, input.seedCoordinates, imageOutputDir, input.basename, {
+        maxPixels: 5000000,  // Allow up to 5 million pixels for large sub-images
+        whiteThreshold: 220  // Lower threshold for off-white/gray backgrounds
+      });
     }
     
     console.log('\n✅ All processing complete!');
