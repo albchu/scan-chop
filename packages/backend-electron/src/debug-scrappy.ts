@@ -140,16 +140,29 @@ const normalizeRotation = (
   let finalWidth = width;
   let finalHeight = height;
   
+  console.log(`🔄 normalizeRotation: input rotation=${rotation.toFixed(2)}°, normalized=${normalizedRotation.toFixed(2)}°`);
+  console.log(`📐 normalizeRotation: input dimensions=${width.toFixed(1)}×${height.toFixed(1)}`);
+  
+  // Handle angles near ±180° by converting to near 0°
+  if (normalizedRotation > 135 || normalizedRotation < -135) {
+    console.log(`🔄 normalizeRotation: angle near ±180°, flipping by 180°`);
+    normalizedRotation = normalizeAngle(normalizedRotation + 180);
+  }
+  
   // Convert angles close to ±90° to smaller angles by swapping width/height
   // Note: Adding ±90° keeps the edge set identical but gives a smaller absolute angle
   // This ensures we always work with rotations in the -45° to 45° range
   if (normalizedRotation > 45) {
+    console.log(`🔄 normalizeRotation: angle > 45°, rotating by -90° and swapping dimensions`);
     normalizedRotation -= 90;
     [finalWidth, finalHeight] = [finalHeight, finalWidth];
   } else if (normalizedRotation < -45) {
+    console.log(`🔄 normalizeRotation: angle < -45°, rotating by +90° and swapping dimensions`);
     normalizedRotation += 90;
     [finalWidth, finalHeight] = [finalHeight, finalWidth];
   }
+  
+  console.log(`🔄 normalizeRotation: final rotation=${normalizedRotation.toFixed(2)}°, dimensions=${finalWidth.toFixed(1)}×${finalHeight.toFixed(1)}`);
   
   return {
     rotation: normalizedRotation,
@@ -333,6 +346,7 @@ const findMinimalBoundingRectangle = (
   
   let minimalArea = Infinity;
   let bestRectangle = { center: { x: 0, y: 0 }, width: 0, height: 0, angle: 0 };
+  let bestEdgeIndex = -1;
   
   // Test each edge of the convex hull
   for (let i = 0; i < hull.length; i++) {
@@ -355,6 +369,7 @@ const findMinimalBoundingRectangle = (
     
     if (area < minimalArea) {
       minimalArea = area;
+      bestEdgeIndex = i;
       const center = rotatePoint(
         { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
         edgeAngle
@@ -369,6 +384,7 @@ const findMinimalBoundingRectangle = (
   }
   
   console.log(`🔄 Minimal rectangle: ${bestRectangle.width.toFixed(1)}×${bestRectangle.height.toFixed(1)}, rotation=${bestRectangle.angle.toFixed(1)}°`);
+  console.log(`📐 Best edge: ${bestEdgeIndex}/${hull.length - 1}, from (${hull[bestEdgeIndex].x.toFixed(0)}, ${hull[bestEdgeIndex].y.toFixed(0)}) to (${hull[(bestEdgeIndex + 1) % hull.length].x.toFixed(0)}, ${hull[(bestEdgeIndex + 1) % hull.length].y.toFixed(0)})`);
   
   if (minimalArea < minArea) {
     throw new Error(`Region too small: ${minimalArea.toFixed(0)} < ${minArea}`);
@@ -380,6 +396,7 @@ const findMinimalBoundingRectangle = (
     const pcaAngle = computePCAOrientation(points);
     const pointsAsPoint2D = points.map(([x, y]) => ({ x, y }));
     workingAngle = chooseBestAngle(bestRectangle.angle, pcaAngle, pointsAsPoint2D, bestRectangle.center);
+    console.log(`📊 After PCA: workingAngle=${workingAngle.toFixed(2)}°`);
   }
   
   // Apply angle refinement if enabled
@@ -393,7 +410,10 @@ const findMinimalBoundingRectangle = (
       config.angleRefineWindow || 3,
       config.angleRefineIterations || 10
     );
+    console.log(`🎯 After refinement: finalAngle=${finalAngle.toFixed(2)}°`);
   }
+  
+  console.log(`🔄 Before normalization: angle=${finalAngle.toFixed(2)}°, dimensions=${bestRectangle.width.toFixed(1)}×${bestRectangle.height.toFixed(1)}`);
   
   // Normalize rotation to smallest absolute value
   const normalized = normalizeRotation(finalAngle, bestRectangle.width, bestRectangle.height);
@@ -725,7 +745,7 @@ const processSeedPoint = async (
     minRotation = 0.2  // Default to 0.2° to suppress float noise
   } = config;
   
-  console.log(`\n🎯 Processing seed ${index}: (${seed.x}, ${seed.y})`);
+  console.log(`\n🎯 Processing seed ${index} for ${basename}: (${seed.x}, ${seed.y})`);
   
   // Scale seed point to downsampled coordinates
   const scaledSeed: Point2D = {
@@ -808,8 +828,10 @@ const processSeedPoint = async (
   });
   
   const normalizedRotation = normalizeAngle(frame.rotation);
+  console.log(`🔄 Final rotation decision: frame.rotation=${frame.rotation.toFixed(2)}°, normalized=${normalizedRotation.toFixed(2)}°, minRotation=${minRotation}°`);
+  
   if (Math.abs(normalizedRotation) > minRotation) {
-    console.log(`🔄 Rotating by ${-normalizedRotation.toFixed(1)}°`);
+    console.log(`🔄 Rotating by ${-normalizedRotation.toFixed(1)}° (applying negative to correct orientation)`);
     finalImage = finalImage.rotate(-normalizedRotation);
   } else {
     console.log(`🔄 Skipping rotation: ${Math.abs(normalizedRotation).toFixed(1)}° < ${minRotation}° threshold`);
