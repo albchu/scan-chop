@@ -36,6 +36,11 @@ type ProcessingConfig = {
   brightSeedThreshold?: number;
   minArea?: number;
   padding?: number;
+  minRotation?: number;  // Minimum rotation angle to apply (in degrees)
+  enableAngleRefine?: boolean;  // Enable angle refinement search
+  angleRefineWindow?: number;  // Search window for angle refinement (in degrees)
+  angleRefineIterations?: number;  // Number of iterations for angle refinement
+  usePca?: boolean;  // Use PCA for orientation estimation
 };
 
 // ============================================================================
@@ -129,6 +134,8 @@ const normalizeRotation = (
   let finalHeight = height;
   
   // Convert angles close to ±90° to smaller angles by swapping width/height
+  // Note: Adding ±90° keeps the edge set identical but gives a smaller absolute angle
+  // This ensures we always work with rotations in the -45° to 45° range
   if (normalizedRotation > 45) {
     normalizedRotation -= 90;
     [finalWidth, finalHeight] = [finalHeight, finalWidth];
@@ -154,18 +161,26 @@ const normalizeRotation = (
  * @param seed - Starting point
  * @param predicate - Function to determine if pixel should be included
  * @param config - Algorithm configuration
- * @returns Array of points in the filled region
+ * @param downsampleFactor - Factor by which the image was downsampled (1.0 = no downsampling)
+ * @returns Array of points in the filled region (in original image coordinates)
  */
-const floodFill = async (
+const floodFill = (
   image: Image,
   seed: Point2D,
   predicate: ColorPredicate,
-  config: FloodFillConfig = {}
-): Promise<ReadonlyArray<[number, number]>> => {
+  config: FloodFillConfig = {},
+  downsampleFactor: number = 1.0
+): ReadonlyArray<[number, number]> => {
   const { 
     step = 1, 
     maxPixels = 500000
   } = config;
+  
+  // Enforce step = 1 to avoid visited array indexing issues
+  if (step !== 1) {
+    console.warn('⚠️ Step > 1 is not supported with current visited array implementation. Using step = 1.');
+  }
+  const actualStep = 1;
   
   const { width, height } = image;
 
@@ -188,13 +203,19 @@ const floodFill = async (
 
   // Use 8 directions for better connectivity
   const directions = [
-    [-step, 0], [step, 0], [0, -step], [0, step],
-    [-step, -step], [step, -step], [-step, step], [step, step]
+    [-actualStep, 0], [actualStep, 0], [0, -actualStep], [0, actualStep],
+    [-actualStep, -actualStep], [actualStep, -actualStep], [-actualStep, actualStep], [actualStep, actualStep]
   ];
 
   let pixelsChecked = 0;
 
-  while (queue.length > 0 && region.length < maxPixels) {
+  while (queue.length > 0) {
+    // Check if we've exceeded the maximum pixels limit
+    if (region.length >= maxPixels) {
+      console.warn(`⚠️ Flood fill terminated: reached maximum pixel limit (${maxPixels}). Region may be incomplete.`);
+      throw new Error(`Region too large: exceeded ${maxPixels} pixels. Consider increasing maxPixels or using a more restrictive color predicate.`);
+    }
+    
     const { x, y } = queue.shift()!;
     const idx = y * width + x;
     
@@ -205,7 +226,8 @@ const floodFill = async (
     const currentColor = image.getPixelXY(x, y).slice(0, 3) as unknown as RGB;
     if (!predicate(currentColor, seedColor)) continue;
     
-    region.push([x, y]);
+    // Store points in original image coordinates
+    region.push([x / downsampleFactor, y / downsampleFactor]);
 
     for (const [dx, dy] of directions) {
       const nx = x + dx;
@@ -224,8 +246,6 @@ const floodFill = async (
 
   return region;
 };
-
-
 
 // ============================================================================
 // Convex Hull (Andrew's Monotone Chain Algorithm)
@@ -249,6 +269,8 @@ const computeConvexHull = (points: ReadonlyArray<[number, number]>): Point2D[] =
   const buildHull = (points: Point2D[]): Point2D[] => {
     const hull: Point2D[] = [];
     for (const p of points) {
+      // Note: We use cross <= 0 to remove collinear points, keeping only the extreme vertices
+      // This creates a strictly convex hull, which is fine for minimum-area rectangle calculation
       while (hull.length >= 2 && cross(hull[hull.length - 2], hull[hull.length - 1], p) <= 0) {
         hull.pop();
       }
@@ -272,11 +294,13 @@ const computeConvexHull = (points: ReadonlyArray<[number, number]>): Point2D[] =
  * Find the minimum area bounding rectangle using rotating calipers
  * @param points - Array of points to bound
  * @param minArea - Minimum acceptable area
+ * @param config - Processing configuration for advanced options
  * @returns Bounding frame with position, size, and rotation
  */
 const findMinimalBoundingRectangle = (
   points: ReadonlyArray<[number, number]>,
-  minArea = 100
+  minArea = 100,
+  config: ProcessingConfig = {}
 ): BoundingFrame => {
   if (points.length < 3) {
     throw new Error('Not enough points to compute bounding rectangle');
@@ -343,8 +367,29 @@ const findMinimalBoundingRectangle = (
     throw new Error(`Region too small: ${minimalArea.toFixed(0)} < ${minArea}`);
   }
   
+  // Apply PCA if enabled
+  let workingAngle = bestRectangle.angle;
+  if (config.usePca) {
+    const pcaAngle = computePCAOrientation(points);
+    const pointsAsPoint2D = points.map(([x, y]) => ({ x, y }));
+    workingAngle = chooseBestAngle(bestRectangle.angle, pcaAngle, pointsAsPoint2D, bestRectangle.center);
+  }
+  
+  // Apply angle refinement if enabled
+  let finalAngle = workingAngle;
+  if (config.enableAngleRefine) {
+    const pointsAsPoint2D = points.map(([x, y]) => ({ x, y }));
+    finalAngle = refineAngle(
+      pointsAsPoint2D,
+      bestRectangle.center,
+      workingAngle,
+      config.angleRefineWindow || 3,
+      config.angleRefineIterations || 10
+    );
+  }
+  
   // Normalize rotation to smallest absolute value
-  const normalized = normalizeRotation(bestRectangle.angle, bestRectangle.width, bestRectangle.height);
+  const normalized = normalizeRotation(finalAngle, bestRectangle.width, bestRectangle.height);
   
   // Convert from center-based to corner-based representation
   const angleRad = degreesToRadians(normalized.rotation);
@@ -360,6 +405,175 @@ const findMinimalBoundingRectangle = (
     height: normalized.height,
     rotation: normalized.rotation
   };
+};
+
+// ============================================================================
+// Angle Refinement Algorithm
+// ============================================================================
+
+/**
+ * Refine the rotation angle to minimize the projected bounding box height
+ * @param points - Points to analyze
+ * @param center - Center point of rotation
+ * @param initialDeg - Initial angle estimate in degrees
+ * @param windowDeg - Search window size in degrees
+ * @param iterations - Number of refinement iterations
+ * @returns Refined angle in degrees
+ */
+const refineAngle = (
+  points: ReadonlyArray<Point2D>,
+  center: Point2D,
+  initialDeg: number,
+  windowDeg: number = 3,
+  iterations: number = 10
+): number => {
+  const toRad = (d: number) => d * Math.PI / 180;
+  let lo = initialDeg - windowDeg;
+  let hi = initialDeg + windowDeg;
+
+  const computeHeight = (deg: number): number => {
+    const a = toRad(deg);
+    const cos = Math.cos(a);
+    const sin = Math.sin(a);
+    let minY = Infinity;
+    let maxY = -Infinity;
+    
+    for (const p of points) {
+      const dx = p.x - center.x;
+      const dy = p.y - center.y;
+      // Rotate point around center
+      const y = dx * sin + dy * cos;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+    return maxY - minY;
+  };
+
+  // Golden section search
+  for (let i = 0; i < iterations; i++) {
+    const m1 = lo + (hi - lo) * 0.382;
+    const m2 = lo + (hi - lo) * 0.618;
+    if (computeHeight(m1) < computeHeight(m2)) {
+      hi = m2;
+    } else {
+      lo = m1;
+    }
+  }
+  
+  const refined = (lo + hi) / 2;
+  console.log(`🎯 Angle refinement: ${initialDeg.toFixed(2)}° → ${refined.toFixed(2)}° (Δ=${(refined - initialDeg).toFixed(2)}°)`);
+  return refined;
+};
+
+// ============================================================================
+// Principal Component Analysis (PCA) Orientation
+// ============================================================================
+
+/**
+ * Compute the principal axis orientation using PCA
+ * @param points - Array of points to analyze
+ * @returns Angle in degrees of the principal axis
+ */
+const computePCAOrientation = (points: ReadonlyArray<[number, number]>): number | null => {
+  if (points.length < 3) return null;
+  
+  // Compute mean
+  let sx = 0, sy = 0;
+  for (const [x, y] of points) {
+    sx += x;
+    sy += y;
+  }
+  const n = points.length;
+  const mx = sx / n;
+  const my = sy / n;
+  
+  // Compute covariance matrix elements
+  let sxx = 0, sxy = 0, syy = 0;
+  for (const [x, y] of points) {
+    const dx = x - mx;
+    const dy = y - my;
+    sxx += dx * dx;
+    sxy += dx * dy;
+    syy += dy * dy;
+  }
+  
+  // Compute eigenvalues and eigenvectors
+  const trace = sxx + syy;
+  const det = sxx * syy - sxy * sxy;
+  const discriminant = (trace * trace) / 4 - det;
+  
+  if (discriminant < 0) {
+    console.warn('⚠️ PCA: Negative discriminant, falling back to calipers');
+    return null;
+  }
+  
+  // Smallest eigenvalue
+  const lambda = trace / 2 - Math.sqrt(discriminant);
+  
+  // Corresponding eigenvector
+  const vx = lambda - syy;
+  const vy = sxy;
+  
+  // Handle degenerate case (circular or no clear orientation)
+  if (Math.abs(vx) < 1e-10 && Math.abs(vy) < 1e-10) {
+    console.warn('⚠️ PCA: Degenerate case (equal eigenvalues), falling back to calipers');
+    return null;
+  }
+  
+  const pcaAngle = Math.atan2(vy, vx) * 180 / Math.PI;
+  console.log(`📊 PCA orientation: ${pcaAngle.toFixed(2)}°`);
+  return pcaAngle;
+};
+
+/**
+ * Choose the best angle between calipers and PCA based on resulting bounding height
+ * @param angleCalipersDeg - Angle from rotating calipers
+ * @param anglePcaDeg - Angle from PCA (may be null)
+ * @param points - Points to analyze
+ * @param center - Center point for rotation
+ * @returns Best angle in degrees
+ */
+const chooseBestAngle = (
+  angleCalipersDeg: number,
+  anglePcaDeg: number | null,
+  points: ReadonlyArray<Point2D>,
+  center: Point2D
+): number => {
+  if (anglePcaDeg === null) {
+    return angleCalipersDeg;
+  }
+  
+  // Compute heights for both angles
+  const computeHeight = (deg: number): number => {
+    const a = deg * Math.PI / 180;
+    const cos = Math.cos(a);
+    const sin = Math.sin(a);
+    let minY = Infinity;
+    let maxY = -Infinity;
+    
+    for (const p of points) {
+      const dx = p.x - center.x;
+      const dy = p.y - center.y;
+      const y = dx * sin + dy * cos;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+    return maxY - minY;
+  };
+  
+  const heightCalipers = computeHeight(angleCalipersDeg);
+  const heightPca = computeHeight(anglePcaDeg);
+  
+  // Choose angle that gives smaller height
+  const angleDiff = Math.abs(normalizeAngle(angleCalipersDeg - anglePcaDeg));
+  
+  if (angleDiff > 5 && heightPca < heightCalipers) {
+    console.log(`📊 Using PCA angle (height: ${heightPca.toFixed(1)} < ${heightCalipers.toFixed(1)})`);
+    return anglePcaDeg;
+  } else {
+    console.log(`📐 Using calipers angle (height: ${heightCalipers.toFixed(1)})`);
+    return angleCalipersDeg;
+  }
 };
 
 // ============================================================================
@@ -498,7 +712,8 @@ const processSeedPoint = async (
     brightnessThreshold = 50,
     brightSeedThreshold = 30,
     minArea = 100,
-    padding = 10
+    padding = 0,
+    minRotation = 0.2  // Default to 0.2° to suppress float noise
   } = config;
   
   console.log(`\n🎯 Processing seed ${index}: (${seed.x}, ${seed.y})`);
@@ -512,39 +727,43 @@ const processSeedPoint = async (
   // Determine flood fill strategy based on seed brightness
   const seedPixel = scaled.getPixelXY(scaledSeed.x, scaledSeed.y).slice(0, 3) as unknown as RGB;
   const seedBrightness = calculateBrightness(seedPixel);
-  const isbrightSeed = seedBrightness > 180;
+  const isBrightSeed = seedBrightness > 180;
   
   // Configure flood fill based on seed characteristics
-  const threshold = isbrightSeed ? brightSeedThreshold : brightnessThreshold;
+  const threshold = isBrightSeed ? brightSeedThreshold : brightnessThreshold;
   const predicate = createBrightnessPredicate(threshold);
   const floodFillConfig: FloodFillConfig = {
     step: 1,
     maxPixels: 500000
   };
   
-  // Perform flood fill
-  const region = await floodFill(scaled, scaledSeed, predicate, floodFillConfig);
+  // Perform flood fill (returns points in original coordinates)
+  const region = floodFill(scaled, scaledSeed, predicate, floodFillConfig, downsampleFactor);
   
-  // Find minimal bounding rectangle
-  const scaledFrame = findMinimalBoundingRectangle(region, minArea);
+  // Find minimal bounding rectangle using full-resolution coordinates
+  const frame = findMinimalBoundingRectangle(region, minArea, config);
   
-  // Create and save debug image
-  const debugImage = createDebugImage(scaled, region, scaledSeed, scaledFrame);
+  // Create and save debug image (need to scale region back for visualization)
+  const scaledRegion = region.map(([x, y]) => [
+    x * downsampleFactor,
+    y * downsampleFactor
+  ] as [number, number]);
+  const scaledFrame: BoundingFrame = {
+    x: frame.x * downsampleFactor,
+    y: frame.y * downsampleFactor,
+    width: frame.width * downsampleFactor,
+    height: frame.height * downsampleFactor,
+    rotation: frame.rotation
+  };
+  const debugImage = createDebugImage(scaled, scaledRegion, scaledSeed, scaledFrame);
   await debugImage.save(`${outputDir}/debug_floodfill_${index}.png`);
   console.log(`💾 Saved debug image: debug_floodfill_${index}.png`);
-  
-  // Scale frame back to original coordinates
-  const frame: BoundingFrame = {
-    x: scaledFrame.x / downsampleFactor,
-    y: scaledFrame.y / downsampleFactor,
-    width: scaledFrame.width / downsampleFactor,
-    height: scaledFrame.height / downsampleFactor,
-    rotation: scaledFrame.rotation
-  };
 
   console.log(`🖼️ Frame: ${frame.width.toFixed(0)}×${frame.height.toFixed(0)} at (${frame.x.toFixed(0)}, ${frame.y.toFixed(0)}), rotation=${frame.rotation.toFixed(1)}°`);
 
   // Calculate crop region with padding
+  // Note: Padding is applied in axis-aligned space, so we crop a larger upright box
+  // and later rotate it. This guarantees the ROI is fully inside but also keeps background.
   const angleRad = degreesToRadians(frame.rotation);
   const corners = [
     { x: 0, y: 0 },
@@ -579,10 +798,12 @@ const processSeedPoint = async (
     height: cropHeight
   });
   
-  if (Math.abs(frame.rotation) > 5) {
-    const normalizedRotation = normalizeAngle(frame.rotation);
+  const normalizedRotation = normalizeAngle(frame.rotation);
+  if (Math.abs(normalizedRotation) > minRotation) {
     console.log(`🔄 Rotating by ${-normalizedRotation.toFixed(1)}°`);
     finalImage = finalImage.rotate(-normalizedRotation);
+  } else {
+    console.log(`🔄 Skipping rotation: ${Math.abs(normalizedRotation).toFixed(1)}° < ${minRotation}° threshold`);
   }
 
   await finalImage.save(`${outputDir}/subimage_${index}.png`);
