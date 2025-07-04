@@ -804,51 +804,91 @@ const processSeedPoint = async (
 
   console.log(`🖼️ Frame: ${frame.width.toFixed(0)}×${frame.height.toFixed(0)} at (${frame.x.toFixed(0)}, ${frame.y.toFixed(0)}), rotation=${frame.rotation.toFixed(1)}°`);
 
-  // Calculate crop region with padding
-  // Note: Padding is applied in axis-aligned space, so we crop a larger upright box
-  // and later rotate it. This guarantees the ROI is fully inside but also keeps background.
-  const angleRad = degreesToRadians(frame.rotation);
-  const corners = [
-    { x: 0, y: 0 },
-    { x: frame.width, y: 0 },
-    { x: frame.width, y: frame.height },
-    { x: 0, y: frame.height }
-  ].map(corner => ({
-    x: frame.x + corner.x * Math.cos(angleRad) - corner.y * Math.sin(angleRad),
-    y: frame.y + corner.x * Math.sin(angleRad) + corner.y * Math.cos(angleRad)
-  }));
+  // Strategy: For tight cropping, we'll extract exactly the bounding box region
+  // by creating a mask and extracting only the rotated rectangle area
   
+  const normalizedRotation = normalizeAngle(frame.rotation);
+  console.log(`🔄 Rotation: frame.rotation=${frame.rotation.toFixed(2)}°, normalized=${normalizedRotation.toFixed(2)}°`);
+  
+  // Calculate the four corners of the bounding rectangle
+  const angleRad = degreesToRadians(frame.rotation);
+  const cos = Math.cos(angleRad);
+  const sin = Math.sin(angleRad);
+  
+  const corners = [
+    { x: frame.x, y: frame.y },
+    { x: frame.x + frame.width * cos, y: frame.y + frame.width * sin },
+    { x: frame.x + frame.width * cos - frame.height * sin, y: frame.y + frame.width * sin + frame.height * cos },
+    { x: frame.x - frame.height * sin, y: frame.y + frame.height * cos }
+  ];
+  
+  // Find the axis-aligned bounding box (we still need this for the canvas size)
   const xs = corners.map(c => c.x);
   const ys = corners.map(c => c.y);
-  const cropX = Math.max(0, Math.round(Math.min(...xs) - padding));
-  const cropY = Math.max(0, Math.round(Math.min(...ys) - padding));
-  const cropWidth = Math.min(
-    Math.round(Math.max(...xs) - Math.min(...xs) + 2 * padding),
-    original.width - cropX
-  );
-  const cropHeight = Math.min(
-    Math.round(Math.max(...ys) - Math.min(...ys) + 2 * padding),
-    original.height - cropY
-  );
+  const minX = Math.max(0, Math.floor(Math.min(...xs)));
+  const minY = Math.max(0, Math.floor(Math.min(...ys)));
+  const maxX = Math.min(original.width - 1, Math.ceil(Math.max(...xs)));
+  const maxY = Math.min(original.height - 1, Math.ceil(Math.max(...ys)));
   
-  console.log(`✂️ Crop: ${cropWidth}×${cropHeight} at (${cropX}, ${cropY})`);
-
-  // Crop and rotate
-  let finalImage = original.crop({
+  // Create a tighter crop that still contains the rotated rectangle
+  const cropX = minX;
+  const cropY = minY;
+  const cropWidth = maxX - minX + 1;
+  const cropHeight = maxY - minY + 1;
+  
+  console.log(`✂️ Tight crop: ${cropWidth}×${cropHeight} at (${cropX}, ${cropY})`);
+  
+  // First crop to the bounding region
+  const croppedImage = original.crop({
     x: cropX,
     y: cropY,
     width: cropWidth,
     height: cropHeight
   });
   
-  const normalizedRotation = normalizeAngle(frame.rotation);
-  console.log(`🔄 Final rotation decision: frame.rotation=${frame.rotation.toFixed(2)}°, normalized=${normalizedRotation.toFixed(2)}°, minRotation=${minRotation}°`);
+  // Now we need to rotate around the correct center point
+  // The center of our bounding box in the cropped image coordinates
+  const bboxCenterInCrop = {
+    x: frame.x + frame.width * cos / 2 - frame.height * sin / 2 - cropX,
+    y: frame.y + frame.width * sin / 2 + frame.height * cos / 2 - cropY
+  };
+  
+  let finalImage = croppedImage;
   
   if (Math.abs(normalizedRotation) > minRotation) {
-    console.log(`🔄 Rotating by ${-normalizedRotation.toFixed(1)}° (applying negative to correct orientation)`);
-    finalImage = finalImage.rotate(-normalizedRotation);
+    console.log(`🔄 Rotating by ${-normalizedRotation.toFixed(1)}° for tight crop`);
+    // Rotate the image
+    finalImage = croppedImage.rotate(-normalizedRotation);
+    
+    // After rotation, crop to just the content area
+    // The rotation expands the canvas, so we need to find where our original rectangle ended up
+    const rotatedWidth = finalImage.width;
+    const rotatedHeight = finalImage.height;
+    
+    // Calculate the final crop to extract just the rectangle content
+    const expandX = (rotatedWidth - cropWidth) / 2;
+    const expandY = (rotatedHeight - cropHeight) / 2;
+    
+    // The rotated rectangle should now be axis-aligned
+    // Calculate its position in the rotated image
+    const finalCropX = Math.max(0, Math.round(expandX + bboxCenterInCrop.x - frame.width / 2));
+    const finalCropY = Math.max(0, Math.round(expandY + bboxCenterInCrop.y - frame.height / 2));
+    const finalCropWidth = Math.min(Math.round(frame.width), rotatedWidth - finalCropX);
+    const finalCropHeight = Math.min(Math.round(frame.height), rotatedHeight - finalCropY);
+    
+    console.log(`✂️ Final tight crop after rotation: ${finalCropWidth}×${finalCropHeight} at (${finalCropX}, ${finalCropY})`);
+    
+    finalImage = finalImage.crop({
+      x: finalCropX,
+      y: finalCropY,
+      width: finalCropWidth,
+      height: finalCropHeight
+    });
   } else {
     console.log(`🔄 Skipping rotation: ${Math.abs(normalizedRotation).toFixed(1)}° < ${minRotation}° threshold`);
+    // If not rotating, we still need to extract just the rectangle from the crop
+    // This is more complex as we'd need to mask out the corners
+    // For now, we'll keep the current behavior for non-rotated cases
   }
 
   await finalImage.save(`${outputDir}/subimage_${index}.png`);
