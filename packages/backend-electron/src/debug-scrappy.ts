@@ -43,6 +43,13 @@ type ProcessingConfig = {
   usePca?: boolean;  // Use PCA for orientation estimation
 };
 
+/** Structure for input JSON data */
+type InputData = {
+  basename: string;
+  imagePath: string;
+  seedCoordinates: ReadonlyArray<Point2D>;
+};
+
 // ============================================================================
 // Color Utilities
 // ============================================================================
@@ -697,6 +704,7 @@ const createDebugImage = (
  * @param seed - Seed point in original image coordinates
  * @param index - Index for output naming
  * @param outputDir - Output directory path
+ * @param basename - Base name for output files
  * @param config - Processing configuration
  */
 const processSeedPoint = async (
@@ -705,6 +713,7 @@ const processSeedPoint = async (
   seed: Point2D,
   index: number,
   outputDir: string,
+  basename: string,
   config: ProcessingConfig = {}
 ): Promise<void> => {
   const {
@@ -756,8 +765,8 @@ const processSeedPoint = async (
     rotation: frame.rotation
   };
   const debugImage = createDebugImage(scaled, scaledRegion, scaledSeed, scaledFrame);
-  await debugImage.save(`${outputDir}/debug_floodfill_${index}.png`);
-  console.log(`💾 Saved debug image: debug_floodfill_${index}.png`);
+  await debugImage.save(`${outputDir}/${basename}_debug_floodfill_${index}.png`);
+  console.log(`💾 Saved debug image: ${basename}_debug_floodfill_${index}.png`);
 
   console.log(`🖼️ Frame: ${frame.width.toFixed(0)}×${frame.height.toFixed(0)} at (${frame.x.toFixed(0)}, ${frame.y.toFixed(0)}), rotation=${frame.rotation.toFixed(1)}°`);
 
@@ -806,7 +815,7 @@ const processSeedPoint = async (
     console.log(`🔄 Skipping rotation: ${Math.abs(normalizedRotation).toFixed(1)}° < ${minRotation}° threshold`);
   }
 
-  await finalImage.save(`${outputDir}/subimage_${index}.png`);
+  await finalImage.save(`${outputDir}/${basename}_subimage_${index}.png`);
 };
 
 /**
@@ -814,12 +823,14 @@ const processSeedPoint = async (
  * @param inputPath - Path to input image
  * @param seeds - Array of seed points
  * @param outputDir - Output directory
+ * @param basename - Base name for output files
  * @param config - Processing configuration
  */
 export const processImage = async (
   inputPath: string,
   seeds: ReadonlyArray<Point2D>,
   outputDir: string,
+  basename: string,
   config: ProcessingConfig = {}
 ): Promise<void> => {
   const { downsampleFactor = 0.5 } = config;
@@ -833,11 +844,16 @@ export const processImage = async (
   });
   console.log(`📏 Scaled image: ${scaled.width}×${scaled.height} (factor: ${downsampleFactor})`);
 
-  await Promise.all(
-    seeds.map((seed, index) => 
-      processSeedPoint(original, scaled, seed, index, outputDir, config)
-    )
-  );
+  for (let index = 0; index < seeds.length; index++) {
+    const seed = seeds[index];
+    await processSeedPoint(original, scaled, seed, index, outputDir, basename, config);
+  }
+
+  // await Promise.all(
+  //   seeds.map((seed, index) => 
+  //     processSeedPoint(original, scaled, seed, index, outputDir, basename, config)
+  //   )
+  // );
 };
 
 // ============================================================================
@@ -848,24 +864,33 @@ export const processImage = async (
  * Main function for debugging
  */
 const main = async (): Promise<void> => {
-  const INPUT_IMAGE_PATH = '/Users/albchu/vicky_family_photos/2000/Untitled 2.png';
-  const SEED_COORDINATES: ReadonlyArray<Point2D> = [
-    { x: 478, y: 673 },
-    { x: 1496, y: 343 },
-    { x: 643, y: 1992 },
-    { x: 1564, y: 1992 }
-  ];
+  const INPUT_JSON_PATH = './src/debug-input.json';
   const OUTPUT_DIR = './debug-output';
 
   console.log('🚀 Starting image processing...');
-  console.log(`📁 Input: ${INPUT_IMAGE_PATH}`);
-  console.log(`🎯 Seeds: ${JSON.stringify(SEED_COORDINATES)}`);
+  console.log(`📁 Input JSON: ${INPUT_JSON_PATH}`);
   console.log(`📂 Output: ${OUTPUT_DIR}`);
 
   try {
+    // Read and parse input JSON
+    const inputData = await fs.readFile(INPUT_JSON_PATH, 'utf-8');
+    const inputs: InputData[] = JSON.parse(inputData);
+    console.log(`📊 Found ${inputs.length} image(s) to process`);
+
+    // Create output directory
     await fs.mkdir(OUTPUT_DIR, { recursive: true });
-    await processImage(INPUT_IMAGE_PATH, SEED_COORDINATES, OUTPUT_DIR);
-    console.log('\n✅ Processing complete!');
+
+    // Process each input
+    for (let i = 0; i < inputs.length; i++) {
+      const input = inputs[i];
+      console.log(`\n📸 Processing image ${i + 1}/${inputs.length}: ${input.imagePath}`);
+      console.log(`📏 Basename: ${input.basename}`);
+      console.log(`🎯 Seeds: ${JSON.stringify(input.seedCoordinates)}`);
+      
+      await processImage(input.imagePath, input.seedCoordinates, OUTPUT_DIR, input.basename, {});
+    }
+    
+    console.log('\n✅ All processing complete!');
   } catch (error) {
     console.error('❌ Error:', error);
     process.exit(1);

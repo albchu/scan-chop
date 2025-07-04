@@ -1,0 +1,32 @@
+[
+  {
+    "basename": "First_image",
+    "imagePath": "/Users/albchu/vicky_family_photos/2000/Untitled 2.png",
+    "seedCoordinates": [
+      { "x": 478, "y": 673 },
+      { "x": 1496, "y": 343 },
+      { "x": 643, "y": 1992 },
+      { "x": 1564, "y": 1992 }
+    ]
+  },
+  {
+    "basename": "second_image",
+    "imagePath": "/Users/albchu/vicky_family_photos/2000/Untitled.png",
+    "seedCoordinates": [
+      { "x": 478, "y": 673 },
+      { "x": 1496, "y": 393 },
+      { "x": 643, "y": 1992 },
+      { "x": 1564, "y": 1992 }
+    ]
+  }
+  ,
+  {
+    "basename": "third_image",
+    "imagePath": "/Users/albchu/vicky_family_photos/2000/Untitled 3.png",
+    "seedCoordinates": [
+      { "x": 478, "y": 673 },
+      { "x": 1496, "y": 393 },
+      { "x": 1564, "y": 1992 }
+    ]
+  }
+] 
