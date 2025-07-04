@@ -36,6 +36,7 @@ type ProcessingConfig = {
   minArea?: number;
   maxPixels?: number;  // Maximum pixels allowed in flood fill region
   padding?: number;
+  cropInset?: number;  // Pixels to inset from detected edges to remove fringing
   minRotation?: number;  // Minimum rotation angle to apply (in degrees)
   enableAngleRefine?: boolean;  // Enable angle refinement search
   angleRefineWindow?: number;  // Search window for angle refinement (in degrees)
@@ -762,6 +763,7 @@ const processSeedPoint = async (
     minArea = 100,
     maxPixels = 2000000,  // Increased default to 2 million pixels
     padding = 0,
+    cropInset = 8,  // Default 2 pixel inset to remove edge fringing
     minRotation = 0.2  // Default to 0.2° to suppress float noise
   } = config;
   
@@ -876,13 +878,20 @@ const processSeedPoint = async (
     const finalCropWidth = Math.min(Math.round(frame.width), rotatedWidth - finalCropX);
     const finalCropHeight = Math.min(Math.round(frame.height), rotatedHeight - finalCropY);
     
+    // Apply inset to remove edge fringing
+    const insetCropX = finalCropX + cropInset;
+    const insetCropY = finalCropY + cropInset;
+    const insetCropWidth = Math.max(1, finalCropWidth - 2 * cropInset);
+    const insetCropHeight = Math.max(1, finalCropHeight - 2 * cropInset);
+    
     console.log(`✂️ Final tight crop after rotation: ${finalCropWidth}×${finalCropHeight} at (${finalCropX}, ${finalCropY})`);
+    console.log(`📐 With ${cropInset}px inset: ${insetCropWidth}×${insetCropHeight} at (${insetCropX}, ${insetCropY})`);
     
     finalImage = finalImage.crop({
-      x: finalCropX,
-      y: finalCropY,
-      width: finalCropWidth,
-      height: finalCropHeight
+      x: insetCropX,
+      y: insetCropY,
+      width: insetCropWidth,
+      height: insetCropHeight
     });
   } else {
     console.log(`🔄 Skipping rotation: ${Math.abs(normalizedRotation).toFixed(1)}° < ${minRotation}° threshold`);
