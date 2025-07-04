@@ -785,8 +785,8 @@ const processSeedPoint = async (
     rotation: frame.rotation
   };
   const debugImage = createDebugImage(scaled, scaledRegion, scaledSeed, scaledFrame);
-  await debugImage.save(`${outputDir}/${basename}_debug_floodfill_${index}.png`);
-  console.log(`💾 Saved debug image: ${basename}_debug_floodfill_${index}.png`);
+  await debugImage.save(`${outputDir}/debug_floodfill_${index}.png`);
+  console.log(`💾 Saved debug image: debug_floodfill_${index}.png`);
 
   console.log(`🖼️ Frame: ${frame.width.toFixed(0)}×${frame.height.toFixed(0)} at (${frame.x.toFixed(0)}, ${frame.y.toFixed(0)}), rotation=${frame.rotation.toFixed(1)}°`);
 
@@ -837,7 +837,7 @@ const processSeedPoint = async (
     console.log(`🔄 Skipping rotation: ${Math.abs(normalizedRotation).toFixed(1)}° < ${minRotation}° threshold`);
   }
 
-  await finalImage.save(`${outputDir}/${basename}_subimage_${index}.png`);
+  await finalImage.save(`${outputDir}/subimage_${index}.png`);
 };
 
 /**
@@ -909,7 +909,12 @@ const main = async (): Promise<void> => {
       console.log(`📏 Basename: ${input.basename}`);
       console.log(`🎯 Seeds: ${JSON.stringify(input.seedCoordinates)}`);
       
-      await processImage(input.imagePath, input.seedCoordinates, OUTPUT_DIR, input.basename, {});
+      // Create subdirectory for this image's outputs using basename
+      const imageOutputDir = `${OUTPUT_DIR}/${input.basename}`;
+      await fs.mkdir(imageOutputDir, { recursive: true });
+      console.log(`📁 Output directory: ${imageOutputDir}`);
+      
+      await processImage(input.imagePath, input.seedCoordinates, imageOutputDir, input.basename, {});
     }
     
     console.log('\n✅ All processing complete!');

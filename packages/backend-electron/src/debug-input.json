@@ -1,6 +1,6 @@
 [
   {
-    "basename": "First_image",
+    "basename": "Image_A",
     "imagePath": "/Users/albchu/vicky_family_photos/2000/Untitled 2.png",
     "seedCoordinates": [
       { "x": 478, "y": 673 },
@@ -10,7 +10,7 @@
     ]
   },
   {
-    "basename": "second_image",
+    "basename": "Image_B",
     "imagePath": "/Users/albchu/vicky_family_photos/2000/Untitled.png",
     "seedCoordinates": [
       { "x": 478, "y": 673 },
@@ -18,15 +18,34 @@
       { "x": 643, "y": 1992 },
       { "x": 1564, "y": 1992 }
     ]
-  }
-  ,
+  },
   {
-    "basename": "third_image",
+    "basename": "Image_C",
     "imagePath": "/Users/albchu/vicky_family_photos/2000/Untitled 3.png",
     "seedCoordinates": [
       { "x": 478, "y": 673 },
       { "x": 1496, "y": 393 },
       { "x": 1564, "y": 1992 }
     ]
+  },
+  {
+    "basename": "Image_D",
+    "imagePath": "/Users/albchu/vicky_family_photos/1999/Untitled 3.png",
+    "seedCoordinates": [
+      { "x": 478, "y": 673 },
+      { "x": 1496, "y": 393 },
+      { "x": 643, "y": 1992 },
+      { "x": 1564, "y": 1992 }
+    ]
+  },
+  {
+    "basename": "Image_E",
+    "imagePath": "/Users/albchu/vicky_family_photos/1999/Untitled 6.png",
+    "seedCoordinates": [
+      { "x": 478, "y": 673 },
+      { "x": 1496, "y": 393 },
+      { "x": 643, "y": 1992 },
+      { "x": 1564, "y": 1992 }
+    ]
   }
-] 
+]
