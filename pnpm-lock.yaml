@@ -139,16 +139,10 @@ importers:
       electron:
         specifier: ^28.0.0
         version: 28.3.3
-      image-js:
-        specifier: ^0.35.5
-        version: 0.35.6
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.1
-      tsx:
-        specifier: ^4.7.0
-        version: 4.20.3
       typescript:
         specifier: ^5.0.0
         version: 5.8.3
@@ -212,6 +206,13 @@ importers:
         version: 1.6.1(@types/node@20.19.1)(jsdom@23.2.0)(lightningcss@1.30.1)
 
   packages/shared:
+    dependencies:
+      image-js:
+        specifier: ^0.37.0
+        version: 0.37.0
+      tsx:
+        specifier: ^4.20.3
+        version: 4.20.3
     devDependencies:
       typescript:
         specifier: ^5.0.0
@@ -2295,8 +2296,8 @@ packages:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
 
-  image-js@0.35.6:
-    resolution: {integrity: sha512-2qRaowXOBUIT7Ia842BUFDoBo/Jr0FHlbfssx/awbQUtc399kJWfFf0xE5hIG62ybaQiwutL2e1ocUzGtYxASw==}
+  image-js@0.37.0:
+    resolution: {integrity: sha512-t/6CE+H0mT9TKFhlm1h84e9Y1W/ZNAgLUvYH+ogWSZOMUWXLdtUPVJH3EppCCR+EgwSqxbcuiVlPqDPEa9dNtw==}
     engines: {node: '>= 16.0.0'}
 
   image-type@4.1.0:
@@ -6202,7 +6203,7 @@ snapshots:
 
   ignore@5.3.2: {}
 
-  image-js@0.35.6:
+  image-js@0.37.0:
     dependencies:
       '@swiftcarrot/color-fns': 3.2.0
       blob-util: 2.0.2

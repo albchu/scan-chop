@@ -9,18 +9,15 @@
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
     "test": "vitest --run",
-    "test:watch": "vitest",
-    "scrappy": "tsx src/debug-scrappy.ts"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@workspace/shared": "workspace:*",
-    "electron": "^28.0.0",
-    "image-js": "^0.35.5"
+    "electron": "^28.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0",
-    "vitest": "^1.0.0",
-    "tsx": "^4.7.0"
+    "vitest": "^1.0.0"
   }
-} 
+}

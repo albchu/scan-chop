@@ -63,14 +63,6 @@ type InputData = {
 const calculateBrightness = (color: RGB): number => 
   (color[0] + color[1] + color[2]) / 3;
 
-/**
- * Create a brightness-based color predicate
- * @param threshold - Maximum brightness difference allowed
- * @returns Predicate function for color matching
- */
-const createBrightnessPredicate = (threshold: number): ColorPredicate => 
-  (target, reference) => 
-    Math.abs(calculateBrightness(target) - calculateBrightness(reference)) < threshold;
 
 /**
  * Create a white-boundary color predicate

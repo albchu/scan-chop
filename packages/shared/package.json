@@ -18,9 +18,14 @@
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:types": "tsc -p tsconfig.types.json",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "scrappy": "tsx src/debug-scrappy.ts"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "image-js": "^0.37.0",
+    "tsx": "^4.20.3"
   }
-} 
+}
