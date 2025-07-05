@@ -4,14 +4,18 @@ export interface Vector2 {
   y: number;
 }
 
-export interface FrameData {
+// Geometric bounding box - base interface for rectangular bounds
+export interface BoundingBox {
+  x: number;              // X position relative to origin
+  y: number;              // Y position relative to origin
+  width: number;          // Box width
+  height: number;         // Box height
+  rotation: number;       // Rotation angle in degrees
+}
+
+export interface FrameData extends BoundingBox {
   id: string;             // Sequential ID (e.g., "frame-1", "frame-2")
   label: string;
-  x: number;              // X position relative to Page top-left origin (0 to page.width)
-  y: number;              // Y position relative to Page top-left origin (0 to page.height)
-  width: number;          // Frame width (minimum: 20)
-  height: number;         // Frame height (minimum: 20)
-  rotation: number;       // Relative to page (free angle, no snapping), rotation center is frame center
   orientation: 0 | 90 | 180 | 270;  // "Up" direction indicator, 0 is default
 }
 
