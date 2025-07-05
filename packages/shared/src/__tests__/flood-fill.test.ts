@@ -17,7 +17,7 @@ function createTestImage(width: number, height: number, fillColor: RGB = [0, 0, 
     data[i * 4 + 2] = fillColor[2];
     data[i * 4 + 3] = 255; // Alpha
   }
-  return new Image(width, height, data, { kind: 'RGBA' });
+  return new Image(width, height, { data, components: 4 });
 }
 
 // Helper to set pixel color

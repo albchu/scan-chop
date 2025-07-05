@@ -1,21 +1,18 @@
-export type { AppState, Action } from './types';
+// Re-export all types and utilities
+export * from './types';
+export * from './api';
+export * from './geometry';
+export * from './constants';
+export * from './color';
+export * from './flood-fill';
+export * from './orientation';
+export * from './convex-hull';
+export * from './bounding-rectangle';
 
-export type { 
-  Vector2,
-  FrameData,
-  PageData,
-  UIContextSnapshot,
-  UIContextState,
-  UIContextActions
-} from './types';
-
-export type { BackendAPI, StateSubscription } from './api';
-
-export { INITIAL_STATE, APP_CONSTANTS } from './constants';
-
-export { 
-  MIN_FRAME_SIZE,
-  DEFAULT_FRAME_SIZE_RATIO,
-  TRANSLATION_STEP,
-  ROTATION_INCREMENT
-} from './constants'; 
+// New module exports
+export * from './coordinate-utils';
+export * from './image-io';
+export * from './debug-visualization';
+export * from './region-extraction';
+export * from './image-transform';
+export * from './image-processing'; 
