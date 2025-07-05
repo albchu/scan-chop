@@ -19,6 +19,24 @@ export interface FrameData extends BoundingBox {
   orientation: 0 | 90 | 180 | 270;  // "Up" direction indicator, 0 is default
 }
 
+// Color types
+export type RGB = readonly [number, number, number];
+
+// Processing configuration
+export interface ProcessingConfig {
+  downsampleFactor?: number;
+  whiteThreshold?: number;  // Minimum brightness to consider as white boundary (0-255)
+  minArea?: number;
+  maxPixels?: number;  // Maximum pixels allowed in flood fill region
+  padding?: number;
+  cropInset?: number;  // Pixels to inset from detected edges to remove fringing
+  minRotation?: number;  // Minimum rotation angle to apply (in degrees)
+  enableAngleRefine?: boolean;  // Enable angle refinement search
+  angleRefineWindow?: number;  // Search window for angle refinement (in degrees)
+  angleRefineIterations?: number;  // Number of iterations for angle refinement
+  usePca?: boolean;  // Use PCA for orientation estimation
+}
+
 export interface PageData {
   id: string;
   width: number;      // Set to match image dimensions
