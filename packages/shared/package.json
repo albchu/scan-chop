@@ -19,13 +19,17 @@
     "build:types": "tsc -p tsconfig.types.json",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
+    "test": "vitest",
+    "test:once": "vitest run",
     "scrappy": "tsx src/debug-scrappy.ts"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "@vitest/coverage-v8": "^1.6.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
   },
   "dependencies": {
-    "image-js": "^0.37.0",
-    "tsx": "^4.20.3"
+    "image-js": "^0.37.0"
   }
 }
