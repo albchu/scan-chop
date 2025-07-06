@@ -299,9 +299,3 @@ export const batchProcessImages = async (
     `\n✅ Batch processing complete: ${successCount}/${jobs.length} succeeded in ${totalTime}ms`
   );
 };
-
-// Re-export commonly used functions from other modules
-export { createDebugImage } from './debug-visualization';
-export { extractRegionWithWhiteBoundary } from './region-extraction';
-export { smartCrop } from './image-transform';
-export { loadAndPrepareImage, saveProcessedImage } from './image-io'; 
