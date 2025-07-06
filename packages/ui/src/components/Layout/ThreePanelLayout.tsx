@@ -54,7 +54,7 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
             }`}
             style={{ 
               flexBasis: `${leftWidth}%`,
-              marginLeft: isLeftCollapsed ? `-${leftWidth}%` : '0'
+              // Remove negative margin - width is already 0 when collapsed
             }}
           >
             {leftPanel}
@@ -119,7 +119,7 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
             }`}
             style={{ 
               flexBasis: `${rightWidth}%`,
-              marginRight: isRightCollapsed ? `-${rightWidth}%` : '0'
+              // Remove negative margin - width is already 0 when collapsed
             }}
           >
             {rightPanel}
