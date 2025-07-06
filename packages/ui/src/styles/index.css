@@ -1,1 +1,14 @@
-@import "tailwindcss"; 
+@import "tailwindcss";
+
+/* Prevent scrollbars on the body */
+html, body {
+  overflow: hidden;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
+} 

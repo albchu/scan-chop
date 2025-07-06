@@ -15,6 +15,7 @@ export { AppProvider } from './AppProvider';
 // Core components
 export { Editor } from './components/Editor';
 export { Canvas } from './components/Canvas';
+export { DividerButton } from './components/DividerButton';
 export { Page } from './components/Page';
 export { Frame } from './components/Frame';
 export { ZoomSlider } from './components/ZoomSlider';
