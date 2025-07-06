@@ -18,6 +18,9 @@ export { Canvas } from './components/Canvas';
 export { DividerButton } from './components/DividerButton';
 export { Page } from './components/Page';
 export { Frame } from './components/Frame';
+
+// Layout components
+export { ThreePanelLayout } from './components/Layout';
 export { ZoomSlider } from './components/ZoomSlider';
 
 // Preview components
