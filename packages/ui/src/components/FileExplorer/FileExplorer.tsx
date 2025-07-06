@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { HierarchicalFileList } from './HierarchicalFileList';
+import { FileList } from './FileList';
 import { FileExplorerHeader } from './FileExplorerHeader';
 import { FileListError, FileListNoDir } from './FileListStates';
 import { DirectoryEntry } from './types';
+import { IconLoader2 } from '@tabler/icons-react';
 import { 
   DEFAULT_INITIAL_PATH, 
   getInitialEntries, 
@@ -73,15 +74,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({ onFileSelect: onFile
     if (isLoading) {
       return (
         <div className="flex items-center justify-center h-full">
-          <div className="animate-spin h-8 w-8 border-2 border-gray-300 border-t-blue-500 rounded-full" />
+          <IconLoader2 size={32} className="animate-spin text-gray-300" />
         </div>
       );
     }
 
-    // hierarchical list view (only mode)
+    // file list view
     return (
       <div className="h-full w-full overflow-y-auto p-2">
-        <HierarchicalFileList
+        <FileList
           rootEntries={directoryEntries}
           selectedFile={selectedFile}
           onFileSelect={handleFileSelect}

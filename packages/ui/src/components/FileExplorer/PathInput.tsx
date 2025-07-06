@@ -1,47 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { validatePath } from './mockFileSystem';
+import { IconCheck, IconAlertCircle, IconLoader2 } from '@tabler/icons-react';
 
 interface PathInputProps {
   currentPath: string;
   onPathChange: (path: string) => void;
   onPathValidation: (isValid: boolean, error?: string) => void;
 }
-
-// Check mark icon for valid paths
-const CheckIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <svg
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M5 13l4 4L19 7"
-    />
-  </svg>
-);
-
-// Warning icon for invalid paths
-const WarningIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <svg
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.382 16.5c-.77.833.192 2.5 1.732 2.5z"
-    />
-  </svg>
-);
 
 export const PathInput: React.FC<PathInputProps> = ({
   currentPath,
@@ -211,17 +176,15 @@ export const PathInput: React.FC<PathInputProps> = ({
 
   const getValidationIcon = () => {
     if (isValidating) {
-      return (
-        <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-blue-500 rounded-full" />
-      );
+      return <IconLoader2 size={20} className="animate-spin text-gray-300" />;
     }
     
     if (validationState.isValid === true) {
-      return <CheckIcon className="w-5 h-5 text-green-500" />;
+      return <IconCheck size={20} className="text-green-500" />;
     }
     
     if (validationState.isValid === false) {
-      return <WarningIcon className="w-5 h-5 text-red-500" />;
+      return <IconAlertCircle size={20} className="text-red-500" />;
     }
     
     return null;

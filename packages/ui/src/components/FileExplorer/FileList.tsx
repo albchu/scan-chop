@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DirectoryEntry, TreeNode } from './types';
 import { readDirectory } from './mockFileSystem';
-import { HierarchicalFileRow } from './HierarchicalFileRow';
+import { FileRow } from './FileRow';
 
 interface Props {
   rootEntries: DirectoryEntry[];
@@ -9,7 +9,7 @@ interface Props {
   onFileSelect: (path: string) => void;
 }
 
-export const HierarchicalFileList: React.FC<Props> = ({
+export const FileList: React.FC<Props> = ({
   rootEntries,
   selectedFile,
   onFileSelect,
@@ -113,7 +113,7 @@ export const HierarchicalFileList: React.FC<Props> = ({
   return (
     <div className="space-y-1">
       {flatList.map((node) => (
-        <HierarchicalFileRow
+        <FileRow
           key={node.path}
           node={node}
           isSelected={selectedFile === node.path}
