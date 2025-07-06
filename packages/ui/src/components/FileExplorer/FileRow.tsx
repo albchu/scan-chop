@@ -1,6 +1,6 @@
 import React from 'react';
 import { TreeNode } from './types';
-import { IconChevronRight, IconChevronDown, IconFolder, IconFile, IconLoader2 } from '@tabler/icons-react';
+import { IconChevronRight, IconChevronDown, IconFolder, IconFile, IconPhoto, IconLoader2 } from '@tabler/icons-react';
 
 interface FileRowProps {
   node: TreeNode;
@@ -50,6 +50,8 @@ export const FileRow: React.FC<FileRowProps> = ({
       <div className="mr-2">
         {node.isDirectory ? (
           <IconFolder size={16} className="text-blue-400" />
+        ) : node.isSupported ? (
+          <IconPhoto size={16} className="text-gray-400" />
         ) : (
           <IconFile size={16} className="text-gray-400" />
         )}
