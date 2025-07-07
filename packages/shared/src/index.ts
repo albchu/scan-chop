@@ -8,6 +8,7 @@ export * from './flood-fill';
 export * from './orientation';
 export * from './convex-hull';
 export * from './bounding-rectangle';
+export * from './ipcMessages';
 
 // New module exports
 export * from './coordinate-utils';

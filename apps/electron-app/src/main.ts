@@ -16,6 +16,9 @@ const createWindow = (): void => {
     }
   });
 
+  // Set the main window on the backend
+  backend.setMainWindow(mainWindow);
+
   // Load the renderer
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadFile(join(__dirname, 'renderer', 'renderer.html'));

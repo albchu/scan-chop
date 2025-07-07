@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { AppState, Action, BackendAPI, StateSubscription } from '@workspace/shared';
+import { IPC_CHANNELS, LoadDirectoryPayload, DirectoryReadyPayload, ImageReadyPayload } from '@workspace/shared';
 
 class ElectronStateSubscription<T> implements StateSubscription<T> {
   private unsubscribeId: string | null = null;
@@ -37,7 +38,17 @@ class ElectronStateSubscription<T> implements StateSubscription<T> {
   private cleanup = () => {};
 }
 
-const electronBackend: BackendAPI = {
+// Extend the backend API with workspace functionality
+interface ExtendedBackendAPI extends BackendAPI {
+  workspace: {
+    loadDirectory: (path: string) => Promise<void>;
+    onDirectoryReady: (callback: (payload: DirectoryReadyPayload) => void) => () => void;
+    onImageReady: (callback: (payload: ImageReadyPayload) => void) => () => void;
+    onError: (callback: (error: { message: string }) => void) => () => void;
+  };
+}
+
+const electronBackend: ExtendedBackendAPI = {
   async dispatch(action: Action): Promise<void> {
     return ipcRenderer.invoke('backend:dispatch', action);
   },
@@ -51,6 +62,31 @@ const electronBackend: BackendAPI = {
 
   async getState(): Promise<AppState> {
     return ipcRenderer.invoke('backend:getState');
+  },
+
+  workspace: {
+    async loadDirectory(path: string): Promise<void> {
+      const payload: LoadDirectoryPayload = { path };
+      return ipcRenderer.invoke(IPC_CHANNELS.LOAD_DIRECTORY, payload);
+    },
+
+    onDirectoryReady(callback: (payload: DirectoryReadyPayload) => void): () => void {
+      const listener = (_: any, payload: DirectoryReadyPayload) => callback(payload);
+      ipcRenderer.on(IPC_CHANNELS.DIRECTORY_READY, listener);
+      return () => ipcRenderer.off(IPC_CHANNELS.DIRECTORY_READY, listener);
+    },
+
+    onImageReady(callback: (payload: ImageReadyPayload) => void): () => void {
+      const listener = (_: any, payload: ImageReadyPayload) => callback(payload);
+      ipcRenderer.on(IPC_CHANNELS.IMAGE_READY, listener);
+      return () => ipcRenderer.off(IPC_CHANNELS.IMAGE_READY, listener);
+    },
+
+    onError(callback: (error: { message: string }) => void): () => void {
+      const listener = (_: any, error: { message: string }) => callback(error);
+      ipcRenderer.on('workspace:error', listener);
+      return () => ipcRenderer.off('workspace:error', listener);
+    }
   }
 };
 
