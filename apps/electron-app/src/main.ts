@@ -6,6 +6,10 @@ import { ElectronBackend } from '@workspace/backend-electron';
 const backend = new ElectronBackend();
 
 const createWindow = (): void => {
+  console.log('[Main] Creating window...');
+  console.log('[Main] __dirname:', __dirname);
+  console.log('[Main] Preload path:', join(__dirname, 'preload.js'));
+  
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -19,12 +23,15 @@ const createWindow = (): void => {
   // Set the main window on the backend
   backend.setMainWindow(mainWindow);
 
-  // Add F12 keyboard shortcut for dev tools
-  mainWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.key === 'F12') {
-      mainWindow.webContents.toggleDevTools();
-      event.preventDefault();
-    }
+  // Add console logging for debugging
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[Renderer Console] ${message}`);
+  });
+
+  // Add preload error handling
+  mainWindow.webContents.on('preload-error', (event, preloadPath, error) => {
+    console.error('[Main] Preload error:', error);
+    console.error('[Main] Preload path:', preloadPath);
   });
 
   // Load the renderer
@@ -33,11 +40,6 @@ const createWindow = (): void => {
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(join(__dirname, 'renderer', 'renderer.html'));
-  }
-  
-  // Always open dev tools in development mode (fallback check)
-  if (!app.isPackaged) {
-    mainWindow.webContents.openDevTools();
   }
 };
 

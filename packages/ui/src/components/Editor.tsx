@@ -4,8 +4,12 @@ import { Canvas } from './Canvas';
 import { FramesPreview } from './FramesPreview/FramesPreview';
 import { FileExplorer } from './FileExplorer';
 import { ThreePanelLayout } from './Layout';
+import { WorkspaceExample } from '../examples/WorkspaceExample';
 
 export const Editor: React.FC = () => {
+  return (
+    <WorkspaceExample />
+  )
   const handleFileSelect = (path: string) => {
     console.log('File selected:', path);
   };

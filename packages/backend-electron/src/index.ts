@@ -8,6 +8,4 @@ export { WorkspaceModel } from './models/WorkspaceModel';
 
 // Export utilities
 export { isImageFile } from './utils/isImageFile';
-export { sendToRenderer } from './utils/sendToRenderer';
-
-// Note: preload script should be imported separately, not from the main index 
+export { sendToRenderer } from './utils/sendToRenderer'; 

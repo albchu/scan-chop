@@ -36,12 +36,13 @@ export function useWorkspace(): UseWorkspaceReturn {
   });
 
   useEffect(() => {
-    // Only set up listeners if we have the workspace API
-    if (!backend || !(backend as any).workspace) {
+    // Backend should always have workspace API now
+    if (!backend || !backend.workspace) {
+      console.error('Backend or workspace API not available', backend);
       return;
     }
 
-    const workspace = (backend as any).workspace;
+    const { workspace } = backend;
 
     // Set up listeners for workspace events
     const unsubscribeDirectory = workspace.onDirectoryReady((payload: DirectoryReadyPayload) => {
@@ -83,7 +84,7 @@ export function useWorkspace(): UseWorkspaceReturn {
   }, [backend]);
 
   const loadDirectory = useCallback(async (path: string) => {
-    if (!backend || !(backend as any).workspace) {
+    if (!backend || !backend.workspace) {
       setState(prev => ({
         ...prev,
         error: 'Workspace API not available',
@@ -99,7 +100,7 @@ export function useWorkspace(): UseWorkspaceReturn {
     }));
 
     try {
-      await (backend as any).workspace.loadDirectory(path);
+      await backend.workspace.loadDirectory(path);
     } catch (error) {
       setState(prev => ({
         ...prev,
