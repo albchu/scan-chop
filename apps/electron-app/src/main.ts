@@ -19,12 +19,25 @@ const createWindow = (): void => {
   // Set the main window on the backend
   backend.setMainWindow(mainWindow);
 
+  // Add F12 keyboard shortcut for dev tools
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12') {
+      mainWindow.webContents.toggleDevTools();
+      event.preventDefault();
+    }
+  });
+
   // Load the renderer
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadFile(join(__dirname, 'renderer', 'renderer.html'));
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(join(__dirname, 'renderer', 'renderer.html'));
+  }
+  
+  // Always open dev tools in development mode (fallback check)
+  if (!app.isPackaged) {
+    mainWindow.webContents.openDevTools();
   }
 };
 
