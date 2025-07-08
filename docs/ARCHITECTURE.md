@@ -4,18 +4,17 @@
 
 ## 🧭 Overview
 
-This document describes the technical architecture of **Scan Chop**, an image splitting tool built as a **modular, type-safe, and testable monorepo** designed to run across:
+This document describes the technical architecture of **Scan Chop**, an image splitting tool built as a **modular, type-safe, and testable monorepo** designed to run as:
 
-* 🖥 **Electron (desktop)** with Node.js backend and IPC
-* 🌐 **Web browser** with local in-memory state backend
+* 🖥 **Electron (desktop)** application with Node.js backend and IPC
 
 The Scan Chop application uses a **backend-managed state architecture** where the React UI is **purely declarative and view-focused**:
 
 * All application state is **exclusively owned and managed by the backend**
 * The UI **dispatches typed actions** and **subscribes to backend state updates**
-* **State access and reactivity** are handled through a **type-safe `BackendAPI`** interface injected at runtime
+* **State access and reactivity** are handled through a **type-safe `BackendAPI`** interface
 
-This architecture enables consistent image processing logic across platforms while maintaining clean separation between the UI layer and platform-specific implementations.
+This architecture enables consistent image processing logic with clean separation between the UI layer and the Electron backend implementation.
 
 ---
 
@@ -24,12 +23,10 @@ This architecture enables consistent image processing logic across platforms whi
 ```
 /apps
   /electron-app         → Electron runtime: main, preload, renderer
-  /web-app              → Web runtime: React entry
 /packages
   /shared               → TypeScript shared types: AppState, Action, BackendAPI
   /ui                   → React UI + AppContext, hooks
-  /backend-web          → Web backend implementation (local state only)
-  /backend-electron     → Electron backend implementation using IPC
+  /backend              → Electron backend implementation using IPC
 ```
 
 ---
@@ -39,7 +36,7 @@ This architecture enables consistent image processing logic across platforms whi
 | Principle             | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
 | 🧠 Centralized State  | All state lives in the backend, not in React components      |
-| 🧩 Pluggable Backend  | Backend implementations conform to a shared `BackendAPI`     |
+| 🧩 Backend Interface  | Backend implementation conforms to the shared `BackendAPI`   |
 | 🔄 Action-Based Logic | UI dispatches actions instead of setting state directly      |
 | ⚡ Reactive UI         | UI subscribes to state slices and re-renders on change       |
 | 🧪 Fully Testable     | Backend and UI layers are independently and jointly testable |
@@ -78,7 +75,7 @@ export interface BackendAPI {
 
 ## 💻 UI Layer (`packages/ui`)
 
-The React UI is wrapped with an `AppProvider` that accepts any `BackendAPI`.
+The React UI is wrapped with an `AppProvider` that accepts the Electron `BackendAPI`.
 
 > **📋 For detailed UI component architecture, visual editor design patterns, and React component structure, see the [UI Architecture Documentation](UI_ARCHITECTURE.md).**
 
@@ -119,23 +116,17 @@ return (
 
 ---
 
-## 🧩 Backend Implementations
+## 🧩 Backend Implementation
 
-### ✅ `backend-electron`
+### ✅ `backend`
 
 * Uses `contextBridge` in preload to expose `BackendAPI` to renderer
 * Main process holds state and emits updates via `EventEmitter`
 * IPC channels: `'dispatch'`, `'select'`, `'getState'`
 
-### ✅ `backend-web`
-
-* Uses **local in-memory state** (no HTTP or fetch)
-* Simulates subscriptions and updates using local function registry
-* Suitable for demonstrating backend injection in a web-only setup
-
 ---
 
-## 🔧 Runtime Entry Points
+## 🔧 Runtime Entry Point
 
 ### Electron (`apps/electron-app/renderer.tsx`)
 
@@ -145,25 +136,16 @@ return (
 </AppProvider>
 ```
 
-### Web (`apps/web-app/index.tsx`)
-
-```tsx
-<AppProvider backend={webBackend}>
-  <App />
-</AppProvider>
-```
-
 ---
 
 ## 🧪 Testing Strategy
 
 * Uses [`vitest`](https://vitest.dev) and [`@testing-library/react`](https://testing-library.com)
-* Test suites per backend + UI
+* Test suites for backend and UI
 
 | Layer              | Location                    | Tests                                   |
 | ------------------ | --------------------------- | --------------------------------------- |
-| `backend-electron` | `__tests__/backend.test.ts` | dispatch, state update, subscriptions   |
-| `backend-web`      | `__tests__/backend.test.ts` | action simulation, local subscription   |
+| `backend`          | `__tests__/backend.test.ts` | dispatch, state update, subscriptions   |
 | `ui`               | `__tests__/App.test.tsx`    | full UI integration with mocked backend |
 
 ### Run All Tests
@@ -192,8 +174,7 @@ pnpm test
 | ---------------- | -------------------------------- |
 | Install all deps | `pnpm install`                   |
 | Build all        | `pnpm build`                     |
-| Start Electron   | `pnpm dev` or `pnpm dev:electron` |
-| Start Web        | `pnpm dev:web`                   |
+| Start Electron   | `pnpm dev`                       |
 | Test All         | `pnpm test`                      |
 | Lint All         | `pnpm lint`                      |
 | Type Check       | `pnpm type-check`                |
@@ -202,23 +183,18 @@ pnpm test
 
 | Task                    | Command                                  | Output                                    |
 | ----------------------- | ---------------------------------------- | ----------------------------------------- |
-| Build Web (Production)  | `pnpm build:web`                        | `apps/web-app/dist/` (static files)      |
 | Build Electron (Prod)   | `pnpm build:electron`                   | `apps/electron-app/dist/` (executable)   |
-| Build All (Production)  | `pnpm build:prod`                       | Both web and electron production builds  |
+| Build All (Production)  | `pnpm build:prod`                       | Electron production build                |
 | Package Electron        | `pnpm package:electron`                 | Platform-specific installers             |
 | Release Electron        | `pnpm release:electron`                 | Electron builds with publishing          |
 
 ### Build Features
 
-#### Web App Production Build
-* **Tree shaking** and **dead code elimination**
-* **Code splitting** with manual chunks for vendor and UI packages
-* **Asset optimization** with Vite's built-in optimizations
-* **Environment-specific configurations**
-
 #### Electron Production Build
 * **TypeScript compilation** for main process
 * **Vite bundling** for renderer process
+* **Tree shaking** and **dead code elimination**
+* **Asset optimization** with Vite's built-in optimizations
 * **Basic packaging** with electron-builder
 * **Multi-platform builds** (macOS, Windows, Linux)
 
@@ -226,7 +202,7 @@ pnpm test
 
 ## 🚀 Why Turborepo Over Direct PNPM?
 
-This project's **multi-target architecture** (Electron + Web) with shared packages creates complex build dependencies that require sophisticated orchestration. While PNPM provides excellent workspace management, **Turborepo** adds the intelligent build coordination essential for this architecture:
+This project's **modular architecture** with shared packages creates complex build dependencies that require sophisticated orchestration. While PNPM provides excellent workspace management, **Turborepo** adds the intelligent build coordination essential for this architecture:
 
 ### 🏎️ Performance Benefits
 
@@ -237,43 +213,40 @@ This project's **multi-target architecture** (Electron + Web) with shared packag
 | **Parallelization** | Limited to `--parallel` flag | Smart parallel execution with dependency graphs |
 | **Change Detection** | Rebuilds everything | Only rebuilds affected packages |
 
-### 🎯 Multi-Target Build Coordination
+### 🎯 Build Coordination
 
-This project requires building for **two distinct runtime targets** with shared dependencies:
+This project requires intelligent build coordination for the modular architecture:
 
 ```bash
 # Without Turborepo: Manual coordination required
 pnpm --filter shared build
 pnpm --filter ui build
-pnpm --filter backend-web build
-pnpm --filter backend-electron build
-pnpm --filter web-app build        # Web target
-pnpm --filter electron-app build   # Electron target
+pnpm --filter backend build
+pnpm --filter electron-app build
 
 # With Turborepo: Intelligent orchestration
-turbo run build  # Builds both targets optimally
+turbo run build  # Builds all packages optimally
 ```
 
 **Smart Pipeline Benefits:**
-- **Shared packages** (`shared`, `ui`) built once, used by both targets
-- **Backend implementations** built in parallel (no interdependency)
-- **Target applications** built simultaneously after dependencies ready
+- **Shared packages** (`shared`, `ui`) built before dependent packages
+- **Proper dependency ordering** ensures correct build sequence
 - **Incremental builds**: Only rebuilds packages when source or dependencies change
+- **Parallel execution** when possible for unrelated packages
 
 ### 🧠 Intelligent Dependency Management
 
-Turborepo automatically analyzes the complex dependency graph:
+Turborepo automatically analyzes the dependency graph:
 ```
-shared ──┬─→ ui ──┬─→ web-app
-         │        └─→ electron-app  
-         ├─→ backend-web ──┘
-         └─→ backend-electron ──┘
+shared ──┬─→ ui ─────────────┐
+         │                    ↓
+         └─→ backend ──→ electron-app
 ```
 
 **Execution Strategy:**
 1. **Level 1**: Build `shared` (foundation)
-2. **Level 2**: Build `ui`, `backend-web`, `backend-electron` in parallel
-3. **Level 3**: Build `web-app` and `electron-app` in parallel
+2. **Level 2**: Build `ui` and `backend` in parallel
+3. **Level 3**: Build `electron-app`
 
 ### 💾 Local Caching Strategy
 
@@ -310,13 +283,13 @@ This ensures:
 | **Selective Execution** | Manual filtering | Automatic affected package detection |
 | **Debugging** | Difficult to trace issues | Clear dependency visualization |
 
-### 🔧 Multi-Target Architecture Challenges Solved
+### 🔧 Architecture Challenges Solved
 
-1. **Cross-Platform Builds**: Coordinates Electron and Web builds with shared dependencies
+1. **Modular Package Builds**: Coordinates shared packages and application builds
 2. **Smart Incremental Builds**: Only rebuilds packages when source or dependencies change
-3. **Parallel Target Compilation**: Builds both runtime targets simultaneously when possible
-4. **Dependency Synchronization**: Ensures shared packages are built before target applications
-5. **Development Efficiency**: Instant rebuilds during development when only one target is affected
+3. **Parallel Compilation**: Builds independent packages simultaneously
+4. **Dependency Synchronization**: Ensures shared packages are built before dependent applications
+5. **Development Efficiency**: Instant rebuilds during development for affected packages
 6. **Testing Coordination**: Runs tests across all packages in dependency order
 
 ### 📈 Smart Pipeline Examples
@@ -324,13 +297,13 @@ This ensures:
 **Development Scenario**: Changing only UI components
 ```bash
 # Only rebuilds affected packages
-turbo run build  # Skips backend-*, rebuilds ui → web-app + electron-app
+turbo run build  # Skips backend, rebuilds ui → electron-app
 ```
 
-**Backend Change**: Modifying Electron backend only
+**Backend Change**: Modifying Electron backend
 ```bash
 # Smart targeting
-turbo run build  # Skips web-app, rebuilds backend-electron → electron-app
+turbo run build  # Rebuilds backend → electron-app
 ```
 
 **Shared Type Change**: Updating shared interfaces
@@ -339,11 +312,10 @@ turbo run build  # Skips web-app, rebuilds backend-electron → electron-app
 turbo run build  # Rebuilds everything dependent on shared
 ```
 
-**Production Builds**: Different targets, same efficiency
+**Production Build**: 
 ```bash
-turbo run build:prod --filter=web-app      # Web production only
-turbo run build:prod --filter=electron-app # Electron production only  
-turbo run build:prod                       # Both targets optimally
+turbo run build:prod --filter=electron-app # Electron production build
+turbo run build:prod                       # Same as above (only one target)
 ```
 
 ---
@@ -424,41 +396,6 @@ packages:
     }
   }
 }
-```
-
-### Web App Build Configuration (`apps/web-app/vite.config.ts`)
-
-```ts
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-
-export default defineConfig(({ mode }) => ({
-  plugins: [react()],
-  base: mode === 'production' ? './' : '/',
-  build: {
-    outDir: 'dist',
-    sourcemap: mode === 'development',
-    minify: mode === 'production' ? 'esbuild' : false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@workspace/ui']
-        }
-      }
-    },
-    target: 'es2020'
-  },
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src')
-    }
-  },
-  define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
-  }
-}));
 ```
 
 ### Electron Build Configuration

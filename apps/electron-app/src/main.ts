@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import { join } from 'path';
-import { ElectronBackend } from '@workspace/backend-electron';
+import { ElectronBackend } from '@workspace/backend';
 
 // Initialize the backend
 const backend = new ElectronBackend();
