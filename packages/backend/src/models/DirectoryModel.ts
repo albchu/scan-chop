@@ -32,6 +32,12 @@ export class DirectoryModel extends BaseModel {
       }
     }
 
+    console.log('[Main] DirectoryModel load: Directory Ready', {
+      path: this.dirPath,
+      imagePaths: [...this.imageFiles.keys()],
+      subdirectories: this.subdirectories,
+    });
+    
     this.send(IPC_CHANNELS.DIRECTORY_READY, {
       path: this.dirPath,
       imagePaths: [...this.imageFiles.keys()],

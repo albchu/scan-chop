@@ -11,12 +11,15 @@ import {
   INITIAL_ERROR_MESSAGE,
   readDirectory 
 } from './mockFileSystem';
+import { useWorkspace } from '../../context/WorkspaceContext';
 
 interface FileExplorerProps {
   onFileSelect?: (path: string) => void;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({ onFileSelect: onFileSelectProp }) => {
+  const workspaceProps = useWorkspace();
+  console.log('[Renderer] FileExplorer:', workspaceProps);
   const [currentPath, setCurrentPath] = useState<string>(DEFAULT_INITIAL_PATH);
   const [selectedFile, setSelectedFile] = useState<string | null>(INITIAL_SELECTED_FILE);
   const [directoryEntries, setDirectoryEntries] = useState<DirectoryEntry[]>(getInitialEntries());

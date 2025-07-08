@@ -1,8 +1,14 @@
-import { createContext, ReactNode, useEffect, useState } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { useBackend } from './BackendContext';
 import { DirectoryReadyPayload, ImageReadyPayload } from '@workspace/shared';
 
-export const WorkspaceContext = createContext<WorkspaceState | null>(null);
+export const WorkspaceContext = createContext<WorkspaceContextProps | null>(null);
 
 interface WorkspaceImage {
   path: string;
@@ -20,7 +26,7 @@ interface WorkspaceState {
   error: string | null;
 }
 
-interface UseWorkspaceReturn {
+interface WorkspaceContextProps {
   state: WorkspaceState;
   loadDirectory: (path: string) => Promise<void>;
   clearError: () => void;
@@ -29,16 +35,14 @@ interface UseWorkspaceReturn {
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const backend = useBackend();
 
-  const [currentDirectory, setCurrentDirectory] = useState<string | null>(null);
-
-  const value: WorkspaceState = {
+  const [state, setState] = useState<WorkspaceState>({
     currentDirectory: '',
     imagePaths: [],
     subdirectories: [],
     loadedImages: new Map(),
     isLoading: false,
     error: null,
-  };
+  });
 
   // Kickoff load of backend workspace data
   useEffect(() => {
@@ -57,17 +61,18 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const { workspace } = backend;
 
     // Set up listeners for workspace events
-    // const unsubscribeDirectory = workspace.onDirectoryReady(
-    //   (payload: DirectoryReadyPayload) => {
-    //     setState((prev) => ({
-    //       ...prev,
-    //       currentDirectory: payload.path,
-    //       imagePaths: payload.imagePaths,
-    //       subdirectories: payload.subdirectories,
-    //       isLoading: false,
-    //     }));
-    //   }
-    // );
+    const unsubscribeDirectory = workspace.onDirectoryReady(
+      (payload: DirectoryReadyPayload) => {
+        console.log('[Renderer] WorkspaceProvider onDirectoryReady:', payload);
+        setState((prev) => ({
+          ...prev,
+          currentDirectory: payload.path,
+          imagePaths: payload.imagePaths,
+          subdirectories: payload.subdirectories,
+          isLoading: false,
+        }));
+      }
+    );
 
     // const unsubscribeImage = workspace.onImageReady(
     //   (payload: ImageReadyPayload) => {
@@ -83,25 +88,52 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     //   }
     // );
 
-    // const unsubscribeError = workspace.onError((error: { message: string }) => {
-    //   setState((prev) => ({
-    //     ...prev,
-    //     error: error.message,
-    //     isLoading: false,
-    //   }));
-    // });
+    const unsubscribeError = workspace.onError((error: { message: string }) => {
+      console.error('[Renderer] WorkspaceProvider error:', error);
+      setState((prev) => ({
+        ...prev,
+        error: error.message,
+        isLoading: false,
+      }));
+    });
 
     console.log('[Renderer] WorkspaceProvider setting up listeners');
+
     // Cleanup listeners on unmount
     return () => {
-      // unsubscribeDirectory();
+      unsubscribeDirectory();
       // unsubscribeImage();
-      // unsubscribeError();
+      unsubscribeError();
     };
   }, [backend]);
+
+  const loadDirectory = async (path: string): Promise<void> => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    await backend.workspace.loadDirectory(path);
+  };
+
+  const clearError = () => {
+    setState((prev) => ({ ...prev, error: null }));
+  };
+
+  const value: WorkspaceContextProps = {
+    state,
+    loadDirectory,
+    clearError,
+  };
+
   return (
     <WorkspaceContext.Provider value={value}>
       {children}
     </WorkspaceContext.Provider>
   );
+}
+
+export function useWorkspace(): WorkspaceContextProps {
+  const workspaceProps = useContext(WorkspaceContext);
+  if (!workspaceProps) {
+    throw new Error('useWorkspace must be used within a WorkspaceProvider');
+  }
+
+  return workspaceProps;
 }

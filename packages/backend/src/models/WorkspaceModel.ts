@@ -17,7 +17,6 @@ export class WorkspaceModel extends BaseModel {
 
     // TODO: Eventually update to accept a path from the UI by default or populate from an sqlite db
     this.rootDir = new DirectoryModel('/Users/albchu/vicky_family_photos', this.sender);
-    this.send(IPC_CHANNELS.DIRECTORY_UPDATED, { path: this.rootDir.path });
     await this.rootDir.load();
   }
 
