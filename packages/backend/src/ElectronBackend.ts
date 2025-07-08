@@ -21,21 +21,6 @@ export class ElectronBackend extends EventEmitter {
   }
 
   private setupIpcHandlers(): void {
-    // Handle action dispatch
-    ipcMain.handle('backend:dispatch', async (_, action: Action) => {
-      await this.dispatch(action);
-    });
-
-    // Handle state selection
-    ipcMain.handle('backend:select', async (_, key: keyof AppState) => {
-      return this.state[key];
-    });
-
-    // Handle full state retrieval
-    ipcMain.handle('backend:getState', async () => {
-      return { ...this.state };
-    });
-
     // Handle subscription setup
     ipcMain.handle('backend:subscribe', async (event, key: keyof AppState) => {
       const webContents = event.sender;
@@ -57,51 +42,33 @@ export class ElectronBackend extends EventEmitter {
       return unsubscribeId;
     });
 
+    // Initial request from the renderer to start loading everything needed to populate the UI
+    ipcMain.handle(IPC_CHANNELS.INIT_WORKSPACE, async (event) => {
+      const sender = event.sender;
+      this.workspaceModel = new WorkspaceModel(sender);
+      await this.workspaceModel.load();
+    });
+
     // Handle workspace directory loading
     ipcMain.handle(IPC_CHANNELS.LOAD_DIRECTORY, async (event, payload: LoadDirectoryPayload) => {
       const sender = event.sender;
-      await this.loadWorkspace(payload.path, sender);
+      await this.loadDirectory(payload.path, sender);
     });
   }
 
-  private async loadWorkspace(directoryPath: string, sender: WebContents): Promise<void> {
+  private async loadDirectory(directoryPath: string, sender: WebContents): Promise<void> {
     try {
+      console.log('ALBERT_DEBUG: Loading directory:', directoryPath);
       // Create a new workspace model
-      this.workspaceModel = new WorkspaceModel(directoryPath, sender);
+      // this.workspaceModel = new WorkspaceModel(directoryPath, sender);
       
-      // Load the workspace (this will trigger directory and image loading)
-      await this.workspaceModel.load();
+      // // Load the workspace (this will trigger directory and image loading)
+      // await this.workspaceModel.load();
     } catch (error) {
       console.error('Error loading workspace:', error);
       sender.send('workspace:error', {
         message: error instanceof Error ? error.message : 'Unknown error loading workspace'
       });
     }
-  }
-
-  private async dispatch(action: Action): Promise<void> {
-    switch (action.type) {
-      case 'incrementCounter':
-        this.state = {
-          ...this.state,
-          counter: this.state.counter + 1
-        };
-        this.emit('state-change:counter', this.state.counter);
-        break;
-
-      case 'resetApp':
-        this.state = {
-          ...INITIAL_STATE
-        };
-        this.emit('state-change:counter', this.state.counter);
-        break;
-
-      default:
-        console.warn('Unknown action type:', (action as { type: string }).type);
-    }
-  }
-
-  getState(): AppState {
-    return { ...this.state };
   }
 } 

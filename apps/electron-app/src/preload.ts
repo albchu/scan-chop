@@ -6,45 +6,13 @@ import { IPC_CHANNELS, LoadDirectoryPayload, DirectoryReadyPayload, ImageReadyPa
 console.log('[Preload] Script starting...');
 
 try {
+  // Implement the renderer-side client for the ipc interactions
   const electronBackend: BackendAPI = {
-    async dispatch(action) {
-      return ipcRenderer.invoke('backend:dispatch', action);
-    },
-
-    select(key) {
-      // Create a proper StateSubscription implementation
-      return {
-        async getValue() {
-          return ipcRenderer.invoke('backend:select', key);
-        },
-        subscribe(callback) {
-          let unsubscribeId: string | null = null;
-          
-          // Set up IPC subscription
-          ipcRenderer.invoke('backend:subscribe', key).then((id: string) => {
-            unsubscribeId = id;
-            
-            // Listen for state updates
-            const listener = (_: any, value: any) => callback(value);
-            ipcRenderer.on(`backend:state-update:${key}`, listener);
-          });
-
-          // Return cleanup function
-          return () => {
-            ipcRenderer.removeAllListeners(`backend:state-update:${key}`);
-            if (unsubscribeId) {
-              ipcRenderer.invoke(`backend:unsubscribe:${unsubscribeId}`);
-            }
-          };
-        }
-      };
-    },
-
-    async getState() {
-      return ipcRenderer.invoke('backend:getState');
-    },
-
     workspace: {
+      async initWorkspace() {
+        return ipcRenderer.invoke(IPC_CHANNELS.INIT_WORKSPACE);
+      },
+
       async loadDirectory(path: string) {
         const payload: LoadDirectoryPayload = { path };
         return ipcRenderer.invoke(IPC_CHANNELS.LOAD_DIRECTORY, payload);

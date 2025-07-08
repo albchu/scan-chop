@@ -9,12 +9,15 @@ import { IPC_CHANNELS } from '@workspace/shared';
 export class DirectoryModel extends BaseModel {
   public imageFiles = new Map<string, ImageFileModel>();
   public subdirectories: string[] = [];
+  public path: string;
 
   constructor(public dirPath: string, sender: WebContents) {
     super(sender);
+    this.path = dirPath;
   }
 
   public override async load(): Promise<void> {
+    console.log('[Main] DirectoryModel load called with path:', this.dirPath);
     const entries = await fs.readdir(this.dirPath, { withFileTypes: true });
 
     for (const entry of entries) {

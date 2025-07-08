@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { App, AppProvider } from '@workspace/ui';
+import { App } from '@workspace/ui';
 import type { BackendAPI } from '@workspace/shared';
 
 // Import the CSS styles from the UI package
@@ -22,7 +22,9 @@ console.log('Window.api.workspace:', window.api?.workspace);
 // Wait for window.api to be available
 function renderApp() {
   if (!window.api) {
-    console.error('window.api is not available! The preload script may not have loaded correctly.');
+    console.error(
+      'window.api is not available! The preload script may not have loaded correctly.'
+    );
     // Display error message
     document.getElementById('root')!.innerHTML = `
       <div style="padding: 20px; color: red;">
@@ -35,9 +37,7 @@ function renderApp() {
 
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-      <AppProvider backend={window.api}>
-        <App />
-      </AppProvider>
+      <App backend={window.api} />
     </React.StrictMode>
   );
 }
