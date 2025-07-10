@@ -1,3 +1,5 @@
+import { DirectoryEntry } from "./types";
+
 export const IPC_CHANNELS = {
   INIT_WORKSPACE: 'workspace:init',
   LOAD_DIRECTORY: 'directory:load',
@@ -14,8 +16,7 @@ export interface LoadDirectoryPayload {
 
 export interface DirectoryReadyPayload {
   path: string;
-  imagePaths: string[];
-  subdirectories: string[];
+  items: DirectoryEntry[];
 }
 
 export interface ImageReadyPayload {

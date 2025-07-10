@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { DirectoryEntry, TreeNode } from './types';
+import type { DirectoryEntry, TreeNode } from '@workspace/shared';
 import { readDirectory } from './mockFileSystem';
 import { FileRow } from './FileRow';
 
@@ -73,6 +73,7 @@ export const FileList: React.FC<Props> = ({
 
   const handleToggle = useCallback(
     (node: TreeNode) => {
+      console.log('[DEBUGGIN] FileList handleToggle:', {node});
       if (!node.isDirectory) return;
 
       if (node.isExpanded) {

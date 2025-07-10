@@ -1,5 +1,5 @@
 import React from 'react';
-import { TreeNode } from './types';
+import type { TreeNode } from '@workspace/shared';
 import { IconChevronRight, IconChevronDown, IconFolder, IconFile, IconPhoto, IconLoader2 } from '@tabler/icons-react';
 
 interface FileRowProps {

@@ -20,28 +20,39 @@ export class DirectoryModel extends BaseModel {
     console.log('[Main] DirectoryModel load called with path:', this.dirPath);
     const entries = await fs.readdir(this.dirPath, { withFileTypes: true });
 
+    // Build fileTree entries
+    const items = [];
+
     for (const entry of entries) {
       const fullPath = path.join(this.dirPath, entry.name);
 
       if (entry.isDirectory()) {
         this.subdirectories.push(fullPath);
+        items.push({
+          name: entry.name,
+          path: fullPath,
+          isDirectory: true
+        });
       } else if (entry.isFile() && isImageFile(fullPath)) {
         const imageModel = new ImageFileModel(fullPath, this, this.sender);
         this.imageFiles.set(fullPath, imageModel);
         await imageModel.load();
+        items.push({
+          name: entry.name,
+          path: fullPath,
+          isDirectory: false
+        });
       }
     }
 
     console.log('[Main] DirectoryModel load: Directory Ready', {
       path: this.dirPath,
-      imagePaths: [...this.imageFiles.keys()],
-      subdirectories: this.subdirectories,
+      items
     });
     
     this.send(IPC_CHANNELS.DIRECTORY_READY, {
       path: this.dirPath,
-      imagePaths: [...this.imageFiles.keys()],
-      subdirectories: this.subdirectories,
+      items
     });
   }
 

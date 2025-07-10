@@ -6,7 +6,7 @@ import {
   useState,
 } from 'react';
 import { useBackend } from './BackendContext';
-import { DirectoryReadyPayload, ImageReadyPayload } from '@workspace/shared';
+import type { DirectoryReadyPayload, DirectoryEntry } from '@workspace/shared';
 
 export const WorkspaceContext = createContext<WorkspaceContextProps | null>(null);
 
@@ -19,9 +19,7 @@ interface WorkspaceImage {
 
 interface WorkspaceState {
   currentDirectory: string | null;
-  imagePaths: string[];
-  subdirectories: string[];
-  loadedImages: Map<string, WorkspaceImage>;
+  fileTree: Record<string, DirectoryEntry[]>;
   isLoading: boolean;
   error: string | null;
 }
@@ -37,9 +35,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const [state, setState] = useState<WorkspaceState>({
     currentDirectory: '',
-    imagePaths: [],
-    subdirectories: [],
-    loadedImages: new Map(),
+    fileTree: {},
     isLoading: false,
     error: null,
   });
@@ -67,8 +63,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         setState((prev) => ({
           ...prev,
           currentDirectory: payload.path,
-          imagePaths: payload.imagePaths,
-          subdirectories: payload.subdirectories,
+          fileTree: {
+            ...prev.fileTree,
+            [payload.path]: payload.items,
+          },
           isLoading: false,
         }));
       }

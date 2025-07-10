@@ -1,4 +1,4 @@
-import { DirectoryEntry } from './types';
+import type { DirectoryEntry } from '@workspace/shared';
 
 // Default initial path
 export const DEFAULT_INITIAL_PATH = '/Users/john/Pictures/Scans';

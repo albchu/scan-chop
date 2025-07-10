@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { validatePath } from './mockFileSystem';
 import { SubmitButton } from './SubmitButton';
 
 interface PathInputProps {
@@ -7,6 +6,19 @@ interface PathInputProps {
   onPathChange: (path: string) => void;
   onPathValidation: (isValid: boolean, error?: string) => void;
 }
+
+// TODO: replace with actual validation. For now is barebones.
+const validatePath = async (path: string): Promise<{isValid: boolean; error?: string}> => {
+  if (!path || path.trim() === '') {
+    return { isValid: false, error: 'Path cannot be empty' };
+  }
+  
+  if (!path.startsWith('/')) {
+    return { isValid: false, error: 'Path must be absolute (start with /)' };
+  }
+
+  return { isValid: true };
+};
 
 export const PathInput: React.FC<PathInputProps> = ({
   currentPath,
@@ -90,48 +102,6 @@ export const PathInput: React.FC<PathInputProps> = ({
     if (e.key === 'Enter') {
       e.preventDefault();
       handleSubmit();
-    }
-
-    // Handle Cmd+A (Mac) and Ctrl+A (Windows/Linux) to select all text
-    if ((e.metaKey && e.key === 'a') || (e.ctrlKey && e.key === 'a')) {
-      e.preventDefault();
-      if (inputRef.current) {
-        inputRef.current.select();
-      }
-      return;
-    }
-
-    // Handle Cmd+V (Mac) and Ctrl+V (Windows/Linux) with feature detection
-    if ((e.metaKey && e.key === 'v') || (e.ctrlKey && e.key === 'v')) {
-      e.preventDefault();
-
-      // Check if clipboard API is available
-      if (!navigator.clipboard || !navigator.clipboard.readText) {
-        console.warn('Clipboard API not available');
-        return;
-      }
-
-      try {
-        // Read from clipboard
-        const clipboardText = await navigator.clipboard.readText();
-        console.log('Clipboard content:', clipboardText);
-
-        // Update input value
-        setInputValue(clipboardText);
-
-        // Clear validation state
-        setValidationState({ isValid: null });
-
-        // Keep focus on the input
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      } catch (error) {
-        console.error('Failed to read clipboard:', error);
-        if (error instanceof Error && error.name === 'NotAllowedError') {
-          console.info('Clipboard access denied. Please use standard paste.');
-        }
-      }
     }
   };
 
