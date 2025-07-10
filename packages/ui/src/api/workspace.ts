@@ -1,4 +1,4 @@
-import type { DirectoryNode } from '@workspace/shared';
+import type { DirectoryNode, LoadDirectoryOptions } from '@workspace/shared';
 
 // Type-safe API response
 interface ApiResponse<T> {
@@ -9,10 +9,10 @@ interface ApiResponse<T> {
 
 // Workspace API methods
 export const workspaceApi = {
-  async loadDirectory(path: string): Promise<DirectoryNode> {
-    console.log('[WorkspaceAPI] Loading directory:', path);
+  async loadDirectory(path: string, options?: LoadDirectoryOptions): Promise<DirectoryNode> {
+    console.log('[WorkspaceAPI] Loading directory:', path, 'with options:', options);
     
-    const response = await window.backend.invoke('workspace:loadDirectory', path) as ApiResponse<DirectoryNode>;
+    const response = await window.backend.invoke('workspace:loadDirectory', path, options) as ApiResponse<DirectoryNode>;
     
     if (response.success && response.data) {
       return response.data;

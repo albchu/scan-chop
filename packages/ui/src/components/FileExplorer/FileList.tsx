@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { DirectoryNode } from '@workspace/shared';
 import { FileRow } from './FileRow';
+import { useWorkspace } from '../../context/WorkspaceContext';
 
 // Extended node type for UI state
 interface TreeNode extends DirectoryNode {
   level: number;
   isExpanded: boolean;
+  isLoading?: boolean;
   children?: TreeNode[];
 }
 
@@ -20,7 +22,9 @@ export const FileList: React.FC<Props> = ({
   selectedFile,
   onFileSelect,
 }) => {
+  const { loadSubDirectory } = useWorkspace();
   const [tree, setTree] = useState<TreeNode[]>([]);
+  const [loadingPaths, setLoadingPaths] = useState<Set<string>>(new Set());
 
   // Convert DirectoryNode to TreeNode with UI state
   const convertToTreeNode = useCallback((
@@ -31,6 +35,7 @@ export const FileList: React.FC<Props> = ({
       ...node,
       level,
       isExpanded: false,
+      isLoading: false,
       children: node.children?.map(child => 
         convertToTreeNode(child, level + 1)
       ),
@@ -71,18 +76,93 @@ export const FileList: React.FC<Props> = ({
     []
   );
 
+  const findNodeByPath = useCallback(
+    (nodes: TreeNode[], targetPath: string): TreeNode | null => {
+      for (const node of nodes) {
+        if (node.path === targetPath) return node;
+        if (node.children) {
+          const found = findNodeByPath(node.children, targetPath);
+          if (found) return found;
+        }
+      }
+      return null;
+    },
+    []
+  );
+
   const handleToggle = useCallback(
-    (node: TreeNode) => {
+    async (node: TreeNode) => {
       if (!node.isDirectory) return;
 
-      setTree((prev) =>
-        updateNodeByPath(prev, node.path, (n) => ({ 
-          ...n, 
-          isExpanded: !n.isExpanded 
-        }))
-      );
+      // If collapsing, just update the state
+      if (node.isExpanded) {
+        setTree((prev) =>
+          updateNodeByPath(prev, node.path, (n) => ({ 
+            ...n, 
+            isExpanded: false 
+          }))
+        );
+        return;
+      }
+
+      // Check if we need to load children
+      if (node.hasChildren && (!node.childrenLoaded || !node.children || node.children.length === 0)) {
+        // Set loading state
+        setLoadingPaths(prev => new Set(prev).add(node.path));
+        setTree((prev) =>
+          updateNodeByPath(prev, node.path, (n) => ({ 
+            ...n, 
+            isLoading: true 
+          }))
+        );
+
+        try {
+          // Load the subdirectory
+          console.log('[FileList] Loading children for:', node.path);
+          const loadedNode = await loadSubDirectory(node.path);
+          
+          // Convert loaded children to TreeNodes
+          const children = loadedNode.children?.map(child => 
+            convertToTreeNode(child, node.level + 1)
+          ) || [];
+
+          // Update tree with loaded children
+          setTree((prev) =>
+            updateNodeByPath(prev, node.path, (n) => ({
+              ...n,
+              isExpanded: true,
+              isLoading: false,
+              childrenLoaded: true,
+              children
+            }))
+          );
+        } catch (error) {
+          console.error('[FileList] Error loading children:', error);
+          // Clear loading state on error
+          setTree((prev) =>
+            updateNodeByPath(prev, node.path, (n) => ({ 
+              ...n, 
+              isLoading: false 
+            }))
+          );
+        } finally {
+          setLoadingPaths(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(node.path);
+            return newSet;
+          });
+        }
+      } else {
+        // Children already loaded, just expand
+        setTree((prev) =>
+          updateNodeByPath(prev, node.path, (n) => ({ 
+            ...n, 
+            isExpanded: true 
+          }))
+        );
+      }
     },
-    [updateNodeByPath]
+    [updateNodeByPath, loadSubDirectory, convertToTreeNode]
   );
 
   // Flatten tree for rendering
@@ -125,7 +205,7 @@ export const FileList: React.FC<Props> = ({
           key={node.path}
           node={node}
           isSelected={selectedFile === node.path}
-          isLoading={false} // No more async loading!
+          isLoading={node.isLoading || false}
           onToggle={handleToggle}
           onFileSelect={onFileSelect}
         />

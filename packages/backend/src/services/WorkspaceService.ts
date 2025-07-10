@@ -1,77 +1,108 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { isImageFile } from '../utils/isImageFile';
-import type { DirectoryNode } from '@workspace/shared';
+import type { DirectoryNode, LoadDirectoryOptions } from '@workspace/shared';
 
-export interface LoadDirectoryOptions {
-  maxDepth?: number;
-  excludeEmpty?: boolean;
+interface CacheEntry {
+  node: DirectoryNode;
+  timestamp: number;
 }
 
 export class WorkspaceService {
-  private fileTreeCache: Map<string, DirectoryNode> = new Map();
+  private fileTreeCache: Map<string, CacheEntry> = new Map();
+  private cacheTimeout = 5 * 60 * 1000; // 5 minutes
+  private preloadQueue: Set<string> = new Set();
   
   async loadDirectory(
     dirPath: string, 
     options: LoadDirectoryOptions = {}
   ): Promise<DirectoryNode> {
-    const { maxDepth = 10, excludeEmpty = true } = options;
+    const { 
+      depth = 1, 
+      preloadDepth = 2, 
+      maxDepth = 10, 
+      excludeEmpty = true 
+    } = options;
     
     // Check cache first
-    if (this.fileTreeCache.has(dirPath)) {
+    const cached = this.getCached(dirPath);
+    if (cached && cached.childrenLoaded) {
       console.log('[WorkspaceService] Returning cached tree for:', dirPath);
-      return this.fileTreeCache.get(dirPath)!;
+      
+      // Still do preloading if needed
+      if (preloadDepth > 0 && cached.children) {
+        this.schedulePreload(cached.children, preloadDepth);
+      }
+      
+      return cached;
     }
     
-    console.log('[WorkspaceService] Scanning directory:', dirPath);
+    console.log('[WorkspaceService] Loading directory with depth:', dirPath, depth);
     
     try {
-      // Scan the directory recursively
-      const tree = await this.scanDirectoryRecursive(dirPath, 0, maxDepth);
+      // Load the directory with specified depth
+      const tree = await this.scanDirectoryWithDepth(dirPath, depth, maxDepth);
       
       // Prune empty directories if requested
       const finalTree = excludeEmpty ? this.pruneEmptyDirectories(tree) : tree;
       
       // Cache the result
-      this.fileTreeCache.set(dirPath, finalTree);
+      this.setCached(dirPath, finalTree);
+      
+      // Schedule preloading of subdirectories if requested
+      if (preloadDepth > 0 && finalTree.children) {
+        this.schedulePreload(finalTree.children, preloadDepth);
+      }
       
       return finalTree;
     } catch (error) {
-      console.error('[WorkspaceService] Error scanning directory:', error);
+      console.error('[WorkspaceService] Error loading directory:', error);
       throw error;
     }
   }
   
-  private async scanDirectoryRecursive(
+  private async scanDirectoryWithDepth(
     dirPath: string,
-    currentDepth: number,
-    maxDepth: number
+    depth: number,
+    maxDepth: number,
+    currentDepth: number = 0
   ): Promise<DirectoryNode> {
-    const nodeName = path.basename(dirPath) || dirPath; // Handle root paths
-    
-    // Check if we've reached max depth
-    if (currentDepth >= maxDepth) {
-      return {
-        name: nodeName,
-        path: dirPath,
-        isDirectory: true,
-        children: []
-      };
-    }
+    const nodeName = path.basename(dirPath) || dirPath;
     
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
       
-      // Process entries in parallel for better performance
+      // Quick check if directory has children (without loading them)
+      const hasImageFiles = entries.some(e => e.isFile() && isImageFile(path.join(dirPath, e.name)));
+      const hasSubdirs = entries.some(e => e.isDirectory());
+      const hasChildren = hasImageFiles || hasSubdirs;
+      
+      // If we're at depth 0, just return basic info
+      if (depth <= 0 || currentDepth >= maxDepth) {
+        return {
+          name: nodeName,
+          path: dirPath,
+          isDirectory: true,
+          hasChildren,
+          childrenLoaded: false
+        };
+      }
+      
+      // Load children
       const childPromises = entries.map(async (entry) => {
         const fullPath = path.join(dirPath, entry.name);
         
         try {
           if (entry.isDirectory()) {
-            // Recursively scan subdirectory
-            return await this.scanDirectoryRecursive(fullPath, currentDepth + 1, maxDepth);
+            // Recursively scan subdirectory with reduced depth
+            return await this.scanDirectoryWithDepth(
+              fullPath, 
+              depth - 1, 
+              maxDepth, 
+              currentDepth + 1
+            );
           } else if (entry.isFile() && isImageFile(fullPath)) {
-            // Only include supported image files
+            // Include image files
             return {
               name: entry.name,
               path: fullPath,
@@ -80,7 +111,6 @@ export class WorkspaceService {
           }
           return null;
         } catch (error) {
-          // Log but don't fail on individual file/directory errors (permissions, etc)
           console.warn(`[WorkspaceService] Error processing ${fullPath}:`, error);
           return null;
         }
@@ -93,7 +123,14 @@ export class WorkspaceService {
         name: nodeName,
         path: dirPath,
         isDirectory: true,
-        children
+        hasChildren: children.length > 0,
+        childrenLoaded: true,
+        children: children.sort((a, b) => {
+          // Sort directories first, then by name
+          if (a.isDirectory && !b.isDirectory) return -1;
+          if (!a.isDirectory && b.isDirectory) return 1;
+          return a.name.localeCompare(b.name);
+        })
       };
     } catch (error) {
       // If we can't read the directory, return it as empty
@@ -102,35 +139,91 @@ export class WorkspaceService {
         name: nodeName,
         path: dirPath,
         isDirectory: true,
+        hasChildren: false,
+        childrenLoaded: true,
         children: []
       };
     }
   }
   
   private pruneEmptyDirectories(node: DirectoryNode): DirectoryNode {
-    if (!node.isDirectory) {
+    if (!node.isDirectory || !node.children) {
       return node;
     }
     
     const prunedChildren = node.children
-      ?.map(child => this.pruneEmptyDirectories(child))
+      .map(child => this.pruneEmptyDirectories(child))
       .filter(child => {
         // Keep all files
         if (!child.isDirectory) return true;
         // Keep directories that have children
-        return child.children && child.children.length > 0;
+        return child.hasChildren;
       });
     
     return {
       ...node,
-      children: prunedChildren || []
+      children: prunedChildren,
+      hasChildren: prunedChildren.length > 0
     };
+  }
+  
+  private schedulePreload(children: DirectoryNode[], depth: number): void {
+    // Schedule preloading of subdirectories in the background
+    const subdirs = children.filter(child => child.isDirectory && child.hasChildren);
+    
+    subdirs.forEach(subdir => {
+      if (!this.preloadQueue.has(subdir.path)) {
+        this.preloadQueue.add(subdir.path);
+        
+        // Preload asynchronously without blocking
+        setImmediate(async () => {
+          try {
+            console.log('[WorkspaceService] Preloading:', subdir.path);
+            await this.loadDirectory(subdir.path, { 
+              depth, 
+              preloadDepth: Math.max(0, depth - 1),
+              excludeEmpty: true 
+            });
+          } catch (error) {
+            console.warn('[WorkspaceService] Preload failed:', subdir.path, error);
+          } finally {
+            this.preloadQueue.delete(subdir.path);
+          }
+        });
+      }
+    });
+  }
+  
+  private getCached(dirPath: string): DirectoryNode | null {
+    const entry = this.fileTreeCache.get(dirPath);
+    if (!entry) return null;
+    
+    // Check if cache is expired
+    if (Date.now() - entry.timestamp > this.cacheTimeout) {
+      this.fileTreeCache.delete(dirPath);
+      return null;
+    }
+    
+    return entry.node;
+  }
+  
+  private setCached(dirPath: string, node: DirectoryNode): void {
+    this.fileTreeCache.set(dirPath, {
+      node,
+      timestamp: Date.now()
+    });
   }
   
   // Clear cache for a specific path or all cache
   clearCache(dirPath?: string): void {
     if (dirPath) {
       this.fileTreeCache.delete(dirPath);
+      // Also clear any subdirectories
+      for (const [path] of this.fileTreeCache) {
+        if (path.startsWith(dirPath)) {
+          this.fileTreeCache.delete(path);
+        }
+      }
     } else {
       this.fileTreeCache.clear();
     }

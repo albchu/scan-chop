@@ -6,7 +6,7 @@ import {
   useCallback,
 } from 'react';
 import { workspaceApi } from '../api/workspace';
-import type { DirectoryNode } from '@workspace/shared';
+import type { DirectoryNode, LoadDirectoryOptions } from '@workspace/shared';
 
 interface WorkspaceState {
   currentDirectory: string | null;
@@ -17,7 +17,8 @@ interface WorkspaceState {
 
 interface WorkspaceContextProps {
   state: WorkspaceState;
-  loadDirectory: (path: string) => Promise<void>;
+  loadDirectory: (path: string, options?: LoadDirectoryOptions) => Promise<void>;
+  loadSubDirectory: (path: string) => Promise<DirectoryNode>;
   clearError: () => void;
   refreshDirectory: () => Promise<void>;
 }
@@ -32,7 +33,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     error: null,
   });
 
-  const loadDirectory = useCallback(async (path: string): Promise<void> => {
+  const loadDirectory = useCallback(async (path: string, options?: LoadDirectoryOptions): Promise<void> => {
     console.log('[WorkspaceContext] Loading directory:', path);
     
     setState(prev => ({ 
@@ -42,7 +43,15 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }));
 
     try {
-      const tree = await workspaceApi.loadDirectory(path);
+      // Default to loading only 1 level deep for initial load
+      const defaultOptions: LoadDirectoryOptions = {
+        depth: 1,
+        preloadDepth: 2,
+        excludeEmpty: true,
+        ...options
+      };
+      
+      const tree = await workspaceApi.loadDirectory(path, defaultOptions);
       
       setState({
         currentDirectory: path,
@@ -61,13 +70,31 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const loadSubDirectory = useCallback(async (path: string): Promise<DirectoryNode> => {
+    console.log('[WorkspaceContext] Loading subdirectory:', path);
+    
+    try {
+      // Load subdirectory with more depth for expansion
+      const tree = await workspaceApi.loadDirectory(path, {
+        depth: 3,      // Load 3 levels deep when expanding
+        preloadDepth: 1,  // Preload 1 additional level
+        excludeEmpty: true
+      });
+      
+      return tree;
+    } catch (error) {
+      console.error('[WorkspaceContext] Error loading subdirectory:', error);
+      throw error;
+    }
+  }, []);
+
   const refreshDirectory = useCallback(async (): Promise<void> => {
     if (!state.currentDirectory) return;
     
     // Clear cache for current directory
     await workspaceApi.clearCache(state.currentDirectory);
     
-    // Reload
+    // Reload with same options
     await loadDirectory(state.currentDirectory);
   }, [state.currentDirectory, loadDirectory]);
 
@@ -78,6 +105,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const value: WorkspaceContextProps = {
     state,
     loadDirectory,
+    loadSubDirectory,
     clearError,
     refreshDirectory,
   };

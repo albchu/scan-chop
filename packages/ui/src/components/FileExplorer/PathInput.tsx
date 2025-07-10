@@ -5,6 +5,7 @@ interface PathInputProps {
   currentPath: string;
   onPathChange: (path: string) => void;
   onPathValidation: (isValid: boolean, error?: string) => void;
+  onRefresh?: () => void;
 }
 
 // TODO: replace with actual validation. For now is barebones.
@@ -24,6 +25,7 @@ export const PathInput: React.FC<PathInputProps> = ({
   currentPath,
   onPathChange,
   onPathValidation,
+  onRefresh,
 }) => {
   const [inputValue, setInputValue] = useState(currentPath);
   const [lastValidatedPath, setLastValidatedPath] = useState(currentPath);
@@ -95,7 +97,12 @@ export const PathInput: React.FC<PathInputProps> = ({
   };
 
   const handleSubmit = () => {
-    validatePathAsync(inputValue);
+    // If we're not in search mode and have a refresh handler, refresh instead
+    if (!isSearchMode && onRefresh) {
+      onRefresh();
+    } else {
+      validatePathAsync(inputValue);
+    }
   };
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {

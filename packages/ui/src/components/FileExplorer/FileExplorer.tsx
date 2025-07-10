@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { FileList } from './FileList';
 import { FileListError, FileListNoDir } from './FileListStates';
-import { IconLoader2, IconRefresh } from '@tabler/icons-react';
+import { IconLoader2 } from '@tabler/icons-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { PathInput } from './PathInput';
 
@@ -78,24 +78,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   return (
     <div className="h-full flex flex-col bg-gray-900">
       <div className="flex-shrink-0 p-4 border-b border-gray-700 space-y-3">
-        <div className="flex items-center gap-2">
-          <div className="flex-1">
-            <PathInput
-              currentPath={state.currentDirectory || ''}
-              onPathChange={handlePathChange}
-              onPathValidation={handlePathValidation}
-            />
-          </div>
-          {state.currentDirectory && (
-            <button
-              onClick={handleRefresh}
-              className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded transition-colors"
-              title="Refresh directory"
-            >
-              <IconRefresh size={20} />
-            </button>
-          )}
-        </div>
+        <PathInput
+          currentPath={state.currentDirectory || ''}
+          onPathChange={handlePathChange}
+          onPathValidation={handlePathValidation}
+          onRefresh={handleRefresh}
+        />
       </div>
 
       <div className="flex-1 min-h-0">{renderFileListContent()}</div>

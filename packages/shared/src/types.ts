@@ -101,7 +101,16 @@ export interface DirectoryNode {
   name: string;
   path: string;
   isDirectory: boolean;
+  hasChildren?: boolean;      // Indicates if directory has any children (without loading them)
+  childrenLoaded?: boolean;   // Indicates if children array is populated
   children?: DirectoryNode[];
+}
+
+export interface LoadDirectoryOptions {
+  depth?: number;         // How many levels deep to load (default: 1)
+  preloadDepth?: number;  // Additional levels to preload in background (default: 2)
+  maxDepth?: number;      // Maximum depth for safety (default: 10)
+  excludeEmpty?: boolean; // Exclude directories with no images (default: true)
 }
 
 // Legacy types (kept for backward compatibility)
