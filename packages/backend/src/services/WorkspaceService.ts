@@ -75,7 +75,7 @@ export class WorkspaceService {
       
       // Quick check if directory has children (without loading them)
       const hasImageFiles = entries.some(e => e.isFile() && isImageFile(path.join(dirPath, e.name)));
-      const hasSubdirs = entries.some(e => e.isDirectory());
+      const hasSubdirs = entries.some(e => e.isDirectory() && !e.name.startsWith('.'));
       const hasChildren = hasImageFiles || hasSubdirs;
       
       // If we're at depth 0, just return basic info
@@ -95,6 +95,11 @@ export class WorkspaceService {
         
         try {
           if (entry.isDirectory()) {
+            // Skip hidden directories (those starting with a dot)
+            if (entry.name.startsWith('.')) {
+              return null;
+            }
+            
             // Recursively scan subdirectory with reduced depth
             return await this.scanDirectoryWithDepth(
               fullPath, 
