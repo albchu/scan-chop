@@ -2,24 +2,15 @@ import {
   createContext,
   ReactNode,
   useContext,
-  useEffect,
   useState,
+  useCallback,
 } from 'react';
-import { useBackend } from './BackendContext';
-import type { DirectoryReadyPayload, DirectoryEntry } from '@workspace/shared';
-
-export const WorkspaceContext = createContext<WorkspaceContextProps | null>(null);
-
-interface WorkspaceImage {
-  path: string;
-  width: number;
-  height: number;
-  dataUrl: string;
-}
+import { workspaceApi } from '../api/workspace';
+import type { DirectoryNode } from '@workspace/shared';
 
 interface WorkspaceState {
   currentDirectory: string | null;
-  fileTree: Record<string, DirectoryEntry[]>;
+  directoryTree: DirectoryNode | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -28,96 +19,67 @@ interface WorkspaceContextProps {
   state: WorkspaceState;
   loadDirectory: (path: string) => Promise<void>;
   clearError: () => void;
+  refreshDirectory: () => Promise<void>;
 }
 
-export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const backend = useBackend();
+export const WorkspaceContext = createContext<WorkspaceContextProps | null>(null);
 
+export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<WorkspaceState>({
-    currentDirectory: '',
-    fileTree: {},
+    currentDirectory: null,
+    directoryTree: null,
     isLoading: false,
     error: null,
   });
 
-  // Kickoff load of backend workspace data
-  useEffect(() => {
-    console.log('[Renderer] WorkspaceProvider triggering initWorkspace');
-    backend.workspace.initWorkspace();
+  const loadDirectory = useCallback(async (path: string): Promise<void> => {
+    console.log('[WorkspaceContext] Loading directory:', path);
+    
+    setState(prev => ({ 
+      ...prev, 
+      isLoading: true, 
+      error: null 
+    }));
+
+    try {
+      const tree = await workspaceApi.loadDirectory(path);
+      
+      setState({
+        currentDirectory: path,
+        directoryTree: tree,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      console.error('[WorkspaceContext] Error loading directory:', error);
+      
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to load directory',
+      }));
+    }
   }, []);
 
-  // Workspace event listeners
-  useEffect(() => {
-    // Backend should always have workspace API now
-    if (!backend || !backend.workspace) {
-      console.error('Backend or workspace API not available', backend);
-      return;
-    }
+  const refreshDirectory = useCallback(async (): Promise<void> => {
+    if (!state.currentDirectory) return;
+    
+    // Clear cache for current directory
+    await workspaceApi.clearCache(state.currentDirectory);
+    
+    // Reload
+    await loadDirectory(state.currentDirectory);
+  }, [state.currentDirectory, loadDirectory]);
 
-    const { workspace } = backend;
-
-    // Set up listeners for workspace events
-    const unsubscribeDirectory = workspace.onDirectoryReady(
-      (payload: DirectoryReadyPayload) => {
-        console.log('[Renderer] WorkspaceProvider onDirectoryReady:', payload);
-        setState((prev) => ({
-          ...prev,
-          currentDirectory: payload.path,
-          fileTree: {
-            ...prev.fileTree,
-            [payload.path]: payload.items,
-          },
-          isLoading: false,
-        }));
-      }
-    );
-
-    // const unsubscribeImage = workspace.onImageReady(
-    //   (payload: ImageReadyPayload) => {
-    //     setState((prev) => ({
-    //       ...prev,
-    //       loadedImages: new Map(prev.loadedImages).set(payload.path, {
-    //         path: payload.path,
-    //         width: payload.width,
-    //         height: payload.height,
-    //         dataUrl: payload.dataUrl,
-    //       }),
-    //     }));
-    //   }
-    // );
-
-    const unsubscribeError = workspace.onError((error: { message: string }) => {
-      console.error('[Renderer] WorkspaceProvider error:', error);
-      setState((prev) => ({
-        ...prev,
-        error: error.message,
-        isLoading: false,
-      }));
-    });
-
-    console.log('[Renderer] WorkspaceProvider setting up listeners');
-
-    // Cleanup listeners on unmount
-    return () => {
-      unsubscribeDirectory();
-      // unsubscribeImage();
-      unsubscribeError();
-    };
-  }, [backend]);
-
-  const loadDirectory = async (path: string): Promise<void> => {
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
-    await backend.workspace.loadDirectory(path);
-  };
-
-  const clearError = () => {
-    setState((prev) => ({ ...prev, error: null }));
-  };
+  const clearError = useCallback(() => {
+    setState(prev => ({ ...prev, error: null }));
+  }, []);
 
   const value: WorkspaceContextProps = {
     state,
     loadDirectory,
     clearError,
+    refreshDirectory,
   };
 
   return (
@@ -128,10 +90,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 }
 
 export function useWorkspace(): WorkspaceContextProps {
-  const workspaceProps = useContext(WorkspaceContext);
-  if (!workspaceProps) {
+  const context = useContext(WorkspaceContext);
+  if (!context) {
     throw new Error('useWorkspace must be used within a WorkspaceProvider');
   }
-
-  return workspaceProps;
+  return context;
 }

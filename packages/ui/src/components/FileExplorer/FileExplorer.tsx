@@ -1,15 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { FileList } from './FileList';
 import { FileListError, FileListNoDir } from './FileListStates';
-import type { DirectoryEntry } from '@workspace/shared';
-import { IconLoader2 } from '@tabler/icons-react';
-import {
-  DEFAULT_INITIAL_PATH,
-  getInitialEntries,
-  INITIAL_SELECTED_FILE,
-  INITIAL_ERROR_MESSAGE,
-  readDirectory,
-} from './mockFileSystem';
+import { IconLoader2, IconRefresh } from '@tabler/icons-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { PathInput } from './PathInput';
 
@@ -20,25 +12,13 @@ interface FileExplorerProps {
 export const FileExplorer: React.FC<FileExplorerProps> = ({
   onFileSelect: onFileSelectProp,
 }) => {
-  const {state, loadDirectory} = useWorkspace();
-  // TODO: When you come back to this: You need to take the fileTree and use it to populate the file explorer
+  const { state, loadDirectory, clearError, refreshDirectory } = useWorkspace();
   
-  // const [currentPath, setCurrentPath] = useState<string>(DEFAULT_INITIAL_PATH);
-  const [selectedFile, setSelectedFile] = useState<string | null>(
-    INITIAL_SELECTED_FILE
-  );
-
-  console.log('[Renderer] FileExplorer:', {state, selectedFile});
-  // const [directoryEntries, setDirectoryEntries] =
-  //   useState<DirectoryEntry[]>(getInitialEntries());
-  const [errorMessage, setErrorMessage] = useState<string | null>(
-    INITIAL_ERROR_MESSAGE
-  );
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   const handleFileSelect = useCallback(
     (path: string) => {
-      console.log('[DEBUGGIN] FileExplorer handleFileSelect:', {path});
+      console.log('[FileExplorer] File selected:', path);
       setSelectedFile(path);
       if (onFileSelectProp) {
         onFileSelectProp(path);
@@ -48,54 +28,35 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   );
 
   const handlePathChange = useCallback(async (path: string) => {
-    setIsLoading(true);
-    setErrorMessage(null);
+    setSelectedFile(null); // Clear selection when changing directories
+    await loadDirectory(path);
+  }, [loadDirectory]);
 
-    loadDirectory(path);
-
-    // try {
-    //   const entries = await readDirectory(path);
-    //   setCurrentPath(path);
-    //   setDirectoryEntries(entries);
-    //   setSelectedFile(null); // Clear selection when changing directories
-    // } catch (error) {
-    //   setErrorMessage(
-    //     error instanceof Error ? error.message : 'Failed to read directory'
-    //   );
-    //   setDirectoryEntries([]);
-    // } finally {
-    //   setIsLoading(false);
-    // }
-  }, []);
+  const handleRefresh = useCallback(async () => {
+    setSelectedFile(null);
+    await refreshDirectory();
+  }, [refreshDirectory]);
 
   const handlePathValidation = useCallback(
     (isValid: boolean, error?: string) => {
-      if (!isValid && error) {
-        setErrorMessage(error);
-      } else {
-        setErrorMessage(null);
+      if (isValid) {
+        clearError();
       }
+      // PathInput handles its own error display
     },
-    []
+    [clearError]
   );
 
-  // Load initial directory on mount
-  // useEffect(() => {
-  //   if (currentPath) {
-  //     handlePathChange(currentPath);
-  //   }
-  // }, []);
-
   const renderFileListContent = () => {
-    if (errorMessage) {
-      return <FileListError message={errorMessage} />;
+    if (state.error) {
+      return <FileListError message={state.error} />;
     }
 
-    if (!state.currentDirectory) {
+    if (!state.currentDirectory || !state.directoryTree) {
       return <FileListNoDir />;
     }
 
-    if (isLoading) {
+    if (state.isLoading) {
       return (
         <div className="flex items-center justify-center h-full">
           <IconLoader2 size={32} className="animate-spin text-gray-300" />
@@ -103,11 +64,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       );
     }
 
-    // file list view
     return (
       <div className="h-full w-full overflow-y-auto p-2">
         <FileList
-          rootEntries={state.fileTree[state.currentDirectory] || []}
+          rootNode={state.directoryTree}
           selectedFile={selectedFile}
           onFileSelect={handleFileSelect}
         />
@@ -118,11 +78,24 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   return (
     <div className="h-full flex flex-col bg-gray-900">
       <div className="flex-shrink-0 p-4 border-b border-gray-700 space-y-3">
-        <PathInput
-          currentPath={state.currentDirectory || ''}
-          onPathChange={handlePathChange}
-          onPathValidation={handlePathValidation}
-        />
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <PathInput
+              currentPath={state.currentDirectory || ''}
+              onPathChange={handlePathChange}
+              onPathValidation={handlePathValidation}
+            />
+          </div>
+          {state.currentDirectory && (
+            <button
+              onClick={handleRefresh}
+              className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded transition-colors"
+              title="Refresh directory"
+            >
+              <IconRefresh size={20} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 min-h-0">{renderFileListContent()}</div>

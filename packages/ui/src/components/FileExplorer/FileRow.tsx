@@ -1,6 +1,14 @@
 import React from 'react';
-import type { TreeNode } from '@workspace/shared';
 import { IconChevronRight, IconChevronDown, IconFolder, IconFile, IconPhoto, IconLoader2 } from '@tabler/icons-react';
+
+interface TreeNode {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+  level: number;
+  isExpanded: boolean;
+  children?: TreeNode[];
+}
 
 interface FileRowProps {
   node: TreeNode;
@@ -20,7 +28,7 @@ export const FileRow: React.FC<FileRowProps> = ({
   const handleClick = () => {
     if (node.isDirectory) {
       onToggle(node);
-    } else if (node.isSupported) {
+    } else {
       onFileSelect(node.path);
     }
   };
@@ -50,10 +58,8 @@ export const FileRow: React.FC<FileRowProps> = ({
       <div className="mr-2">
         {node.isDirectory ? (
           <IconFolder size={16} className="text-blue-400" />
-        ) : node.isSupported ? (
-          <IconPhoto size={16} className="text-gray-400" />
         ) : (
-          <IconFile size={16} className="text-gray-400" />
+          <IconPhoto size={16} className="text-gray-400" />
         )}
       </div>
 

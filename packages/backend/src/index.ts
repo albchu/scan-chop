@@ -1,11 +1,11 @@
 export { ElectronBackend } from './ElectronBackend';
 
-// Export models
-export { BaseModel } from './models/BaseModel';
-export { ImageFileModel } from './models/ImageFileModel';
-export { DirectoryModel } from './models/DirectoryModel';
-export { WorkspaceModel } from './models/WorkspaceModel';
+// Export services
+export { WorkspaceService } from './services/WorkspaceService';
+export type { LoadDirectoryOptions } from './services/WorkspaceService';
 
 // Export utilities
 export { isImageFile } from './utils/isImageFile';
-export { sendToRenderer } from './utils/sendToRenderer'; 
+
+// Export IPC setup
+export { setupIpcHandlers } from './ipc/handlers'; 

@@ -96,6 +96,14 @@ export interface TreeNode extends DirectoryEntry {
   children?: TreeNode[];
 }
 
+// File system types for new architecture
+export interface DirectoryNode {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+  children?: DirectoryNode[];
+}
+
 // Legacy types (kept for backward compatibility)
 export interface AppState extends Record<string, any> {
   counter: number;
