@@ -3,18 +3,21 @@ import { DirectoryCacheManager } from './DirectoryCacheManager';
 import { DirectoryScanner } from './DirectoryScanner';
 import { DirectoryPreloader } from './DirectoryPreloader';
 import { ImageLoader, type ImageLoadOptions, type ImageData } from './ImageLoader';
+import { ImageCacheManager } from './ImageCacheManager';
 
 export class WorkspaceService {
   private cacheManager: DirectoryCacheManager;
   private scanner: DirectoryScanner;
   private preloader: DirectoryPreloader;
   private imageLoader: ImageLoader;
+  private imageCacheManager: ImageCacheManager;
 
   constructor() {
     this.cacheManager = new DirectoryCacheManager();
     this.scanner = new DirectoryScanner();
     this.preloader = new DirectoryPreloader();
     this.imageLoader = new ImageLoader();
+    this.imageCacheManager = new ImageCacheManager();
   }
   
   async loadDirectory(
@@ -77,12 +80,39 @@ export class WorkspaceService {
   
   clearCache(dirPath?: string): void {
     this.cacheManager.clear(dirPath);
+    // Also clear image cache for this directory if specified
+    if (dirPath) {
+      this.imageCacheManager.clear(dirPath);
+    } else {
+      // Clear all image cache if no specific directory
+      this.imageCacheManager.clear();
+    }
+  }
+  
+  clearImageCache(imagePath?: string): void {
+    this.imageCacheManager.clear(imagePath);
+  }
+  
+  getImageCacheStats(): { size: number; maxSize: number } {
+    return this.imageCacheManager.getStats();
   }
   
   async loadImageAsBase64(
     imagePath: string, 
     options?: ImageLoadOptions
   ): Promise<ImageData> {
-    return this.imageLoader.loadAsBase64(imagePath, options);
+    // Check cache first
+    const cached = this.imageCacheManager.get(imagePath, options);
+    if (cached) {
+      return cached;
+    }
+    
+    // Load the image if not cached
+    const imageData = await this.imageLoader.loadAsBase64(imagePath, options);
+    
+    // Cache the result
+    this.imageCacheManager.set(imagePath, options, imageData);
+    
+    return imageData;
   }
 } 

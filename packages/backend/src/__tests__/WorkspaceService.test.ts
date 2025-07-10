@@ -569,6 +569,206 @@ describe('WorkspaceService', () => {
     });
   });
 
+  describe('image caching', () => {
+    beforeEach(() => {
+      mockStat.mockResolvedValue({
+        isFile: () => true,
+        isDirectory: () => false
+      } as any);
+    });
+
+    it('should cache loaded images', async () => {
+      const imagePath = '/test/cached-image.jpg';
+      const mockImage = {
+        width: 800,
+        height: 600,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,cacheddata')
+      };
+
+      mockLoadAndPrepareImage.mockResolvedValue({
+        original: mockImage,
+        scaled: mockImage,
+        scaleFactor: 1.0
+      } as any);
+
+      // First call - should load from disk
+      const result1 = await service.loadImageAsBase64(imagePath);
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(1);
+
+      // Second call - should use cache
+      const result2 = await service.loadImageAsBase64(imagePath);
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(1); // Still only called once
+      expect(result2).toEqual(result1);
+    });
+
+    it('should cache images with different options separately', async () => {
+      const imagePath = '/test/multi-cache.jpg';
+      const mockImage1 = {
+        width: 800,
+        height: 600,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,full')
+      };
+      const mockImage2 = {
+        width: 400,
+        height: 300,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,half')
+      };
+
+      mockLoadAndPrepareImage
+        .mockResolvedValueOnce({
+          original: mockImage1,
+          scaled: mockImage1,
+          scaleFactor: 1.0
+        } as any)
+        .mockResolvedValueOnce({
+          original: mockImage1,
+          scaled: mockImage2,
+          scaleFactor: 0.5
+        } as any);
+
+      // Load with different options
+      const result1 = await service.loadImageAsBase64(imagePath);
+      const result2 = await service.loadImageAsBase64(imagePath, { downsampleFactor: 0.5 });
+
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(2);
+      expect(result1.imageData).toBe('data:image/jpeg;base64,full');
+      expect(result2.imageData).toBe('data:image/jpeg;base64,half');
+
+      // Both should be cached
+      await service.loadImageAsBase64(imagePath);
+      await service.loadImageAsBase64(imagePath, { downsampleFactor: 0.5 });
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(2); // No additional calls
+    });
+
+    it('should clear image cache when clearCache is called', async () => {
+      const imagePath = '/test/clear-cache.jpg';
+      const mockImage = {
+        width: 800,
+        height: 600,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,data')
+      };
+
+      mockLoadAndPrepareImage.mockResolvedValue({
+        original: mockImage,
+        scaled: mockImage,
+        scaleFactor: 1.0
+      } as any);
+
+      // Load and cache
+      await service.loadImageAsBase64(imagePath);
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(1);
+
+      // Clear all cache
+      service.clearCache();
+
+      // Should reload
+      await service.loadImageAsBase64(imagePath);
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(2);
+    });
+
+    it('should clear specific image cache when clearImageCache is called', async () => {
+      const imagePath1 = '/test/image1.jpg';
+      const imagePath2 = '/test/image2.jpg';
+      const mockImage = {
+        width: 800,
+        height: 600,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,data')
+      };
+
+      mockLoadAndPrepareImage.mockResolvedValue({
+        original: mockImage,
+        scaled: mockImage,
+        scaleFactor: 1.0
+      } as any);
+
+      // Load both images
+      await service.loadImageAsBase64(imagePath1);
+      await service.loadImageAsBase64(imagePath2);
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(2);
+
+      // Clear only image1 cache
+      service.clearImageCache(imagePath1);
+
+      // image1 should reload, image2 should use cache
+      await service.loadImageAsBase64(imagePath1);
+      await service.loadImageAsBase64(imagePath2);
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(3);
+    });
+
+    it('should return correct cache statistics', async () => {
+      const mockImage = {
+        width: 800,
+        height: 600,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,data')
+      };
+
+      mockLoadAndPrepareImage.mockResolvedValue({
+        original: mockImage,
+        scaled: mockImage,
+        scaleFactor: 1.0
+      } as any);
+
+      // Check initial stats
+      let stats = service.getImageCacheStats();
+      expect(stats.size).toBe(0);
+      expect(stats.maxSize).toBe(5); // Default MAX_CACHED_IMAGES
+
+      // Load some images
+      await service.loadImageAsBase64('/test/image1.jpg');
+      await service.loadImageAsBase64('/test/image2.jpg');
+
+      stats = service.getImageCacheStats();
+      expect(stats.size).toBe(2);
+      expect(stats.maxSize).toBe(5);
+    });
+
+    it('should evict least recently used images when cache is full', async () => {
+      // Create a service with a small cache size
+      service = new WorkspaceService();
+      
+      const createMockImageResponse = (id: string) => ({
+        original: { width: 800, height: 600 },
+        scaled: {
+          width: 800,
+          height: 600,
+          toDataURL: vi.fn().mockReturnValue(`data:image/jpeg;base64,${id}`)
+        },
+        scaleFactor: 1.0
+      });
+
+      // Mock responses for 6 different images
+      mockLoadAndPrepareImage
+        .mockResolvedValueOnce(createMockImageResponse('img1') as any)
+        .mockResolvedValueOnce(createMockImageResponse('img2') as any)
+        .mockResolvedValueOnce(createMockImageResponse('img3') as any)
+        .mockResolvedValueOnce(createMockImageResponse('img4') as any)
+        .mockResolvedValueOnce(createMockImageResponse('img5') as any)
+        .mockResolvedValueOnce(createMockImageResponse('img6') as any)
+        .mockResolvedValueOnce(createMockImageResponse('img1-reload') as any);
+
+      // Load 5 images (fill the cache)
+      for (let i = 1; i <= 5; i++) {
+        await service.loadImageAsBase64(`/test/image${i}.jpg`);
+      }
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(5);
+
+      // Access images 2-5 to update their access time
+      for (let i = 2; i <= 5; i++) {
+        await service.loadImageAsBase64(`/test/image${i}.jpg`);
+      }
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(5); // No new loads
+
+      // Load a 6th image - should evict image1 (least recently used)
+      await service.loadImageAsBase64('/test/image6.jpg');
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(6);
+
+      // Try to load image1 again - should reload as it was evicted
+      const result = await service.loadImageAsBase64('/test/image1.jpg');
+      expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(7);
+      expect(result.imageData).toBe('data:image/jpeg;base64,img1-reload');
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle root directory path', async () => {
       mockReaddir.mockResolvedValue([

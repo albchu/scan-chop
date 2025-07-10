@@ -25,6 +25,20 @@ export function setupIpcHandlers(workspaceService: WorkspaceService) {
     return { success: true };
   });
   
+  // Clear only image cache
+  ipcMain.handle('workspace:clearImageCache', async (event, path?: string) => {
+    console.log('[IPC] workspace:clearImageCache called');
+    workspaceService.clearImageCache(path);
+    return { success: true };
+  });
+  
+  // Get image cache statistics
+  ipcMain.handle('workspace:getImageCacheStats', async () => {
+    console.log('[IPC] workspace:getImageCacheStats called');
+    const stats = workspaceService.getImageCacheStats();
+    return { success: true, data: stats };
+  });
+  
   // Load image file as base64
   ipcMain.handle('workspace:loadImage', async (event, imagePath: string, options?: {
     downsampleFactor?: number;
