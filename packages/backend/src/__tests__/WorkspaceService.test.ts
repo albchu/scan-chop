@@ -402,7 +402,13 @@ describe('WorkspaceService', () => {
 
       const result = await service.loadImageAsBase64(imagePath);
 
-      expect(result).toBe('data:image/jpeg;base64,mockdata');
+      expect(result).toEqual({
+        imageData: 'data:image/jpeg;base64,mockdata',
+        width: 800,
+        height: 600,
+        originalWidth: 800,
+        originalHeight: 600
+      });
       expect(mockLoadAndPrepareImage).toHaveBeenCalledWith(imagePath, 1.0);
     });
 
@@ -422,7 +428,13 @@ describe('WorkspaceService', () => {
 
       const result = await service.loadImageAsBase64(imagePath, { downsampleFactor: 0.5 });
 
-      expect(result).toBe('data:image/png;base64,scaled');
+      expect(result).toEqual({
+        imageData: 'data:image/png;base64,scaled',
+        width: 400,
+        height: 300,
+        originalWidth: 800,
+        originalHeight: 600
+      });
       expect(mockLoadAndPrepareImage).toHaveBeenCalledWith(imagePath, 0.5);
     });
 
@@ -449,7 +461,13 @@ describe('WorkspaceService', () => {
 
       const result = await service.loadImageAsBase64(imagePath, { maxWidth: 500 });
 
-      expect(result).toBe('data:image/jpeg;base64,resized');
+      expect(result).toEqual({
+        imageData: 'data:image/jpeg;base64,resized',
+        width: 500,
+        height: 250,
+        originalWidth: 2000,
+        originalHeight: 1000
+      });
       expect(mockLoadAndPrepareImage).toHaveBeenCalledTimes(2);
       expect(mockLoadAndPrepareImage).toHaveBeenLastCalledWith(imagePath, 0.25);
     });
@@ -477,7 +495,13 @@ describe('WorkspaceService', () => {
 
       const result = await service.loadImageAsBase64(imagePath, { maxHeight: 500 });
 
-      expect(result).toBe('data:image/jpeg;base64,resized');
+      expect(result).toEqual({
+        imageData: 'data:image/jpeg;base64,resized',
+        width: 250,
+        height: 500,
+        originalWidth: 1000,
+        originalHeight: 2000
+      });
       expect(mockLoadAndPrepareImage).toHaveBeenLastCalledWith(imagePath, 0.25);
     });
 
@@ -507,7 +531,13 @@ describe('WorkspaceService', () => {
         maxHeight: 200  // Height ratio: 800/200 = 4.0 (more restrictive)
       });
 
-      expect(result).toBe('data:image/jpeg;base64,resized');
+      expect(result).toEqual({
+        imageData: 'data:image/jpeg;base64,resized',
+        width: 250,
+        height: 200,
+        originalWidth: 1000,
+        originalHeight: 800
+      });
       // The implementation uses 1/maxRatio where maxRatio is the larger of the two ratios
       // Height is more restrictive (4.0 > 3.33), so downsample factor = 1/4 = 0.25
       expect(mockLoadAndPrepareImage).toHaveBeenLastCalledWith(imagePath, 0.25);

@@ -12,7 +12,13 @@ vi.mock('../api/workspace', () => ({
       type: 'directory',
       children: [],
     }),
-    loadImage: vi.fn().mockResolvedValue('data:image/png;base64,test'),
+    loadImage: vi.fn().mockResolvedValue({
+      imageData: 'data:image/png;base64,test',
+      width: 800,
+      height: 600,
+      originalWidth: 1600,
+      originalHeight: 1200
+    }),
     clearCache: vi.fn().mockResolvedValue(undefined),
   },
 }));

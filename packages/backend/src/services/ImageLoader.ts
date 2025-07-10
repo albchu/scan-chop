@@ -8,8 +8,16 @@ export interface ImageLoadOptions {
   maxHeight?: number;
 }
 
+export interface ImageData {
+  imageData: string;  // base64 data URL
+  width: number;      // actual width of the returned image
+  height: number;     // actual height of the returned image
+  originalWidth: number;  // original image width before scaling
+  originalHeight: number; // original image height before scaling
+}
+
 export class ImageLoader {
-  async loadAsBase64(imagePath: string, options?: ImageLoadOptions): Promise<string> {
+  async loadAsBase64(imagePath: string, options?: ImageLoadOptions): Promise<ImageData> {
     try {
       console.log('[ImageLoader] Loading image:', imagePath);
       
@@ -20,13 +28,20 @@ export class ImageLoader {
       const downsampleFactor = await this.calculateDownsampleFactor(imagePath, options);
       
       // Load and prepare the image
-      const { scaled } = await loadAndPrepareImage(imagePath, downsampleFactor);
+      const { original, scaled } = await loadAndPrepareImage(imagePath, downsampleFactor);
       
       // Convert to base64 data URL
       const base64 = scaled.toDataURL();
       
       console.log('[ImageLoader] Image loaded successfully, dimensions:', scaled.width, 'x', scaled.height);
-      return base64;
+      
+      return {
+        imageData: base64,
+        width: scaled.width,
+        height: scaled.height,
+        originalWidth: original.width,
+        originalHeight: original.height
+      };
     } catch (error) {
       console.error('[ImageLoader] Error loading image:', error);
       throw error;

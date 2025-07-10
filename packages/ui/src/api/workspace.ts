@@ -1,5 +1,14 @@
 import type { DirectoryNode, LoadDirectoryOptions } from '@workspace/shared';
 
+// Define ImageData type to match backend
+export interface ImageData {
+  imageData: string;  // base64 data URL
+  width: number;      // actual width of the returned image
+  height: number;     // actual height of the returned image
+  originalWidth: number;  // original image width before scaling
+  originalHeight: number; // original image height before scaling
+}
+
 // Type-safe API response
 interface ApiResponse<T> {
   success: boolean;
@@ -31,10 +40,10 @@ export const workspaceApi = {
     downsampleFactor?: number;
     maxWidth?: number;
     maxHeight?: number;
-  }): Promise<string> {
+  }): Promise<ImageData> {
     console.log('[WorkspaceAPI] Loading image:', imagePath, 'with options:', options);
     
-    const response = await window.backend.invoke('workspace:loadImage', imagePath, options) as ApiResponse<string>;
+    const response = await window.backend.invoke('workspace:loadImage', imagePath, options) as ApiResponse<ImageData>;
     
     if (response.success && response.data) {
       return response.data;

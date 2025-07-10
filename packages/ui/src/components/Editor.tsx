@@ -18,18 +18,23 @@ const EditorContent: React.FC = () => {
     try {
       // Load the image as base64 with max dimensions for display
       // This prevents loading huge images that could slow down the UI
-      const imageData = await workspaceApi.loadImage(path, {
+      const imageDataResponse = await workspaceApi.loadImage(path, {
         maxWidth: 2048,   // Max width for display
         maxHeight: 2048,  // Max height for display
       });
       
-      // Update the page with the new image data
-      updatePage({ imageData });
+      // Update the page with the new image data and dimensions
+      updatePage({ 
+        imageData: imageDataResponse.imageData,
+        width: imageDataResponse.width,
+        height: imageDataResponse.height
+      });
       
       // Set loaded state after successful load
       setPageLoadingState('loaded');
       
-      console.log('Image loaded and set as page background');
+      console.log('Image loaded and set as page background with dimensions:', 
+        imageDataResponse.width, 'x', imageDataResponse.height);
     } catch (error) {
       console.error('Failed to load image:', error);
       

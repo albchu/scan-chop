@@ -2,7 +2,7 @@ import type { DirectoryNode, LoadDirectoryOptions } from '@workspace/shared';
 import { DirectoryCacheManager } from './DirectoryCacheManager';
 import { DirectoryScanner } from './DirectoryScanner';
 import { DirectoryPreloader } from './DirectoryPreloader';
-import { ImageLoader, type ImageLoadOptions } from './ImageLoader';
+import { ImageLoader, type ImageLoadOptions, type ImageData } from './ImageLoader';
 
 export class WorkspaceService {
   private cacheManager: DirectoryCacheManager;
@@ -82,7 +82,7 @@ export class WorkspaceService {
   async loadImageAsBase64(
     imagePath: string, 
     options?: ImageLoadOptions
-  ): Promise<string> {
+  ): Promise<ImageData> {
     return this.imageLoader.loadAsBase64(imagePath, options);
   }
 } 
