@@ -13,14 +13,18 @@ interface TreeNode extends DirectoryNode {
 
 interface Props {
   rootNode: DirectoryNode | null;
+  rootPath?: string;  // New prop to identify the root
   selectedFile: string | null;
   onFileSelect: (path: string) => void;
+  onSetAsRoot?: (path: string) => void;  // New callback
 }
 
 export const FileList: React.FC<Props> = ({
   rootNode,
+  rootPath,
   selectedFile,
   onFileSelect,
+  onSetAsRoot,
 }) => {
   const { loadSubDirectory } = useWorkspace();
   const [tree, setTree] = useState<TreeNode[]>([]);
@@ -198,6 +202,9 @@ export const FileList: React.FC<Props> = ({
     );
   }
 
+  // Determine the actual root path (either rootPath prop or the rootNode's path)
+  const actualRootPath = rootPath || rootNode.path;
+
   return (
     <div className="space-y-1">
       {flatList.map((node) => (
@@ -206,8 +213,10 @@ export const FileList: React.FC<Props> = ({
           node={node}
           isSelected={selectedFile === node.path}
           isLoading={node.isLoading || false}
+          isRoot={node.path === actualRootPath}
           onToggle={handleToggle}
           onFileSelect={onFileSelect}
+          onSetAsRoot={onSetAsRoot}
         />
       ))}
     </div>

@@ -10,6 +10,7 @@ import type { DirectoryNode, LoadDirectoryOptions } from '@workspace/shared';
 
 interface WorkspaceState {
   currentDirectory: string | null;
+  rootDirectory: string | null;  // New: tracks the displayed root
   directoryTree: DirectoryNode | null;
   isLoading: boolean;
   error: string | null;
@@ -19,6 +20,7 @@ interface WorkspaceContextProps {
   state: WorkspaceState;
   loadDirectory: (path: string, options?: LoadDirectoryOptions) => Promise<void>;
   loadSubDirectory: (path: string) => Promise<DirectoryNode>;
+  setRootDirectory: (path: string) => Promise<void>;
   clearError: () => void;
   refreshDirectory: () => Promise<void>;
 }
@@ -28,6 +30,7 @@ export const WorkspaceContext = createContext<WorkspaceContextProps | null>(null
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<WorkspaceState>({
     currentDirectory: null,
+    rootDirectory: null,
     directoryTree: null,
     isLoading: false,
     error: null,
@@ -55,6 +58,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       
       setState({
         currentDirectory: path,
+        rootDirectory: path,  // Set root directory when loading a new directory
         directoryTree: tree,
         isLoading: false,
         error: null,
@@ -88,6 +92,41 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setRootDirectory = useCallback(async (path: string): Promise<void> => {
+    console.log('[WorkspaceContext] Setting root directory:', path);
+    
+    setState(prev => ({ 
+      ...prev, 
+      isLoading: true, 
+      error: null 
+    }));
+
+    try {
+      // Load the subdirectory as the new root
+      const tree = await workspaceApi.loadDirectory(path, {
+        depth: 1,
+        preloadDepth: 2,
+        excludeEmpty: true
+      });
+      
+      setState({
+        currentDirectory: path,
+        rootDirectory: path,  // Update root directory
+        directoryTree: tree,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      console.error('[WorkspaceContext] Error setting root directory:', error);
+      
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to set root directory',
+      }));
+    }
+  }, []);
+
   const refreshDirectory = useCallback(async (): Promise<void> => {
     if (!state.currentDirectory) return;
     
@@ -106,6 +145,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     state,
     loadDirectory,
     loadSubDirectory,
+    setRootDirectory,
     clearError,
     refreshDirectory,
   };

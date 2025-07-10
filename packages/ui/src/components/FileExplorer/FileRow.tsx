@@ -1,5 +1,14 @@
-import React from 'react';
-import { IconChevronRight, IconChevronDown, IconFolder, IconFolderOpen, IconPhoto, IconLoader2 } from '@tabler/icons-react';
+import React, { useState } from 'react';
+import { 
+  IconChevronRight, 
+  IconChevronDown, 
+  IconFolder, 
+  IconFolderOpen, 
+  IconPhoto, 
+  IconLoader2,
+  IconStar,
+  IconStarFilled
+} from '@tabler/icons-react';
 
 interface TreeNode {
   name: string;
@@ -17,22 +26,35 @@ interface FileRowProps {
   node: TreeNode;
   isSelected: boolean;
   isLoading: boolean;
+  isRoot?: boolean;
   onToggle: (node: TreeNode) => void;
   onFileSelect: (path: string) => void;
+  onSetAsRoot?: (path: string) => void;
 }
 
 export const FileRow: React.FC<FileRowProps> = ({
   node,
   isSelected,
   isLoading,
+  isRoot = false,
   onToggle,
   onFileSelect,
+  onSetAsRoot,
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   const handleClick = () => {
     if (node.isDirectory) {
       onToggle(node);
     } else {
       onFileSelect(node.path);
+    }
+  };
+
+  const handleStarClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
+    if (onSetAsRoot && !isRoot) {
+      onSetAsRoot(node.path);
     }
   };
 
@@ -43,9 +65,11 @@ export const FileRow: React.FC<FileRowProps> = ({
     <div
       className={`flex items-center px-2 py-1 rounded-md text-sm transition-colors duration-150 ${
         isSelected ? 'bg-blue-600 text-white' : 'text-gray-200 hover:bg-gray-700 hover:text-gray-100'
-      } cursor-pointer`}
+      } cursor-pointer relative group`}
       style={{ paddingLeft: `${node.level * 16 + 8}px` }}
       onClick={handleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Disclosure triangle or placeholder */}
       <div className="flex items-center justify-center w-4 h-4 mr-1">
@@ -83,6 +107,34 @@ export const FileRow: React.FC<FileRowProps> = ({
         <span className="text-xs text-gray-500 ml-2">
           ({node.children.length})
         </span>
+      )}
+
+      {/* Star icon for directories */}
+      {node.isDirectory && (
+        <div 
+          className={`ml-2 transition-opacity duration-200 ${
+            isRoot ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`}
+        >
+          {isRoot ? (
+            <IconStarFilled 
+              size={16} 
+              className="text-yellow-500"
+              title="Current root directory"
+            />
+          ) : (
+            <button
+              onClick={handleStarClick}
+              className="p-1 hover:bg-gray-600 rounded transition-colors"
+              title="Set as root directory"
+            >
+              <IconStar 
+                size={16} 
+                className="text-gray-400 hover:text-yellow-500"
+              />
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

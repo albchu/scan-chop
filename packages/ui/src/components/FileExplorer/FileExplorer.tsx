@@ -12,7 +12,7 @@ interface FileExplorerProps {
 export const FileExplorer: React.FC<FileExplorerProps> = ({
   onFileSelect: onFileSelectProp,
 }) => {
-  const { state, loadDirectory, clearError, refreshDirectory } = useWorkspace();
+  const { state, loadDirectory, clearError, refreshDirectory, setRootDirectory } = useWorkspace();
   
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
@@ -36,6 +36,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setSelectedFile(null);
     await refreshDirectory();
   }, [refreshDirectory]);
+
+  const handleSetAsRoot = useCallback(async (path: string) => {
+    console.log('[FileExplorer] Setting as root:', path);
+    setSelectedFile(null); // Clear selection when changing root
+    await setRootDirectory(path);
+  }, [setRootDirectory]);
 
   const handlePathValidation = useCallback(
     (isValid: boolean, error?: string) => {
@@ -68,8 +74,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       <div className="h-full w-full overflow-y-auto p-2">
         <FileList
           rootNode={state.directoryTree}
+          rootPath={state.rootDirectory || state.currentDirectory}
           selectedFile={selectedFile}
           onFileSelect={handleFileSelect}
+          onSetAsRoot={handleSetAsRoot}
         />
       </div>
     );
