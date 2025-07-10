@@ -4,12 +4,12 @@ import {
   UIContextSnapshot,
   FrameData,
   PageData,
+  PageLoadingState,
   Vector2,
   MIN_FRAME_SIZE,
   DEFAULT_FRAME_SIZE_RATIO,
 } from '@workspace/shared';
 import { rotateVector } from '../../utils/geometry';
-import pageDataJson from './pageData.json';
 
 // Action types for reducer
 export type Action =
@@ -25,7 +25,8 @@ export type Action =
   | { type: 'TRANSLATE_FRAME_RELATIVE'; id: string; vector: Vector2 }
   | { type: 'ROTATE_FRAME'; id: string; dAngle: number }
   | { type: 'SAVE_FRAMES'; ids: string[] }
-  | { type: 'UPDATE_PAGE'; updates: Partial<PageData> };
+  | { type: 'UPDATE_PAGE'; updates: Partial<PageData> }
+  | { type: 'SET_PAGE_LOADING_STATE'; state: PageLoadingState };
 
 // Generate sequential frame ID
 let frameCounter = 0;
@@ -50,16 +51,16 @@ export const createSnapshot = (state: UIContextState): UIContextSnapshot => ({
 
 // Initial state
 export const initialState: UIContextState = {
-  page: pageDataJson.page,
-  // page: {
-  //   id: 'page-1',
-  //   width: 800,
-  //   height: 600,
-  //   imageData: ''
-  // },
+  page: {
+    id: 'page-1',
+    width: 800,
+    height: 600,
+    imageData: ''
+  },
   frames: {},
   selectedFrameIds: [],
-  nextFrameNumber: 1
+  nextFrameNumber: 1,
+  pageLoadingState: 'empty'
 };
 
 // Reducer
@@ -230,6 +231,12 @@ export const reducer = (state: UIContextState, action: Action): UIContextState =
     case 'UPDATE_PAGE': {
       return produce(state, draft => {
         draft.page = { ...draft.page, ...action.updates };
+      });
+    }
+
+    case 'SET_PAGE_LOADING_STATE': {
+      return produce(state, draft => {
+        draft.pageLoadingState = action.state;
       });
     }
 

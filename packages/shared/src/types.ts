@@ -53,6 +53,9 @@ export interface ImageData {
   imageData: string;
 }
 
+// Page loading states
+export type PageLoadingState = 'empty' | 'loading' | 'loaded';
+
 // UI Context types
 export interface UIContextSnapshot {
   page: PageData;
@@ -61,7 +64,9 @@ export interface UIContextSnapshot {
   nextFrameNumber: number;
 }
 
-export interface UIContextState extends UIContextSnapshot {}
+export interface UIContextState extends UIContextSnapshot {
+  pageLoadingState: PageLoadingState;
+}
 
 export interface UIContextActions {
   addFrame(frame: Omit<FrameData, 'id' | 'label' | 'orientation'>): void;
@@ -82,6 +87,7 @@ export interface UIContextActions {
 
   saveFrames(ids: string[]): void; // Logs frame IDs for now
   updatePage(updates: Partial<PageData>): void; // Updates page properties like imageData
+  setPageLoadingState(state: PageLoadingState): void; // Sets the page loading state
 }
 
 export interface DirectoryEntry {

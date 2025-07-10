@@ -10,6 +10,7 @@ import {
   FrameData,
   Vector2,
   PageData,
+  PageLoadingState,
 } from '@workspace/shared';
 import { reducer, initialState } from './reducer';
 
@@ -94,6 +95,13 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
     dispatch({ type: 'UPDATE_PAGE', updates });
   }, []);
 
+  const setPageLoadingState = useCallback(
+    (state: PageLoadingState) => {
+      dispatch({ type: 'SET_PAGE_LOADING_STATE', state });
+    },
+    []
+  );
+
   const value: UIContextState & UIContextActions = {
     ...state,
     addFrame,
@@ -109,6 +117,7 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
     setOrientation,
     saveFrames,
     updatePage,
+    setPageLoadingState,
   };
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

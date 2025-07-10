@@ -7,10 +7,13 @@ import { FileExplorer } from './FileExplorer';
 import { ThreePanelLayout } from './Layout';
 
 const EditorContent: React.FC = () => {
-  const { updatePage } = useUIContext();
+  const { updatePage, setPageLoadingState } = useUIContext();
   
   const handleFileSelect = useCallback(async (path: string) => {
     console.log('File selected:', path);
+    
+    // Set loading state when starting to load an image
+    setPageLoadingState('loading');
     
     try {
       // Load the image as base64 with max dimensions for display
@@ -23,12 +26,19 @@ const EditorContent: React.FC = () => {
       // Update the page with the new image data
       updatePage({ imageData });
       
+      // Set loaded state after successful load
+      setPageLoadingState('loaded');
+      
       console.log('Image loaded and set as page background');
     } catch (error) {
       console.error('Failed to load image:', error);
+      
+      // Revert to empty state on error
+      setPageLoadingState('empty');
+      
       // Could show an error notification here
     }
-  }, [updatePage]);
+  }, [updatePage, setPageLoadingState]);
 
   return (
     <ThreePanelLayout
