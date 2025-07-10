@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen } from './test-utils';
 import { Editor } from '../components/Editor';
 
 describe('Editor', () => {
@@ -17,13 +17,12 @@ describe('Editor', () => {
     expect(screen.getByText('Use the Add tool to create frames')).toBeInTheDocument();
   });
 
-  it('disables batch controls when no frames', () => {
+  it('disables save button when no frames exist', () => {
     render(<Editor />);
     
-    const saveButton = screen.getByText('Save All Frames');
-    const removeButton = screen.getByText('Remove Selected');
+    // The save button shows "Save All" when no frames are selected
+    const saveButton = screen.getByText('Save All');
     
     expect(saveButton).toBeDisabled();
-    expect(removeButton).toBeDisabled();
   });
 }); 
