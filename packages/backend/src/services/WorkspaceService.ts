@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { isImageFile } from '../utils/isImageFile';
 import type { DirectoryNode, LoadDirectoryOptions } from '@workspace/shared';
+import { loadAndPrepareImage } from '@workspace/shared';
 
 interface CacheEntry {
   node: DirectoryNode;
@@ -226,6 +227,57 @@ export class WorkspaceService {
       }
     } else {
       this.fileTreeCache.clear();
+    }
+  }
+  
+  // Load an image file and convert it to base64
+  async loadImageAsBase64(imagePath: string, options?: { 
+    downsampleFactor?: number;
+    maxWidth?: number;
+    maxHeight?: number;
+  }): Promise<string> {
+    try {
+      console.log('[WorkspaceService] Loading image:', imagePath);
+      
+      // Check if file exists and is an image
+      const stats = await fs.stat(imagePath);
+      if (!stats.isFile()) {
+        throw new Error('Path is not a file');
+      }
+      
+      if (!isImageFile(imagePath)) {
+        throw new Error('File is not a supported image format');
+      }
+      
+      // Determine if we need to downsample based on options
+      let downsampleFactor = options?.downsampleFactor || 1.0;
+      
+      // If max dimensions are specified, calculate downsample factor
+      if (options?.maxWidth || options?.maxHeight) {
+        // Load just to get dimensions first
+        const { original } = await loadAndPrepareImage(imagePath, 1.0);
+        
+        const widthRatio = options.maxWidth ? original.width / options.maxWidth : 1;
+        const heightRatio = options.maxHeight ? original.height / options.maxHeight : 1;
+        const maxRatio = Math.max(widthRatio, heightRatio);
+        
+        if (maxRatio > 1) {
+          downsampleFactor = 1 / maxRatio;
+          console.log(`[WorkspaceService] Image dimensions ${original.width}x${original.height} exceed max, downsampling by ${downsampleFactor.toFixed(2)}`);
+        }
+      }
+      
+      // Load and prepare the image with the calculated downsample factor
+      const { scaled } = await loadAndPrepareImage(imagePath, downsampleFactor);
+      
+      // Convert to base64 data URL using image-js's toDataURL method
+      const base64 = scaled.toDataURL();
+      
+      console.log('[WorkspaceService] Image loaded successfully, dimensions:', scaled.width, 'x', scaled.height);
+      return base64;
+    } catch (error) {
+      console.error('[WorkspaceService] Error loading image:', error);
+      throw error;
     }
   }
 } 

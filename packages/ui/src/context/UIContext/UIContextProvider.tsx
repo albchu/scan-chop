@@ -9,6 +9,7 @@ import {
   UIContextActions,
   FrameData,
   Vector2,
+  PageData,
 } from '@workspace/shared';
 import { reducer, initialState } from './reducer';
 
@@ -89,6 +90,10 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
     dispatch({ type: 'SAVE_FRAMES', ids });
   }, []);
 
+  const updatePage = useCallback((updates: Partial<PageData>) => {
+    dispatch({ type: 'UPDATE_PAGE', updates });
+  }, []);
+
   const value: UIContextState & UIContextActions = {
     ...state,
     addFrame,
@@ -103,6 +108,7 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
     rotateFrame,
     setOrientation,
     saveFrames,
+    updatePage,
   };
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

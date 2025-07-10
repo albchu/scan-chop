@@ -25,5 +25,24 @@ export function setupIpcHandlers(workspaceService: WorkspaceService) {
     return { success: true };
   });
   
+  // Load image file as base64
+  ipcMain.handle('workspace:loadImage', async (event, imagePath: string, options?: {
+    downsampleFactor?: number;
+    maxWidth?: number;
+    maxHeight?: number;
+  }) => {
+    console.log('[IPC] workspace:loadImage called with path:', imagePath, 'options:', options);
+    try {
+      const imageData = await workspaceService.loadImageAsBase64(imagePath, options);
+      return { success: true, data: imageData };
+    } catch (error) {
+      console.error('[IPC] Error loading image:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  });
+  
   // Add more handlers as needed in the future
 } 

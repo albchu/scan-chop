@@ -24,7 +24,8 @@ export type Action =
   | { type: 'SET_ORIENTATION'; id: string; orientation: 0 | 90 | 180 | 270 }
   | { type: 'TRANSLATE_FRAME_RELATIVE'; id: string; vector: Vector2 }
   | { type: 'ROTATE_FRAME'; id: string; dAngle: number }
-  | { type: 'SAVE_FRAMES'; ids: string[] };
+  | { type: 'SAVE_FRAMES'; ids: string[] }
+  | { type: 'UPDATE_PAGE'; updates: Partial<PageData> };
 
 // Generate sequential frame ID
 let frameCounter = 0;
@@ -225,6 +226,12 @@ export const reducer = (state: UIContextState, action: Action): UIContextState =
       // Just log for now as specified
       console.log('Saving frames:', action.ids);
       return state;
+
+    case 'UPDATE_PAGE': {
+      return produce(state, draft => {
+        draft.page = { ...draft.page, ...action.updates };
+      });
+    }
 
     default:
       return state;

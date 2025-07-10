@@ -8,6 +8,7 @@ const backendAPI = {
     const allowedChannels = [
       'workspace:loadDirectory',
       'workspace:clearCache',
+      'workspace:loadImage',
       // Add more channels as needed
     ];
     

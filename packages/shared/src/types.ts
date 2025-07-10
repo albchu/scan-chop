@@ -81,6 +81,7 @@ export interface UIContextActions {
   setOrientation(id: string, orientation: 0 | 90 | 180 | 270): void;
 
   saveFrames(ids: string[]): void; // Logs frame IDs for now
+  updatePage(updates: Partial<PageData>): void; // Updates page properties like imageData
 }
 
 export interface DirectoryEntry {
