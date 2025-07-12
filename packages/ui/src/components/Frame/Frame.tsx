@@ -173,6 +173,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
           height={size.height}
           orientation={orientation}
           moveableZoom={moveableZoom}
+          imageScaleFactor={frame.imageScaleFactor}
         />
       </div>
 

@@ -8,6 +8,7 @@ interface FrameInfoProps {
   height: number;
   orientation: number;
   moveableZoom: number;
+  imageScaleFactor?: number;
 }
 
 export const FrameInfo: React.FC<FrameInfoProps> = ({
@@ -16,6 +17,7 @@ export const FrameInfo: React.FC<FrameInfoProps> = ({
   height,
   orientation,
   moveableZoom,
+  imageScaleFactor,
 }) => {
   // Keep the info container always in the bottom left corner of the frame
   const getPositioningStyles = (orientation: number, moveableZoom: number) => {
@@ -63,7 +65,7 @@ export const FrameInfo: React.FC<FrameInfoProps> = ({
         <div className="text-sm font-semibold text-blue-800">{label}</div>
 
         <div className="text-xs text-blue-600">
-          {formatSizeDisplay(width, height)}
+          {formatSizeDisplay(width, height, imageScaleFactor)}
         </div>
       </div>
     </div>

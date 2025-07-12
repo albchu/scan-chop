@@ -18,6 +18,7 @@ export interface FrameData extends BoundingBox {
   label: string;
   orientation: 0 | 90 | 180 | 270; // "Up" direction indicator, 0 is default
   imageData?: string; // Base64 data URL of the cropped frame image
+  imageScaleFactor?: number; // Scale factor from display to original image (display * scaleFactor = original)
 }
 
 // Color types

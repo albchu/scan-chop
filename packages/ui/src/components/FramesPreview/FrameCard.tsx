@@ -96,7 +96,10 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame }) => {
           >
             <div className="font-medium text-white drop-shadow-md">{frame.label}</div>
             <div className="text-xs text-gray-300 drop-shadow-md">
-              {Math.round(frame.width)} × {Math.round(frame.height)}
+              {frame.imageScaleFactor 
+                ? `${Math.round(frame.width * frame.imageScaleFactor)} × ${Math.round(frame.height * frame.imageScaleFactor)}`
+                : `${Math.round(frame.width)} × ${Math.round(frame.height)}`
+              }
             </div>
           </div>
         </div>

@@ -93,19 +93,25 @@ export const useCanvasInteraction = ({
         } catch (error) {
           console.error('Failed to generate frame:', error);
           // If frame generation fails, fall back to manual frame creation
+          // Calculate imageScaleFactor if we have original dimensions
+          const imageScaleFactor = page.originalWidth && page.originalHeight
+            ? page.originalWidth / page.width  // Assuming width and height scale equally
+            : undefined;
+            
           addFrame({
             x: displayX - defaultFrameWidth / 2,
             y: displayY - defaultFrameHeight / 2,
             width: defaultFrameWidth,
             height: defaultFrameHeight,
             rotation: 0,
+            imageScaleFactor,
           });
         } finally {
           setIsGenerating(false);
         }
       } else {
         console.warn('No image loaded - cannot generate frame from seed');
-        // Create a manual frame
+        // Create a manual frame without scale factor since no image is loaded
         addFrame({
           x: displayX - defaultFrameWidth / 2,
           y: displayY - defaultFrameHeight / 2,

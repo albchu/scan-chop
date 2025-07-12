@@ -36,8 +36,15 @@ export const removeGrabbingCursor = (target: HTMLElement): void => {
 
 /**
  * Formats size display string
+ * If scaleFactor is provided, displays original image dimensions
  */
-export const formatSizeDisplay = (width: number, height: number): string => {
+export const formatSizeDisplay = (width: number, height: number, scaleFactor?: number): string => {
+  if (scaleFactor) {
+    // Show original dimensions
+    const originalWidth = Math.round(width * scaleFactor);
+    const originalHeight = Math.round(height * scaleFactor);
+    return `${originalWidth} × ${originalHeight}`;
+  }
   return `${Math.round(width)} × ${Math.round(height)}`;
 };
 

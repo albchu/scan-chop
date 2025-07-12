@@ -81,7 +81,8 @@ export class FrameService {
       height: scaledBoundingBox.height,
       rotation: scaledBoundingBox.rotation,
       orientation: 0,
-      imageData // Include the cropped image data
+      imageData, // Include the cropped image data
+      imageScaleFactor: 1 / scaleFactor // Store inverse scale factor (display to original)
     };
     
     console.log(`[FrameService] FrameData includes imageData: ${!!frameData.imageData}`);

@@ -89,8 +89,14 @@ export const FrameControlPanel: React.FC<FrameControlPanelProps> = ({ frame }) =
       <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
         <div>X: {Math.round(frame.x)}px</div>
         <div>Y: {Math.round(frame.y)}px</div>
-        <div>W: {Math.round(frame.width)}px</div>
-        <div>H: {Math.round(frame.height)}px</div>
+        <div>W: {frame.imageScaleFactor 
+          ? `${Math.round(frame.width * frame.imageScaleFactor)}px`
+          : `${Math.round(frame.width)}px`
+        }</div>
+        <div>H: {frame.imageScaleFactor 
+          ? `${Math.round(frame.height * frame.imageScaleFactor)}px`
+          : `${Math.round(frame.height)}px`
+        }</div>
         <div>Rotation: {frame.rotation.toFixed(1)}°</div>
         <div>Orientation: {frame.orientation}°</div>
       </div>
