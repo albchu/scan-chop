@@ -32,7 +32,7 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Action creators
   const addFrame = useCallback(
-    (frame: Omit<FrameData, 'id' | 'label' | 'orientation'>) => {
+    (frame: Partial<FrameData> & Pick<FrameData, 'x' | 'y' | 'width' | 'height' | 'rotation'>) => {
       dispatch({ type: 'ADD_FRAME', payload: frame });
     },
     []
@@ -91,8 +91,8 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
     dispatch({ type: 'SAVE_FRAMES', ids });
   }, []);
 
-  const updatePage = useCallback((updates: Partial<PageData>) => {
-    dispatch({ type: 'UPDATE_PAGE', updates });
+  const updatePage = useCallback((updates: Partial<PageData>, imagePath?: string) => {
+    dispatch({ type: 'UPDATE_PAGE', updates, imagePath });
   }, []);
 
   const setPageLoadingState = useCallback(

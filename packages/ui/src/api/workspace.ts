@@ -1,4 +1,4 @@
-import type { DirectoryNode, LoadDirectoryOptions } from '@workspace/shared';
+import type { DirectoryNode, LoadDirectoryOptions, Vector2, FrameData, ProcessingConfig } from '@workspace/shared';
 
 // Define ImageData type to match backend
 export interface ImageData {
@@ -50,5 +50,45 @@ export const workspaceApi = {
     }
     
     throw new Error(response.error || 'Failed to load image');
+  },
+
+  async generateFrame(
+    imagePath: string, 
+    seed: Vector2,
+    config?: ProcessingConfig
+  ): Promise<FrameData> {
+    console.log('[WorkspaceAPI] Generating frame at seed:', seed);
+    
+    const response = await window.backend.invoke(
+      'workspace:generateFrame', 
+      imagePath, 
+      seed,
+      config
+    ) as ApiResponse<FrameData>;
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    throw new Error(response.error || 'Failed to generate frame');
+  },
+
+  async updateFrame(
+    frameId: string,
+    updates: Partial<FrameData>
+  ): Promise<FrameData> {
+    console.log('[WorkspaceAPI] Updating frame:', frameId, updates);
+    
+    const response = await window.backend.invoke(
+      'workspace:updateFrame',
+      frameId,
+      updates
+    ) as ApiResponse<FrameData>;
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    throw new Error(response.error || 'Failed to update frame');
   }
 }; 

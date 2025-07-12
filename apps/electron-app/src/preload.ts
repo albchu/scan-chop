@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
 // Define the API that will be exposed to the renderer
 const backendAPI = {
@@ -9,6 +9,8 @@ const backendAPI = {
       'workspace:loadDirectory',
       'workspace:clearCache',
       'workspace:loadImage',
+      'workspace:generateFrame',
+      'workspace:updateFrame',
       // Add more channels as needed
     ];
     
@@ -26,7 +28,7 @@ const backendAPI = {
     ];
     
     if (allowedChannels.includes(channel)) {
-      const subscription = (_: Electron.IpcRendererEvent, ...args: any[]) => callback(...args);
+      const subscription = (_: IpcRendererEvent, ...args: any[]) => callback(...args);
       ipcRenderer.on(channel, subscription);
       
       // Return unsubscribe function

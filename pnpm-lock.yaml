@@ -103,8 +103,8 @@ importers:
         specifier: ^28.0.0
         version: 28.3.3
       image-js:
-        specifier: ^0.35.0
-        version: 0.35.6
+        specifier: ^0.37.0
+        version: 0.37.0
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -146,6 +146,9 @@ importers:
       immer:
         specifier: ^10.0.3
         version: 10.1.1
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -165,6 +168,9 @@ importers:
       '@testing-library/react':
         specifier: ^14.0.0
         version: 14.3.1(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/lodash':
+        specifier: ^4.17.20
+        version: 4.17.20
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.23
@@ -1129,6 +1135,9 @@ packages:
 
   '@types/keyv@3.1.4':
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
+
+  '@types/lodash@4.17.20':
+    resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
@@ -2232,10 +2241,6 @@ packages:
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
-
-  image-js@0.35.6:
-    resolution: {integrity: sha512-2qRaowXOBUIT7Ia842BUFDoBo/Jr0FHlbfssx/awbQUtc399kJWfFf0xE5hIG62ybaQiwutL2e1ocUzGtYxASw==}
-    engines: {node: '>= 16.0.0'}
 
   image-js@0.37.0:
     resolution: {integrity: sha512-t/6CE+H0mT9TKFhlm1h84e9Y1W/ZNAgLUvYH+ogWSZOMUWXLdtUPVJH3EppCCR+EgwSqxbcuiVlPqDPEa9dNtw==}
@@ -4658,6 +4663,8 @@ snapshots:
     dependencies:
       '@types/node': 20.19.1
 
+  '@types/lodash@4.17.20': {}
+
   '@types/ms@2.1.0': {}
 
   '@types/node@18.19.112':
@@ -6199,34 +6206,6 @@ snapshots:
   ieee754@1.2.1: {}
 
   ignore@5.3.2: {}
-
-  image-js@0.35.6:
-    dependencies:
-      '@swiftcarrot/color-fns': 3.2.0
-      blob-util: 2.0.2
-      canny-edge-detector: 1.0.0
-      fast-bmp: 2.0.1
-      fast-jpeg: 1.0.1
-      fast-list: 1.0.3
-      fast-png: 6.4.0
-      has-own: 1.0.1
-      image-type: 4.1.0
-      is-array-type: 1.0.0
-      is-integer: 1.0.7
-      jpeg-js: 0.4.4
-      js-priority-queue: 0.1.5
-      js-quantities: 1.8.0
-      median-quickselect: 1.0.1
-      ml-convolution: 0.2.0
-      ml-disjoint-set: 1.0.0
-      ml-matrix: 6.12.1
-      ml-matrix-convolution: 0.4.3
-      ml-regression: 5.0.0
-      monotone-chain-convex-hull: 1.1.0
-      new-array: 1.0.0
-      robust-point-in-polygon: 1.0.3
-      tiff: 5.0.3
-      web-worker-manager: 0.2.0
 
   image-js@0.37.0:
     dependencies:

@@ -43,6 +43,8 @@ export interface PageData {
   width: number; // Set to match image dimensions
   height: number; // Set to match image dimensions
   imageData: string; // base64 image data, rendered at 1:1 scale
+  originalWidth?: number; // NEW - original image width before any scaling
+  originalHeight?: number; // NEW - original image height before any scaling
 }
 
 export interface ImageData {
@@ -66,10 +68,11 @@ export interface UIContextSnapshot {
 
 export interface UIContextState extends UIContextSnapshot {
   pageLoadingState: PageLoadingState;
+  currentImagePath?: string; // NEW - track the current loaded image path
 }
 
 export interface UIContextActions {
-  addFrame(frame: Omit<FrameData, 'id' | 'label' | 'orientation'>): void;
+  addFrame(frame: Partial<FrameData> & Pick<FrameData, 'x' | 'y' | 'width' | 'height' | 'rotation'>): void;
   addMagicFrame(frame: Omit<FrameData, 'id' | 'label' | 'orientation'>): void;
 
   removeFrame(id: string): void;
@@ -86,7 +89,7 @@ export interface UIContextActions {
   setOrientation(id: string, orientation: 0 | 90 | 180 | 270): void;
 
   saveFrames(ids: string[]): void; // Logs frame IDs for now
-  updatePage(updates: Partial<PageData>): void; // Updates page properties like imageData
+  updatePage(updates: Partial<PageData>, imagePath?: string): void; // Updates page properties like imageData
   setPageLoadingState(state: PageLoadingState): void; // Sets the page loading state
 }
 

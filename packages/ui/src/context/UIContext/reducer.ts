@@ -13,7 +13,7 @@ import { rotateVector } from '../../utils/geometry';
 
 // Action types for reducer
 export type Action =
-  | { type: 'ADD_FRAME'; payload: Omit<FrameData, "id" | "label" | "orientation"> }
+  | { type: 'ADD_FRAME'; payload: Partial<FrameData> & Pick<FrameData, 'x' | 'y' | 'width' | 'height' | 'rotation'> }
   | { type: 'ADD_MAGIC_FRAME'; payload: Omit<FrameData, "id" | "label" | "orientation"> }
   | { type: 'UPDATE_FRAME'; id: string; updates: Partial<FrameData> }
   | { type: 'REMOVE_FRAME'; id: string }
@@ -25,7 +25,7 @@ export type Action =
   | { type: 'TRANSLATE_FRAME_RELATIVE'; id: string; vector: Vector2 }
   | { type: 'ROTATE_FRAME'; id: string; dAngle: number }
   | { type: 'SAVE_FRAMES'; ids: string[] }
-  | { type: 'UPDATE_PAGE'; updates: Partial<PageData> }
+  | { type: 'UPDATE_PAGE'; updates: Partial<PageData>; imagePath?: string }
   | { type: 'SET_PAGE_LOADING_STATE'; state: PageLoadingState };
 
 // Generate sequential frame ID
@@ -53,33 +53,44 @@ export const createSnapshot = (state: UIContextState): UIContextSnapshot => ({
 export const initialState: UIContextState = {
   page: {
     id: 'page-1',
-    width: 800,
-    height: 600,
-    imageData: ''
+    width: 2480,
+    height: 3508,
+    imageData: '',
+    originalWidth: 2480,  // NEW - track original dimensions
+    originalHeight: 3508, // NEW
   },
   frames: {},
   selectedFrameIds: [],
   nextFrameNumber: 1,
-  pageLoadingState: 'empty'
+  pageLoadingState: 'empty',
+  currentImagePath: undefined, // NEW
 };
 
 // Reducer
-export const reducer = (state: UIContextState, action: Action): UIContextState => {
+export const reducer = (
+  state: UIContextState,
+  action: Action
+): UIContextState => {
   switch (action.type) {
     case 'ADD_FRAME': {
       return produce(state, draft => {
-        const id = generateId();
+        // If frame already has an ID (from backend), use it
+        const id = action.payload.id || generateId();
+        const label = action.payload.label || `Frame ${draft.nextFrameNumber}`;
+        
         const defaultSize = {
           width: draft.page.width * DEFAULT_FRAME_SIZE_RATIO,
           height: draft.page.height * DEFAULT_FRAME_SIZE_RATIO
         };
+        
         const frame: FrameData = {
           ...defaultSize,
           ...action.payload,
           id,
-          label: `Frame ${draft.nextFrameNumber}`,
-          orientation: 0 as const
+          label,
+          orientation: action.payload.orientation || 0 as const
         };
+        
         // Ensure frame position stays within page bounds
         frame.x = Math.max(0, Math.min(frame.x, draft.page.width));
         frame.y = Math.max(0, Math.min(frame.y, draft.page.height));
@@ -87,7 +98,11 @@ export const reducer = (state: UIContextState, action: Action): UIContextState =
         frame.height = Math.max(MIN_FRAME_SIZE, frame.height);
         
         draft.frames[id] = frame;
-        draft.nextFrameNumber++;
+        
+        // Only increment if we generated the ID
+        if (!action.payload.id) {
+          draft.nextFrameNumber++;
+        }
       });
     }
 
@@ -231,6 +246,10 @@ export const reducer = (state: UIContextState, action: Action): UIContextState =
     case 'UPDATE_PAGE': {
       return produce(state, draft => {
         draft.page = { ...draft.page, ...action.updates };
+        // Store image path when provided
+        if (action.imagePath) {
+          draft.currentImagePath = action.imagePath;
+        }
       });
     }
 

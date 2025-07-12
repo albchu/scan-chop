@@ -1,3 +1,4 @@
+import React from 'react';
 import { CursorStyle } from '../types/canvas.types';
 
 export const getCursorStyle = (

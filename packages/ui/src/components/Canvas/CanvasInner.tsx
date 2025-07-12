@@ -8,6 +8,7 @@ import { CanvasViewport } from './components/CanvasViewport';
 import { CanvasControls } from './components/CanvasControls';
 import { CanvasDebugInfo } from './components/CanvasDebugInfo';
 import { getCursorStyle } from './utils/canvasUtils';
+import { IconLoader2 } from '@tabler/icons-react';
 
 export const CanvasInner: React.FC = () => {
   const { page } = useUIContext();
@@ -27,7 +28,7 @@ export const CanvasInner: React.FC = () => {
     isCommandPressed 
   });
   
-  const { handleCanvasClick } = useCanvasInteraction({ 
+  const { handleCanvasClick, isGenerating } = useCanvasInteraction({ 
     isDragging, 
     isCommandPressed 
   });
@@ -51,7 +52,7 @@ export const CanvasInner: React.FC = () => {
   }, [resetView]);
 
   const cursorStyle = getCursorStyle(isDragging, isCommandPressed);
-
+  
   return (
     <div className="h-full bg-gray-700 flex flex-col relative">
       {/* Main canvas area with zoom and pan */}
@@ -82,6 +83,16 @@ export const CanvasInner: React.FC = () => {
         baseScale={baseScale}
         totalScale={totalScale}
       />
+      
+      {/* Loading indicator for frame generation */}
+      {isGenerating && (
+        <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-md shadow-lg">
+          <div className="flex items-center gap-2">
+            <IconLoader2 className="animate-spin" size={16} />
+            <span className="text-sm">Detecting frame...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }; 

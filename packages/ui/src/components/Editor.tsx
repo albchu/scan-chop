@@ -24,17 +24,21 @@ const EditorContent: React.FC = () => {
       });
       
       // Update the page with the new image data and dimensions
+      // Pass the image path along with the update
       updatePage({ 
         imageData: imageDataResponse.imageData,
         width: imageDataResponse.width,
-        height: imageDataResponse.height
-      });
+        height: imageDataResponse.height,
+        originalWidth: imageDataResponse.originalWidth,   // NEW - store original dimensions
+        originalHeight: imageDataResponse.originalHeight, // NEW
+      }, path); // Pass the image path
       
       // Set loaded state after successful load
       setPageLoadingState('loaded');
       
       console.log('Image loaded and set as page background with dimensions:', 
-        imageDataResponse.width, 'x', imageDataResponse.height);
+        imageDataResponse.width, 'x', imageDataResponse.height,
+        'Original dimensions:', imageDataResponse.originalWidth, 'x', imageDataResponse.originalHeight);
     } catch (error) {
       console.error('Failed to load image:', error);
       

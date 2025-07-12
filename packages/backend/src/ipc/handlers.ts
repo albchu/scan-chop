@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { WorkspaceService } from '../services/WorkspaceService';
-import type { LoadDirectoryOptions } from '@workspace/shared';
+import type { LoadDirectoryOptions, Vector2, FrameData, ProcessingConfig } from '@workspace/shared';
 
 export function setupIpcHandlers(workspaceService: WorkspaceService) {
   // Load directory tree with depth options
@@ -54,6 +54,60 @@ export function setupIpcHandlers(workspaceService: WorkspaceService) {
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  });
+  
+  // Generate frame from seed point
+  ipcMain.handle('workspace:generateFrame', async (
+    event, 
+    imagePath: string, 
+    seed: Vector2,
+    config?: ProcessingConfig
+  ) => {
+    console.log('[IPC] workspace:generateFrame called with seed:', seed);
+    
+    try {
+      const frameData = await workspaceService.generateFrame(
+        imagePath, 
+        seed, 
+        config
+      );
+      
+      return { success: true, data: frameData };
+    } catch (error) {
+      console.error('[IPC] Error generating frame:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to generate frame' 
+      };
+    }
+  });
+  
+  // Update existing frame
+  ipcMain.handle('workspace:updateFrame', async (
+    event,
+    frameId: string,
+    updates: Partial<FrameData>
+  ) => {
+    console.log('[IPC] workspace:updateFrame called for frame:', frameId);
+    
+    try {
+      const updatedFrame = workspaceService.updateFrame(frameId, updates);
+      
+      if (!updatedFrame) {
+        return { 
+          success: false, 
+          error: `Frame ${frameId} not found` 
+        };
+      }
+      
+      return { success: true, data: updatedFrame };
+    } catch (error) {
+      console.error('[IPC] Error updating frame:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to update frame' 
       };
     }
   });

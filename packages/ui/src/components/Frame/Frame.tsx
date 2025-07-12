@@ -8,6 +8,7 @@ import Moveable, {
 } from 'react-moveable';
 import { FrameData } from '@workspace/shared';
 import { useZoomContext } from '../../context/ZoomContext';
+import { useUIContext } from '../../context/UIContext';
 import { FrameInfo } from './FrameInfo';
 import {
   createTransformString,
@@ -16,6 +17,8 @@ import {
   removeGrabbingCursor,
   RENDER_DIRECTIONS,
 } from './frameUtils';
+import { workspaceApi } from '../../api/workspace';
+import { debounce } from 'lodash';
 import styles from './Frame.module.css';
 
 interface FrameProps {
@@ -39,6 +42,9 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
     orientation,
   } = frame;
 
+  // Get page context for scaling
+  const { page } = useUIContext();
+
   // Get zoom context and calculate moveable zoom
   const { totalScale } = useZoomContext();
   const moveableZoom = useMemo(
@@ -60,6 +66,29 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
   });
   const [rotation, setRotation] = useState(initialRotation);
 
+  // Debounced backend sync
+  const syncToBackend = useMemo(
+    () => debounce(async (frameId: string, updates: Partial<FrameData>) => {
+      try {
+        // Scale coordinates to original image space before syncing
+        const scaleX = (page.originalWidth || page.width) / page.width;
+        const scaleY = (page.originalHeight || page.height) / page.height;
+        
+        const scaledUpdates = { ...updates };
+        if (updates.x !== undefined) scaledUpdates.x = updates.x * scaleX;
+        if (updates.y !== undefined) scaledUpdates.y = updates.y * scaleY;
+        if (updates.width !== undefined) scaledUpdates.width = updates.width * scaleX;
+        if (updates.height !== undefined) scaledUpdates.height = updates.height * scaleY;
+        
+        await workspaceApi.updateFrame(frameId, scaledUpdates);
+        console.log(`[Frame] Synced frame ${frameId} to backend`);
+      } catch (error) {
+        console.error(`[Frame] Failed to sync frame ${frameId} to backend:`, error);
+      }
+    }, 500),
+    [page]
+  );
+
   const handleDragStart = useCallback(({ target }: OnDragStart) => {
     if (target) {
       addGrabbingCursor(target as HTMLElement);
@@ -72,10 +101,15 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
         target.style.transform = transform;
         const [x, y] = translate;
         setTransform(transform);
+        
+        // Update local state immediately
         updateFrame(id, { x, y, width, height });
+        
+        // Sync to backend (debounced)
+        syncToBackend(id, { x, y, width, height });
       }
     },
-    [id, updateFrame]
+    [id, updateFrame, syncToBackend]
   );
 
   const handleDragEnd = useCallback(({ target }: OnDragEnd) => {
@@ -94,10 +128,15 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
 
         setSize({ width, height });
         setTransform(drag.transform);
+        
+        // Update local state immediately
         updateFrame(id, { x, y, width, height });
+        
+        // Sync to backend (debounced)
+        syncToBackend(id, { x, y, width, height });
       }
     },
-    [id, updateFrame]
+    [id, updateFrame, syncToBackend]
   );
 
   const handleRotate = useCallback(
@@ -108,11 +147,16 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
         setTransform(transform);
         if (rotation !== undefined) {
           setRotation(rotation);
+          
+          // Update local state immediately
           updateFrame(id, { rotation });
+          
+          // Sync to backend (debounced)
+          syncToBackend(id, { rotation });
         }
       }
     },
-    [id, updateFrame]
+    [id, updateFrame, syncToBackend]
   );
 
   return (
