@@ -6,8 +6,8 @@ import {
   IconFolderOpen, 
   IconPhoto, 
   IconLoader2,
-  IconStar,
-  IconStarFilled
+  IconPin,
+  IconPinFilled
 } from '@tabler/icons-react';
 
 interface TreeNode {
@@ -51,7 +51,7 @@ export const FileRow: React.FC<FileRowProps> = ({
     }
   };
 
-  const handleStarClick = (e: React.MouseEvent) => {
+  const handlePinClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent row click
     if (onSetAsRoot && !isRoot) {
       onSetAsRoot(node.path);
@@ -109,7 +109,7 @@ export const FileRow: React.FC<FileRowProps> = ({
         </span>
       )}
 
-      {/* Star icon for directories */}
+      {/* Pin icon for directories */}
       {node.isDirectory && (
         <div 
           className={`ml-2 transition-opacity duration-200 ${
@@ -117,18 +117,18 @@ export const FileRow: React.FC<FileRowProps> = ({
           }`}
         >
           {isRoot ? (
-            <IconStarFilled 
+            <IconPinFilled 
               size={16} 
               className="text-yellow-500"
               title="Current root directory"
             />
           ) : (
             <button
-              onClick={handleStarClick}
+              onClick={handlePinClick}
               className="p-1 hover:bg-gray-600 rounded transition-colors"
               title="Set as root directory"
             >
-              <IconStar 
+              <IconPin 
                 size={16} 
                 className="text-gray-400 hover:text-yellow-500"
               />
