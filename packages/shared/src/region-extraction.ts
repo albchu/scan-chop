@@ -2,7 +2,7 @@ import { Image } from 'image-js';
 import { Vector2, ProcessingConfig } from './types';
 import { ColorPredicate, createWhiteBoundaryPredicate } from './color';
 import { floodFill, FloodFillConfig } from './flood-fill';
-import { scaleCoordinates } from './coordinate-utils';
+import { scaleCoordinates, scaleCoordinatesFloat } from './coordinate-utils';
 
 /**
  * Region extraction result
@@ -91,6 +91,26 @@ export const extractRegionWithWhiteBoundary = (
   const predicate = createWhiteBoundaryPredicate(whiteThreshold);
   
   return extractRegionFromSeed(image, seed, predicate, config);
+};
+
+/**
+ * Scale region coordinates from one coordinate system to another (preserves floating-point precision)
+ * @param region - Region points to scale
+ * @param scaleFactor - Scale factor to apply
+ * @returns Scaled region points with floating-point precision
+ */
+export const scaleRegionCoordinatesFloat = (
+  region: ReadonlyArray<[number, number]>,
+  scaleFactor: number
+): Array<[number, number]> => {
+  if (scaleFactor === 1.0) {
+    return [...region];
+  }
+  
+  return region.map(([x, y]) => [
+    x * scaleFactor,
+    y * scaleFactor,
+  ] as [number, number]);
 };
 
 /**

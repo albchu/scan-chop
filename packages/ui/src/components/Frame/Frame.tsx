@@ -70,23 +70,14 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
   const syncToBackend = useMemo(
     () => debounce(async (frameId: string, updates: Partial<FrameData>) => {
       try {
-        // Scale coordinates to original image space before syncing
-        const scaleX = (page.originalWidth || page.width) / page.width;
-        const scaleY = (page.originalHeight || page.height) / page.height;
-        
-        const scaledUpdates = { ...updates };
-        if (updates.x !== undefined) scaledUpdates.x = updates.x * scaleX;
-        if (updates.y !== undefined) scaledUpdates.y = updates.y * scaleY;
-        if (updates.width !== undefined) scaledUpdates.width = updates.width * scaleX;
-        if (updates.height !== undefined) scaledUpdates.height = updates.height * scaleY;
-        
-        await workspaceApi.updateFrame(frameId, scaledUpdates);
+        // Backend now expects display coordinates, no scaling needed
+        await workspaceApi.updateFrame(frameId, updates);
         console.log(`[Frame] Synced frame ${frameId} to backend`);
       } catch (error) {
         console.error(`[Frame] Failed to sync frame ${frameId} to backend:`, error);
       }
     }, 500),
-    [page]
+    []  // Remove page dependency since we don't need it anymore
   );
 
   const handleDragStart = useCallback(({ target }: OnDragStart) => {

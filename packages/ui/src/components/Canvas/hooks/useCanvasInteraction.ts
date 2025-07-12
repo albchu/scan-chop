@@ -61,37 +61,21 @@ export const useCanvasInteraction = ({
         try {
           setIsGenerating(true);
           
-          // Scale coordinates from displayed image space to original image space
-          const scaleX = (page.originalWidth || page.width) / page.width;
-          const scaleY = (page.originalHeight || page.height) / page.height;
-          const originalX = displayX * scaleX;
-          const originalY = displayY * scaleY;
+          // No need to scale coordinates anymore - backend expects display coordinates
+          console.log('Click coordinates - Display:', { x: displayX, y: displayY });
           
-          console.log('Click coordinates - Display:', { x: displayX, y: displayY }, 
-                      'Original:', { x: originalX, y: originalY },
-                      'Scale factors:', { scaleX, scaleY });
-          
-          // Generate frame using seed coordinates in original image space
+          // Generate frame using seed coordinates in display image space
           const frameData = await workspaceApi.generateFrame(
             currentImagePath,
-            { x: originalX, y: originalY },
+            { x: displayX, y: displayY },
             { 
               whiteThreshold: 220,
-              downsampleFactor: 0.5 
+              downsampleFactor: 0.75  // Better precision with higher resolution processing
             }
           );
           
-          // Scale frame coordinates back to displayed image space
-          const scaledFrameData = {
-            x: frameData.x / scaleX,
-            y: frameData.y / scaleY,
-            width: frameData.width / scaleX,
-            height: frameData.height / scaleY,
-            rotation: frameData.rotation,
-          };
-          
-          // Add the scaled frame
-          addFrame(scaledFrameData);
+          // Frame data is already in display coordinates, no scaling needed
+          addFrame(frameData);
           
         } catch (error) {
           console.error('Failed to generate frame:', error);
@@ -107,8 +91,8 @@ export const useCanvasInteraction = ({
           setIsGenerating(false);
         }
       } else {
-        // No image loaded, create manual frame
-        console.warn('No image loaded for frame generation, using manual frame creation');
+        console.warn('No image loaded - cannot generate frame from seed');
+        // Create a manual frame
         addFrame({
           x: displayX - defaultFrameWidth / 2,
           y: displayY - defaultFrameHeight / 2,

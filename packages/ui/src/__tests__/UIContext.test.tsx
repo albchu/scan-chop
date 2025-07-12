@@ -13,8 +13,8 @@ describe('UIContext', () => {
     expect(result.current.frames).toEqual({});
     expect(result.current.selectedFrameIds).toEqual([]);
     expect(result.current.nextFrameNumber).toBe(1);
-    expect(result.current.page.width).toBe(800);
-    expect(result.current.page.height).toBe(600);
+    expect(result.current.page.width).toBe(2480);
+    expect(result.current.page.height).toBe(3508);
   });
 
   it('adds a frame', () => {

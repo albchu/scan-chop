@@ -14,7 +14,7 @@ export class FrameService {
   ): Promise<FrameData> {
     // Process seed point to get bounding box
     const result = processSingleSeed(image.original, image.scaled, seed, {
-      downsampleFactor: 0.5,
+      downsampleFactor: 0.75,  // Better default for precision
       whiteThreshold: 220,
       minArea: 100,
       cropInset: 8,

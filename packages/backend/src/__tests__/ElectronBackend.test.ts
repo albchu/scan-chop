@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ElectronBackend } from '../ElectronBackend';
-import { INITIAL_STATE } from '@workspace/shared';
 
 // Mock electron modules
 vi.mock('electron', () => ({
@@ -8,6 +7,11 @@ vi.mock('electron', () => ({
     handle: vi.fn(),
     handleOnce: vi.fn(),
   },
+}));
+
+// Mock the setupIpcHandlers function
+vi.mock('../ipc/handlers', () => ({
+  setupIpcHandlers: vi.fn(),
 }));
 
 describe('ElectronBackend', () => {
@@ -22,13 +26,14 @@ describe('ElectronBackend', () => {
     expect(backend).toBeInstanceOf(ElectronBackend);
   });
 
-  it('should have getState method', () => {
-    expect(typeof backend.getState).toBe('function');
+  it('should have getWorkspaceService method', () => {
+    expect(typeof backend.getWorkspaceService).toBe('function');
   });
 
-  it('should initialize with default state', () => {
-    const state = backend.getState();
-    expect(state).toEqual(INITIAL_STATE);
+  it('should return WorkspaceService instance', () => {
+    const workspaceService = backend.getWorkspaceService();
+    expect(workspaceService).toBeDefined();
+    expect(workspaceService.constructor.name).toBe('WorkspaceService');
   });
 
   it('should be an EventEmitter', () => {

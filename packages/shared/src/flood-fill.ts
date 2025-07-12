@@ -37,12 +37,16 @@ export const floodFill = (
 
   const { width, height } = image;
 
-  if (!isInBounds(image, seed.x, seed.y)) {
+  // Round seed coordinates only when needed for pixel access
+  const seedX = Math.round(seed.x);
+  const seedY = Math.round(seed.y);
+
+  if (!isInBounds(image, seedX, seedY)) {
     throw new Error('Seed point out of image bounds');
   }
 
   const seedColor = image
-    .getPixelXY(seed.x, seed.y)
+    .getPixelXY(seedX, seedY)
     .slice(0, 3) as unknown as RGB;
   const seedBrightness = (seedColor[0] + seedColor[1] + seedColor[2]) / 3;
 
@@ -57,7 +61,7 @@ export const floodFill = (
   }
 
   const visited = new Uint8Array(width * height);
-  const queue: Vector2[] = [seed];
+  const queue: Vector2[] = [{ x: seedX, y: seedY }];
   const region: [number, number][] = [];
 
   // Use 8 directions for better connectivity
@@ -95,8 +99,10 @@ export const floodFill = (
     const currentColor = image.getPixelXY(x, y).slice(0, 3) as unknown as RGB;
     if (!predicate(currentColor, seedColor)) continue;
 
-    // Store points in original image coordinates
-    region.push([x / downsampleFactor, y / downsampleFactor]);
+    // Store points in original image coordinates with floating-point precision
+    const originalX = x / downsampleFactor;
+    const originalY = y / downsampleFactor;
+    region.push([originalX, originalY]);
 
     for (const [dx, dy] of directions) {
       const nx = x + dx;

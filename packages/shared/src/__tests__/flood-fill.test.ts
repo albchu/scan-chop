@@ -10,14 +10,13 @@ vi.spyOn(console, 'warn').mockImplementation(() => {});
 
 // Helper to create test images
 function createTestImage(width: number, height: number, fillColor: RGB = [0, 0, 0]): Image {
-  const data = new Uint8Array(width * height * 4);
-  for (let i = 0; i < width * height; i++) {
-    data[i * 4] = fillColor[0];
-    data[i * 4 + 1] = fillColor[1];
-    data[i * 4 + 2] = fillColor[2];
-    data[i * 4 + 3] = 255; // Alpha
+  const image = new Image(width, height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      image.setPixelXY(x, y, [fillColor[0], fillColor[1], fillColor[2], 255]);
+    }
   }
-  return new Image(width, height, { data, components: 4 });
+  return image;
 }
 
 // Helper to set pixel color

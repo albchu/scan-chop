@@ -94,9 +94,37 @@ export class WorkspaceService {
     
     if (!imageData) {
       console.log('[WorkspaceService] Loading image for frame generation:', imagePath);
-      const { original, scaled } = await loadAndPrepareImage(imagePath, config?.downsampleFactor || 0.5);
-      imageData = { original, scaled };
+      
+      // First, load the full image to get dimensions
+      const { original: fullImage } = await loadAndPrepareImage(imagePath, 1.0);
+      
+      // Calculate display downsample factor to match UI constraints
+      const maxDisplayWidth = 2048;
+      const maxDisplayHeight = 2048;
+      const widthRatio = fullImage.width / maxDisplayWidth;
+      const heightRatio = fullImage.height / maxDisplayHeight;
+      const displayDownsample = Math.max(widthRatio, heightRatio) > 1 
+        ? 1 / Math.max(widthRatio, heightRatio) 
+        : 1.0;
+      
+      // For processing, we combine the display downsample with the processing downsample
+      const processingDownsample = config?.downsampleFactor || 0.75;
+      const combinedDownsample = displayDownsample * processingDownsample;
+      
+      // Load at the display resolution (this matches what the UI shows)
+      const displayResult = await loadAndPrepareImage(imagePath, displayDownsample);
+      
+      // Load at the processing resolution
+      const processingResult = await loadAndPrepareImage(imagePath, combinedDownsample);
+      
+      imageData = { 
+        original: displayResult.scaled,  // Display version for coordinate system
+        scaled: processingResult.scaled  // Processing version
+      };
       this.currentImageCache.set(imagePath, imageData);
+      
+      console.log(`[WorkspaceService] Loaded display image: ${displayResult.scaled.width}×${displayResult.scaled.height}`);
+      console.log(`[WorkspaceService] Loaded processing image: ${processingResult.scaled.width}×${processingResult.scaled.height}`);
       
       // Keep only the last 3 images in cache to manage memory
       if (this.currentImageCache.size > 3) {

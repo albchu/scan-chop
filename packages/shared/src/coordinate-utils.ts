@@ -2,6 +2,20 @@ import { BoundingBox, Vector2 } from './types';
 import { degreesToRadians } from './geometry';
 
 /**
+ * Scale a single point by a scale factor (preserves floating-point precision)
+ * @param point - Point to scale
+ * @param scaleFactor - Scale factor to apply
+ * @returns Scaled point with floating-point precision
+ */
+export const scaleCoordinatesFloat = (
+  point: Vector2,
+  scaleFactor: number
+): Vector2 => ({
+  x: point.x * scaleFactor,
+  y: point.y * scaleFactor,
+});
+
+/**
  * Scale a single point by a scale factor
  * @param point - Point to scale
  * @param scaleFactor - Scale factor to apply
@@ -14,6 +28,22 @@ export const scaleCoordinates = (
   x: Math.round(point.x * scaleFactor),
   y: Math.round(point.y * scaleFactor),
 });
+
+/**
+ * Scale an array of points by a scale factor (preserves floating-point precision)
+ * @param region - Array of points to scale
+ * @param scaleFactor - Scale factor to apply
+ * @returns Scaled region with floating-point precision
+ */
+export const scaleRegionFloat = (
+  region: ReadonlyArray<[number, number]>,
+  scaleFactor: number
+): Array<[number, number]> => {
+  return region.map(([x, y]) => [
+    x * scaleFactor,
+    y * scaleFactor,
+  ] as [number, number]);
+};
 
 /**
  * Scale an array of points by a scale factor
@@ -73,6 +103,33 @@ export const transformCorners = (boundingBox: BoundingBox): Vector2[] => {
       y: boundingBox.y + boundingBox.height * cos 
     },
   ];
+};
+
+/**
+ * Calculate axis-aligned bounding box from rotated corners (preserves floating-point precision)
+ * @param corners - Array of corner points
+ * @param imageWidth - Width constraint for the image
+ * @param imageHeight - Height constraint for the image
+ * @returns Axis-aligned bounding box coordinates with floating-point precision
+ */
+export const calculateAxisAlignedBoundsFloat = (
+  corners: Vector2[],
+  imageWidth?: number,
+  imageHeight?: number
+): { minX: number; minY: number; maxX: number; maxY: number } => {
+  const xs = corners.map(c => c.x);
+  const ys = corners.map(c => c.y);
+  
+  const minX = Math.max(0, Math.min(...xs));
+  const minY = Math.max(0, Math.min(...ys));
+  const maxX = imageWidth 
+    ? Math.min(imageWidth, Math.max(...xs))
+    : Math.max(...xs);
+  const maxY = imageHeight
+    ? Math.min(imageHeight, Math.max(...ys))
+    : Math.max(...ys);
+  
+  return { minX, minY, maxX, maxY };
 };
 
 /**
