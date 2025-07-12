@@ -62,7 +62,11 @@ export const workspaceApi = {
       config
     ) as ApiResponse<FrameData>;
     
+    console.log('[WorkspaceAPI] generateFrame response:', response);
+    
     if (response.success && response.data) {
+      console.log('[WorkspaceAPI] Frame data from backend:', response.data);
+      console.log('[WorkspaceAPI] Has imageData:', !!response.data.imageData);
       return response.data;
     }
     

@@ -741,6 +741,7 @@ describe('WorkspaceService', () => {
         mockScaledImage,      // scaled version for detection
         0.54,                 // scale factor
         { x: 100, y: 100 },   // seed
+        imagePath,            // image path
         undefined             // config
       );
       

@@ -30,7 +30,7 @@ export const Page: React.FC = () => {
     position: 'relative',
   };
 
-  const shouldShowEmptyState = pageLoadingState === 'empty';
+  const shouldShowEmptyState = pageLoadingState === 'empty' && !page.imageData;
   const shouldShowLoadingState = pageLoadingState === 'loading';
 
   return (

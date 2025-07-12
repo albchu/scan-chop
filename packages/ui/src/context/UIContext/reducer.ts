@@ -78,6 +78,9 @@ export const reducer = (
         const id = action.payload.id || generateId();
         const label = action.payload.label || `Frame ${draft.nextFrameNumber}`;
         
+        console.log('[UIContext] Adding frame with payload:', action.payload);
+        console.log('[UIContext] Payload has imageData:', !!action.payload.imageData);
+        
         const defaultSize = {
           width: draft.page.width * DEFAULT_FRAME_SIZE_RATIO,
           height: draft.page.height * DEFAULT_FRAME_SIZE_RATIO
@@ -90,6 +93,8 @@ export const reducer = (
           label,
           orientation: action.payload.orientation || 0 as const
         };
+        
+        console.log('[UIContext] Created frame has imageData:', !!frame.imageData);
         
         // Ensure frame position stays within page bounds
         frame.x = Math.max(0, Math.min(frame.x, draft.page.width));

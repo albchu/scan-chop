@@ -157,13 +157,33 @@ export class WorkspaceService {
       scaledImage,           // Scaled image for detection
       actualDownscale,       // Scale factor
       seed,
+      imagePath,             // Pass the image path for metadata
       config
     );
     
     return frameData;
   }
   
-  updateFrame(id: string, updates: Partial<FrameData>): FrameData | undefined {
+  async updateFrame(id: string, updates: Partial<FrameData>): Promise<FrameData | undefined> {
+    // Get frame metadata to check if we need the original image
+    const metadata = this.frameService.getFrameMetadata(id);
+    
+    // If we're updating coordinates and have metadata, get the original image
+    if (metadata && (
+      updates.x !== undefined || 
+      updates.y !== undefined || 
+      updates.width !== undefined || 
+      updates.height !== undefined || 
+      updates.rotation !== undefined
+    )) {
+      // Get the cached image
+      const cacheEntry = await this.getCachedImage(metadata.imagePath, false);
+      
+      // Update frame with regenerated image
+      return this.frameService.updateFrame(id, updates, cacheEntry.fullImage);
+    }
+    
+    // Otherwise just update without regenerating image
     return this.frameService.updateFrame(id, updates);
   }
   

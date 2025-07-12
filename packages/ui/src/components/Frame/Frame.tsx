@@ -70,14 +70,18 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
   const syncToBackend = useMemo(
     () => debounce(async (frameId: string, updates: Partial<FrameData>) => {
       try {
+        console.log(`[Frame] Syncing to backend, updates:`, updates);
         // Backend now expects display coordinates, no scaling needed
-        await workspaceApi.updateFrame(frameId, updates);
-        console.log(`[Frame] Synced frame ${frameId} to backend`);
+        const updatedFrame = await workspaceApi.updateFrame(frameId, updates);
+        console.log(`[Frame] Backend returned updated frame, has imageData:`, !!updatedFrame.imageData);
+        
+        // Update local state with the full frame data from backend
+        updateFrame(frameId, updatedFrame);
       } catch (error) {
         console.error(`[Frame] Failed to sync frame ${frameId} to backend:`, error);
       }
     }, 500),
-    []  // Remove page dependency since we don't need it anymore
+    [updateFrame]  // Add updateFrame dependency
   );
 
   const handleDragStart = useCallback(({ target }: OnDragStart) => {

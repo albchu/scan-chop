@@ -17,6 +17,7 @@ export interface FrameData extends BoundingBox {
   id: string; // Sequential ID (e.g., "frame-1", "frame-2")
   label: string;
   orientation: 0 | 90 | 180 | 270; // "Up" direction indicator, 0 is default
+  imageData?: string; // Base64 data URL of the cropped frame image
 }
 
 // Color types

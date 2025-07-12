@@ -2,8 +2,15 @@ import { FrameData, Vector2, ProcessingConfig, BoundingBox } from '@workspace/sh
 import { findBoundingBoxFromSeed, scaleBoundingBox, smartCrop } from '@workspace/shared';
 import type { Image } from 'image-js';
 
+// Internal metadata for regenerating frame images
+interface FrameMetadata {
+  imagePath: string;
+  scaleFactor: number;
+}
+
 export class FrameService {
   private frames = new Map<string, FrameData>();
+  private frameMetadata = new Map<string, FrameMetadata>();
   private frameCounter = 1;
 
   constructor() {
@@ -18,11 +25,16 @@ export class FrameService {
     return this.frames.get(id);
   }
 
+  getFrameMetadata(id: string): FrameMetadata | undefined {
+    return this.frameMetadata.get(id);
+  }
+
   async generateFrameFromSeed(
     original: Image,        // Full resolution image for final cropping
     scaled: Image,          // Scaled image for bounding box detection
     scaleFactor: number,    // Scale factor (scaled width / original width)
     seed: Vector2,
+    imagePath: string,      // Path to the original image
     config?: ProcessingConfig
   ): Promise<FrameData> {
     // Find bounding box on the scaled image for performance
@@ -46,8 +58,16 @@ export class FrameService {
     // This gives us the best quality output
     const croppedImage = smartCrop(original, originalBoundingBox, config);
     
-    // Store the cropped image data if needed (for future export functionality)
-    // For now, we just log the dimensions
+    // Generate base64 data URL for the cropped image
+    let imageData: string | undefined;
+    try {
+      imageData = croppedImage.toDataURL();
+      console.log(`[FrameService] ImageData generated successfully, length: ${imageData.length}`);
+    } catch (error) {
+      console.error(`[FrameService] Failed to generate imageData:`, error);
+      imageData = undefined;
+    }
+    
     console.log(`[FrameService] Cropped image: ${croppedImage.width}×${croppedImage.height}`);
     
     // Create FrameData with display coordinates (scaled bounding box)
@@ -60,26 +80,74 @@ export class FrameService {
       width: scaledBoundingBox.width,
       height: scaledBoundingBox.height,
       rotation: scaledBoundingBox.rotation,
-      orientation: 0
+      orientation: 0,
+      imageData // Include the cropped image data
+    };
+    
+    console.log(`[FrameService] FrameData includes imageData: ${!!frameData.imageData}`);
+    
+    // Store metadata for regeneration
+    const metadata: FrameMetadata = {
+      imagePath,
+      scaleFactor
     };
     
     // Increment counter for next frame
     this.frameCounter++;
     
-    // Persist in backend
+    // Persist frame and metadata
     this.frames.set(frameData.id, frameData);
+    this.frameMetadata.set(frameData.id, metadata);
     
     console.log(`[FrameService] Generated and persisted frame: ${frameData.id}`);
     return frameData;
   }
 
-  updateFrame(id: string, updates: Partial<FrameData>): FrameData | undefined {
+  async updateFrame(
+    id: string, 
+    updates: Partial<FrameData>,
+    original?: Image,      // Optional: provide for regenerating imageData
+    config?: ProcessingConfig
+  ): Promise<FrameData | undefined> {
     const frame = this.frames.get(id);
+    const metadata = this.frameMetadata.get(id);
+    
     if (!frame) {
       return undefined;
     }
     
     const updatedFrame = { ...frame, ...updates };
+    
+    console.log(`[FrameService] Updating frame ${id}, original has imageData: ${!!frame.imageData}`);
+    console.log(`[FrameService] Updated frame will have imageData: ${!!updatedFrame.imageData}`);
+    
+    // If coordinates changed and we have the original image, regenerate the cropped image
+    if (original && metadata && (
+      updates.x !== undefined || 
+      updates.y !== undefined || 
+      updates.width !== undefined || 
+      updates.height !== undefined || 
+      updates.rotation !== undefined
+    )) {
+      // Scale the bounding box back to original image dimensions
+      const originalBoundingBox = scaleBoundingBox(
+        {
+          x: updatedFrame.x,
+          y: updatedFrame.y,
+          width: updatedFrame.width,
+          height: updatedFrame.height,
+          rotation: updatedFrame.rotation
+        }, 
+        1 / metadata.scaleFactor
+      );
+      
+      // Generate new cropped image
+      const croppedImage = smartCrop(original, originalBoundingBox, config);
+      updatedFrame.imageData = croppedImage.toDataURL();
+      
+      console.log(`[FrameService] Regenerated cropped image for frame: ${id}`);
+    }
+    
     this.frames.set(id, updatedFrame);
     
     console.log(`[FrameService] Updated frame: ${id}`);
@@ -89,6 +157,7 @@ export class FrameService {
   deleteFrame(id: string): boolean {
     const deleted = this.frames.delete(id);
     if (deleted) {
+      this.frameMetadata.delete(id);
       console.log(`[FrameService] Deleted frame: ${id}`);
     }
     return deleted;
@@ -96,6 +165,7 @@ export class FrameService {
 
   clearAllFrames(): void {
     this.frames.clear();
+    this.frameMetadata.clear();
     this.frameCounter = 1;
     console.log('[FrameService] Cleared all frames');
   }

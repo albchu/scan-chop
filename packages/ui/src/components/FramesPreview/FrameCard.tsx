@@ -12,6 +12,8 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame }) => {
   const { isSelected, selectionType } = useFrameTransform(frame.id);
   const { selectFrame, setOrientation, removeFrame } = useUIContext();
   
+  console.log(`[FrameCard] Rendering frame ${frame.id}, has imageData: ${!!frame.imageData}`);
+  
   const handleCheckboxChange = () => {
     selectFrame(frame.id);
   };
@@ -40,7 +42,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame }) => {
   return (
     <div
       className={`
-        relative min-w-[150px] max-w-[250px] min-h-[150px] md:min-h-[150px] bg-gray-800 rounded-lg shadow transition-all duration-200
+        relative min-w-[150px] max-w-[250px] min-h-[150px] md:min-h-[150px] bg-gray-800 rounded-lg shadow transition-all duration-200 overflow-hidden
         ${isSelected 
           ? selectionType === 'single'
             ? 'border-2 border-blue-500 ring-1 ring-blue-500/50'
@@ -52,14 +54,29 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame }) => {
         aspectRatio: aspectRatio.toString()
       }}
     >
+      {/* Frame image preview */}
+      {frame.imageData && (
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${frame.imageData})`,
+            transform: `rotate(${frame.orientation}deg)`,
+            transformOrigin: 'center center'
+          }}
+        />
+      )}
+      
+      {/* Gradient overlay for better readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+      
       {/* Top right corner - Delete button */}
       <div className="absolute top-2 right-2">
         <button
           onClick={handleDeleteClick}
-          className="p-2 bg-transparent hover:bg-red-600/20 rounded transition-colors opacity-50 hover:opacity-100"
+          className="p-2 bg-black/50 hover:bg-red-600/50 rounded-lg transition-colors opacity-70 hover:opacity-100"
           title="Delete frame"
         >
-          <IconTrash size={20} className="text-red-500" />
+          <IconTrash size={20} className="text-red-400 hover:text-red-300" />
         </button>
       </div>
       
@@ -77,8 +94,8 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame }) => {
             className="flex flex-col text-sm text-gray-300 cursor-pointer hover:text-white transition-colors"
             onClick={handleCheckboxChange}
           >
-            <div className="font-medium text-white">{frame.label}</div>
-            <div className="text-xs text-gray-400">
+            <div className="font-medium text-white drop-shadow-md">{frame.label}</div>
+            <div className="text-xs text-gray-300 drop-shadow-md">
               {Math.round(frame.width)} × {Math.round(frame.height)}
             </div>
           </div>
@@ -87,10 +104,10 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame }) => {
         {/* Right side - Rotate button */}
         <button
           onClick={handleRotateClick}
-          className="p-2 bg-transparent hover:bg-gray-600 rounded transition-colors"
+          className="p-2 bg-black/50 hover:bg-gray-600/50 rounded-lg transition-colors"
           title={`Rotate (current: ${frame.orientation}°)`}
         >
-          <IconRotateClockwise size={20} className="text-white" />
+          <IconRotateClockwise size={20} className="text-white drop-shadow-md" />
         </button>
       </div>
     </div>

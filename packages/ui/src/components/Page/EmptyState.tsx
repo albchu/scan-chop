@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const EmptyState: React.FC = () => (
-  <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+  <div className="absolute inset-0 flex items-center justify-center bg-gray-50 pointer-events-none">
     <div className="text-center">
       <svg 
         className="mx-auto h-12 w-12 text-gray-400" 

@@ -89,7 +89,7 @@ export function setupIpcHandlers(workspaceService: WorkspaceService) {
     console.log('[IPC] workspace:updateFrame called for frame:', frameId);
     
     try {
-      const updatedFrame = workspaceService.updateFrame(frameId, updates);
+      const updatedFrame = await workspaceService.updateFrame(frameId, updates);
       
       if (!updatedFrame) {
         return { 

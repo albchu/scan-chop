@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { workspaceApi } from '../../../api/workspace';
 import { useUIContext } from '../../../context/UIContext';
 import { useZoomContext } from '../../../context/ZoomContext';
@@ -30,11 +30,18 @@ export const useCanvasInteraction = ({
   }, [page]);
 
   const handleCanvasClick = useCallback(async (e: React.MouseEvent<HTMLDivElement>) => {
-    // Don't add frames if we were dragging or if Command key is pressed
-    if (isDragging || isCommandPressed) return;
+    console.log('[useCanvasInteraction] Click handler called');
+    console.log('[useCanvasInteraction] currentImagePath:', currentImagePath);
+    console.log('[useCanvasInteraction] isDragging:', isDragging);
+    console.log('[useCanvasInteraction] isCommandPressed:', isCommandPressed);
+    
+    // Don't add frames if we were dragging
+    if (isDragging) return;
 
     // Check if we clicked on a frame
     const target = e.target as HTMLElement;
+    console.log('[useCanvasInteraction] Click target:', target.tagName, target.className);
+    
     const frameElement = target.closest('[data-frame-id]');
 
     if (frameElement) {
@@ -45,6 +52,7 @@ export const useCanvasInteraction = ({
     } 
     // Clicked on the page
     else if (target.closest('[data-page="true"]')) {
+      console.log('[useCanvasInteraction] Clicked on page element');
       // Clicked on page background
       const pageElement = target.closest('[data-page="true"]') as HTMLElement;
       const rect = pageElement.getBoundingClientRect();
@@ -55,6 +63,8 @@ export const useCanvasInteraction = ({
       // Calculate click position in displayed image coordinates
       const displayX = (e.clientX - rect.left) / totalScale;
       const displayY = (e.clientY - rect.top) / totalScale;
+      
+      console.log('[useCanvasInteraction] Page element found, coordinates:', { displayX, displayY });
       
       // Use seed-based frame generation by default
       if (currentImagePath) {
@@ -73,6 +83,9 @@ export const useCanvasInteraction = ({
               // Backend handles downsampling internally now
             }
           );
+          
+          console.log('[useCanvasInteraction] Frame generated:', frameData);
+          console.log('[useCanvasInteraction] Frame has imageData:', !!frameData.imageData);
           
           // Frame data is already in display coordinates, no scaling needed
           addFrame(frameData);
@@ -101,6 +114,9 @@ export const useCanvasInteraction = ({
           rotation: 0,
         });
       }
+    } else {
+      console.log('[useCanvasInteraction] Click did not match frame or page element');
+      console.log('[useCanvasInteraction] Checking for data-page attribute:', document.querySelector('[data-page="true"]'));
     }
   }, [isDragging, isCommandPressed, page, addFrame, selectFrame, zoom, baseScale, 
       defaultFrameWidth, defaultFrameHeight, currentImagePath]);
