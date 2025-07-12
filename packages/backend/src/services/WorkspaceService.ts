@@ -9,8 +9,12 @@ import { Image as ImageJS } from 'image-js';
 import fs from 'fs/promises';
 import { isImageFile } from '../utils/isImageFile';
 
-// Internal processing configuration
-const DEFAULT_PROCESSING_DOWNSCALE = 0.3; // 30% of display size for processing
+// Internal scaling configuration
+const MAX_DISPLAY_WIDTH = 1920;  // Max width for display/processing
+const MAX_DISPLAY_HEIGHT = 1080; // Max height for display/processing
+
+// Default downscale factor for processing (30% of original size)
+const DEFAULT_PROCESSING_DOWNSCALE = 0.3;
 
 // Image data interface (previously from ImageLoader)
 export interface ImageData {
@@ -21,11 +25,11 @@ export interface ImageData {
   originalHeight: number; // original image height before scaling
 }
 
-// Simple image cache entry that stores both full and downscaled versions
+// Simple image cache entry that stores both full and scaled versions
 interface ImageCacheEntry {
   fullImage: Image;
-  processingImage?: Image; // Downscaled version for processing
-  downscaleFactor?: number; // Scale factor used for processing image
+  scaledImage?: Image;     // Scaled version for both display and processing
+  scaleFactor?: number;    // Scale factor used for the scaled image
   lastAccess: number;
 }
 
@@ -38,6 +42,9 @@ export class WorkspaceService {
   // Image cache with full and processing versions
   private imageCache = new Map<string, ImageCacheEntry>();
   private readonly maxCacheSize = 10; // Number of images to keep in cache
+  
+  // Track in-flight image loads to prevent duplicates
+  private loadingPromises = new Map<string, Promise<ImageCacheEntry>>();
   
   constructor() {
     console.log('[WorkspaceService] Initializing');
@@ -117,42 +124,46 @@ export class WorkspaceService {
     const cacheEntry = await this.getCachedImage(imagePath, true);
     
     // Check if we can use the cached processing image
-    let imageToUse: Image;
+    let scaledImage: Image;
     let actualDownscale: number;
     
-    if (cacheEntry.processingImage && 
-        cacheEntry.downscaleFactor && 
-        Math.abs(cacheEntry.downscaleFactor - processingDownscale) < 0.01) {
-      // Use cached processing image
-      console.log('[WorkspaceService] Using cached processing image for frame generation:', imagePath);
-      imageToUse = cacheEntry.processingImage;
-      actualDownscale = cacheEntry.downscaleFactor;
+    if (cacheEntry.scaledImage && 
+        cacheEntry.scaleFactor && 
+        Math.abs(cacheEntry.scaleFactor - processingDownscale) < 0.01) {
+      // Use cached scaled image
+      scaledImage = cacheEntry.scaledImage;
+      actualDownscale = cacheEntry.scaleFactor;
     } else {
-      // This should rarely happen since we pre-cache at DEFAULT_PROCESSING_DOWNSCALE
-      console.log('[WorkspaceService] Creating processing image with default factor:', processingDownscale);
-      imageToUse = cacheEntry.fullImage.resize({ 
-        width: Math.round(cacheEntry.fullImage.width * processingDownscale) 
-      });
-      actualDownscale = processingDownscale;
+      // Create scaled image on demand if not available
+      const targetWidth = Math.round(cacheEntry.fullImage.width * processingDownscale);
+      scaledImage = cacheEntry.fullImage.resize({ width: targetWidth });
+      actualDownscale = scaledImage.width / cacheEntry.fullImage.width;
+      
+      // Update cache with the newly created scaled image
+      cacheEntry.scaledImage = scaledImage;
+      cacheEntry.scaleFactor = actualDownscale;
     }
     
-    // Generate frame using the appropriate image
+    // Calculate the actual scale factor (from display to original)
+    // If the image was scaled for display, we need to account for that
+    const displayToOriginalScale = cacheEntry.fullImage.width / scaledImage.width;
+    
+    console.log('[WorkspaceService] Using scaled image for frame generation:', scaledImage.width, 'x', scaledImage.height);
+    console.log('[WorkspaceService] Scale factor (display to original):', displayToOriginalScale);
+    
+    // Generate frame using both images
     const frameData = await this.frameService.generateFrameFromSeed(
-      cacheEntry.fullImage,  // Pass original for final extraction
-      imageToUse,           // Pass downscaled for processing
-      actualDownscale,      // Pass actual scale factor used
+      cacheEntry.fullImage,  // Original full-resolution image
+      scaledImage,           // Scaled image for detection
+      actualDownscale,       // Scale factor
       seed,
-      { 
-        ...config,
-        whiteThreshold: config?.whiteThreshold ?? WHITE_THRESHOLD_DEFAULT,
-        downsampleFactor: actualDownscale  // Always use our internal value
-      }
+      config
     );
     
     return frameData;
   }
   
-  updateFrame(id: string, updates: Partial<FrameData>): FrameData | null {
+  updateFrame(id: string, updates: Partial<FrameData>): FrameData | undefined {
     return this.frameService.updateFrame(id, updates);
   }
   
@@ -168,28 +179,15 @@ export class WorkspaceService {
     return this.frameService.deleteFrame(id);
   }
   
-  clearFrames(): void {
-    this.frameService.clearFrames();
+  clearCache(path?: string): void {
+    this.cacheManager.clear(path);
+    this.frameService.clearAllFrames();
+    // Also clear image cache when clearing all cache
+    this.imageCache.clear();
   }
   
   clearCurrentImageCache(): void {
     this.imageCache.clear();
-  }
-  
-  clearCache(dirPath?: string): void {
-    this.cacheManager.clear(dirPath);
-    // Also clear image cache for this directory if specified
-    if (dirPath) {
-      // Clear images from this directory
-      for (const [key] of this.imageCache) {
-        if (key.startsWith(dirPath)) {
-          this.imageCache.delete(key);
-        }
-      }
-    } else {
-      // Clear all image cache if no specific directory
-      this.imageCache.clear();
-    }
   }
   
   clearImageCache(imagePath?: string): void {
@@ -208,43 +206,108 @@ export class WorkspaceService {
   }
   
   async loadImageAsBase64(imagePath: string): Promise<ImageData> {
-    // Get the full image and pre-create processing version
-    const { fullImage } = await this.getCachedImage(imagePath, true);
+    // Get the image with scaled version
+    const wasCached = this.imageCache.has(imagePath);
+    const cacheEntry = await this.getCachedImage(imagePath, true);
+    
+    // Use the scaled image for display if available, otherwise use full image
+    const imageToReturn = cacheEntry.scaledImage || cacheEntry.fullImage;
     
     // Convert to base64 data URL
-    const base64 = fullImage.toDataURL();
+    const base64 = imageToReturn.toDataURL();
     
-    console.log('[WorkspaceService] Serving full image with processing version pre-cached:', fullImage.width, 'x', fullImage.height);
+    console.log(
+      `[WorkspaceService] ${wasCached ? 'Serving cached' : 'Loaded and serving new'} image:`,
+      imagePath,
+      `(display: ${imageToReturn.width}x${imageToReturn.height}, original: ${cacheEntry.fullImage.width}x${cacheEntry.fullImage.height})`,
+      `[Cache: ${this.imageCache.size}/${this.maxCacheSize}]`
+    );
     
     return {
       imageData: base64,
-      width: fullImage.width,
-      height: fullImage.height,
-      originalWidth: fullImage.width,
-      originalHeight: fullImage.height
+      width: imageToReturn.width,
+      height: imageToReturn.height,
+      originalWidth: cacheEntry.fullImage.width,
+      originalHeight: cacheEntry.fullImage.height
     };
   }
 
-  private async getCachedImage(imagePath: string, needsProcessingVersion = false): Promise<ImageCacheEntry> {
+  private async getCachedImage(imagePath: string, needsScaledVersion = false): Promise<ImageCacheEntry> {
     // Check cache first
     const cached = this.imageCache.get(imagePath);
     if (cached) {
       // Update last access time
       cached.lastAccess = Date.now();
+      console.log('[WorkspaceService] Found in cache:', imagePath);
       
-      // Check if we need processing version and don't have it
-      if (needsProcessingVersion && !cached.processingImage) {
-        console.log('[WorkspaceService] Creating processing version for cached image:', imagePath);
-        const processingImage = cached.fullImage.resize({ 
-          width: Math.round(cached.fullImage.width * DEFAULT_PROCESSING_DOWNSCALE) 
-        });
-        cached.processingImage = processingImage;
-        cached.downscaleFactor = DEFAULT_PROCESSING_DOWNSCALE;
+      // Check if we need scaled version and don't have it
+      if (needsScaledVersion && !cached.scaledImage) {
+        console.log('[WorkspaceService] Creating scaled version for cached image:', imagePath);
+        const { scaledImage, scaleFactor } = this.createScaledImage(cached.fullImage);
+        cached.scaledImage = scaledImage;
+        cached.scaleFactor = scaleFactor;
       }
       
       return cached;
     }
     
+    // Check if we're already loading this image
+    const loadingPromise = this.loadingPromises.get(imagePath);
+    if (loadingPromise) {
+      console.log('[WorkspaceService] Waiting for in-flight image load:', imagePath);
+      const entry = await loadingPromise;
+      
+      // Check if we need scaled version and don't have it
+      if (needsScaledVersion && !entry.scaledImage) {
+        console.log('[WorkspaceService] Creating scaled version for loaded image:', imagePath);
+        const { scaledImage, scaleFactor } = this.createScaledImage(entry.fullImage);
+        entry.scaledImage = scaledImage;
+        entry.scaleFactor = scaleFactor;
+      }
+      
+      return entry;
+    }
+    
+    // Create a promise for this load
+    const loadPromise = this.loadImage(imagePath, needsScaledVersion);
+    this.loadingPromises.set(imagePath, loadPromise);
+    
+    try {
+      const entry = await loadPromise;
+      return entry;
+    } finally {
+      // Clean up the loading promise
+      this.loadingPromises.delete(imagePath);
+    }
+  }
+  
+  private createScaledImage(fullImage: Image): { scaledImage: Image; scaleFactor: number } {
+    const { width, height } = fullImage;
+    
+    // Calculate scale factor to fit within max dimensions
+    const widthScale = width > MAX_DISPLAY_WIDTH ? MAX_DISPLAY_WIDTH / width : 1.0;
+    const heightScale = height > MAX_DISPLAY_HEIGHT ? MAX_DISPLAY_HEIGHT / height : 1.0;
+    const scaleFactor = Math.min(widthScale, heightScale);
+    
+    // Only scale if necessary
+    if (scaleFactor >= 1.0) {
+      console.log('[WorkspaceService] Image fits within max dimensions, no scaling needed');
+      return { scaledImage: fullImage, scaleFactor: 1.0 };
+    }
+    
+    // Create scaled image
+    const newWidth = Math.round(width * scaleFactor);
+    const newHeight = Math.round(height * scaleFactor);
+    
+    console.log(
+      `[WorkspaceService] Scaling image from ${width}x${height} to ${newWidth}x${newHeight} (factor: ${scaleFactor.toFixed(2)})`
+    );
+    
+    const scaledImage = fullImage.resize({ width: newWidth });
+    return { scaledImage, scaleFactor };
+  }
+  
+  private async loadImage(imagePath: string, needsScaledVersion: boolean): Promise<ImageCacheEntry> {
     // Validate file first
     if (!isImageFile(imagePath)) {
       throw new Error(`Not a valid image file: ${imagePath}`);
@@ -260,23 +323,21 @@ export class WorkspaceService {
     console.log('[WorkspaceService] Loading full-size image:', imagePath);
     const fullImage = await ImageJS.load(imagePath);
     
-    // Create processing version if needed
-    let processingImage: Image | undefined;
-    let downscaleFactor: number | undefined;
+    // Create scaled version if needed
+    let scaledImage: Image | undefined;
+    let scaleFactor: number | undefined;
     
-    if (needsProcessingVersion) {
-      console.log('[WorkspaceService] Creating processing version at', DEFAULT_PROCESSING_DOWNSCALE, 'scale');
-      processingImage = fullImage.resize({ 
-        width: Math.round(fullImage.width * DEFAULT_PROCESSING_DOWNSCALE) 
-      });
-      downscaleFactor = DEFAULT_PROCESSING_DOWNSCALE;
+    if (needsScaledVersion) {
+      const scaled = this.createScaledImage(fullImage);
+      scaledImage = scaled.scaledImage;
+      scaleFactor = scaled.scaleFactor;
     }
     
     // Create cache entry
     const entry: ImageCacheEntry = {
       fullImage,
-      processingImage,
-      downscaleFactor,
+      scaledImage,
+      scaleFactor,
       lastAccess: Date.now()
     };
     

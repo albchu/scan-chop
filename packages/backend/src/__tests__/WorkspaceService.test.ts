@@ -13,14 +13,12 @@ vi.mock('image-js', () => ({
     load: vi.fn()
   }
 }));
-vi.mock('@workspace/shared', async () => {
-  const actual = await vi.importActual('@workspace/shared');
-  return {
-    ...actual,
-    processSingleSeed: vi.fn(),
-    WHITE_THRESHOLD_DEFAULT: 220
-  };
-});
+// Mock the shared module
+vi.mock('@workspace/shared', () => ({
+  WHITE_THRESHOLD_DEFAULT: 220,
+  MAX_DISPLAY_WIDTH: 1920,
+  MAX_DISPLAY_HEIGHT: 1080
+}));
 
 // Helper to create mock dirent
 function createMockDirent(name: string, isDirectory: boolean) {
@@ -555,18 +553,18 @@ describe('WorkspaceService', () => {
     });
 
     it('should evict least recently used images when cache is full', async () => {
-      // Mock resize for processing images
+      // Mock resize for scaled images
       const mockResize = vi.fn().mockImplementation(() => ({
-        width: 240,
-        height: 180,
-        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,processing')
+        width: 1080,  // Scaled to fit within 1920x1080
+        height: 810,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,scaled')
       }));
 
       // Mock responses for different images
       for (let i = 1; i <= 12; i++) {
         mockImageLoad.mockResolvedValueOnce({
-          width: 800,
-          height: 600,
+          width: 1600,
+          height: 1200,
           toDataURL: vi.fn().mockReturnValue(`data:image/jpeg;base64,img${i}`),
           resize: mockResize
         } as any);
@@ -591,140 +589,205 @@ describe('WorkspaceService', () => {
       // Try to load image1 again - should reload as it was evicted
       const result = await service.loadImageAsBase64('/test/image1.jpg');
       expect(mockImageLoad).toHaveBeenCalledTimes(12);
-      expect(result.imageData).toBe('data:image/jpeg;base64,img12');
+      expect(result.imageData).toBe('data:image/jpeg;base64,scaled');
     });
     
-    it('should pre-cache processing version when loading display images', async () => {
+    it('should scale images to fit within max dimensions', async () => {
+      const imagePath = '/test/large-image.jpg';
+      
+      // Create mock images - larger than 1920x1080
+      const mockFullImage = {
+        width: 3840,
+        height: 2160,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,full'),
+        resize: vi.fn()
+      };
+      
+      const mockScaledImage = {
+        width: 1920,  // Scaled to fit within max width
+        height: 1080, // Proportionally scaled
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,scaled')
+      };
+      
+      // Mock resize to return scaled image
+      mockFullImage.resize.mockReturnValue(mockScaledImage);
+      mockImageLoad.mockResolvedValue(mockFullImage as any);
+
+      // Load image for display - should return scaled version
+      const result = await service.loadImageAsBase64(imagePath);
+      
+      // Should return scaled dimensions for display
+      expect(result.width).toBe(1920);
+      expect(result.height).toBe(1080);
+      expect(result.originalWidth).toBe(3840);
+      expect(result.originalHeight).toBe(2160);
+      expect(result.imageData).toBe('data:image/jpeg;base64,scaled');
+      
+      // Should have created scaled version
+      expect(mockFullImage.resize).toHaveBeenCalledWith({
+        width: 1920
+      });
+    });
+    
+    it('should not scale images that fit within max dimensions', async () => {
+      const imagePath = '/test/small-image.jpg';
+      
+      const mockFullImage = {
+        width: 800,
+        height: 600,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,small'),
+        resize: vi.fn()
+      };
+      
+      mockImageLoad.mockResolvedValue(mockFullImage as any);
+
+      // Load image for display
+      const result = await service.loadImageAsBase64(imagePath);
+      
+      // Should return original dimensions
+      expect(result.width).toBe(800);
+      expect(result.height).toBe(600);
+      expect(result.originalWidth).toBe(800);
+      expect(result.originalHeight).toBe(600);
+      expect(result.imageData).toBe('data:image/jpeg;base64,small');
+      
+      // Should not have called resize
+      expect(mockFullImage.resize).not.toHaveBeenCalled();
+    });
+    
+    it('should scale based on height when that is the limiting factor', async () => {
+      const imagePath = '/test/tall-image.jpg';
+      
+      const mockFullImage = {
+        width: 1000,
+        height: 3000,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,full'),
+        resize: vi.fn()
+      };
+      
+      const mockScaledImage = {
+        width: 360,   // 1000 * (1080/3000)
+        height: 1080, // Scaled to fit within max height
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,scaled')
+      };
+      
+      mockFullImage.resize.mockReturnValue(mockScaledImage);
+      mockImageLoad.mockResolvedValue(mockFullImage as any);
+
+      const result = await service.loadImageAsBase64(imagePath);
+      
+      expect(result.width).toBe(360);
+      expect(result.height).toBe(1080);
+      
+      // Should have scaled based on height constraint
+      expect(mockFullImage.resize).toHaveBeenCalledWith({
+        width: 360
+      });
+    });
+    
+    it('should use scaled image for frame generation', async () => {
       const imagePath = '/test/frame.jpg';
       
       // Create mock images
       const mockFullImage = {
-        width: 1600,
-        height: 1200,
-        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,frameimage'),
+        width: 3000,
+        height: 2000,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,full'),
         resize: vi.fn()
       };
       
-      const mockProcessingImage = {
-        width: 480,  // 1600 * 0.3
-        height: 360, // 1200 * 0.3
-        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,processing')
+      const mockScaledImage = {
+        width: 1620,  // 3000 * (1080/2000)
+        height: 1080, // Limited by height
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,scaled')
       };
       
-      // Mock resize to return processing image
-      mockFullImage.resize.mockReturnValue(mockProcessingImage);
+      // Mock resize to return scaled image
+      mockFullImage.resize.mockReturnValue(mockScaledImage);
       mockImageLoad.mockResolvedValue(mockFullImage as any);
 
-      // Load image for display - should pre-create processing version
-      const result = await service.loadImageAsBase64(imagePath);
-      expect(result.width).toBe(1600);
-      expect(result.height).toBe(1200);
-      expect(mockImageLoad).toHaveBeenCalledTimes(1);
-      
-      // Should have created processing version at 30% scale
-      expect(mockFullImage.resize).toHaveBeenCalledWith({
-        width: 480  // 1600 * 0.3
-      });
+      // Load image first
+      await service.loadImageAsBase64(imagePath);
 
       // Mock FrameService to return a valid frame
       const mockFrameService = (service as any).frameService;
       mockFrameService.generateFrameFromSeed = vi.fn().mockReturnValue({
         id: 'frame-1',
+        label: 'Frame 1',
         x: 50,
         y: 50,
         width: 100,
         height: 100,
         rotation: 0,
-        label: 'Frame 1',
         orientation: 0
       });
 
-      // Clear resize mock calls
-      mockFullImage.resize.mockClear();
-
-      // Generate a frame - should use cached processing image
+      // Generate a frame - should use cached scaled image
       const frameData = await service.generateFrame(
         imagePath,
         { x: 100, y: 100 }
       );
 
-      // Should not have loaded from disk or created new resize
-      expect(mockImageLoad).toHaveBeenCalledTimes(1);
-      expect(mockFullImage.resize).not.toHaveBeenCalled();
       expect(frameData).toBeDefined();
-      expect(frameData.id).toBe('frame-1');
+      // Frame coordinates are in display space
+      expect(frameData.x).toBe(50);
+      expect(frameData.y).toBe(50);
+      expect(frameData.width).toBe(100);
+      expect(frameData.height).toBe(100);
       
-      // Verify frame service was called with correct images
+      // Verify frame service was called with both images
       expect(mockFrameService.generateFrameFromSeed).toHaveBeenCalledWith(
-        mockFullImage,        // original
-        mockProcessingImage,  // cached processing version
-        0.3,                  // scale factor
-        { x: 100, y: 100 },
-        expect.objectContaining({
-          downsampleFactor: 0.3,
-          whiteThreshold: 220
-        })
+        mockFullImage,        // original full-resolution image
+        mockScaledImage,      // scaled version for detection
+        0.54,                 // scale factor
+        { x: 100, y: 100 },   // seed
+        undefined             // config
       );
-    });
-    
-    it('should always use default processing downscale regardless of config', async () => {
-      const imagePath = '/test/fixed-scale.jpg';
       
-      const mockFullImage = {
-        width: 1600,
-        height: 1200,
-        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,full'),
-        resize: vi.fn()
-      };
-      
-      const mockProcessingImage = {
-        width: 480,  // 1600 * 0.3
-        height: 360, // 1200 * 0.3
-        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,processing30')
-      };
-      
-      mockFullImage.resize.mockReturnValue(mockProcessingImage);
-      mockImageLoad.mockResolvedValue(mockFullImage as any);
-
-      // Load image - creates 30% processing version
-      await service.loadImageAsBase64(imagePath);
-      
-      // Clear previous calls
-      mockFullImage.resize.mockClear();
-      
-      // Mock FrameService
-      const mockFrameService = (service as any).frameService;
-      mockFrameService.generateFrameFromSeed = vi.fn().mockReturnValue({
+      // Result should have the returned frame data
+      expect(frameData).toEqual({
         id: 'frame-1',
+        label: 'Frame 1',
         x: 50,
         y: 50,
         width: 100,
         height: 100,
         rotation: 0,
-        label: 'Frame 1',
         orientation: 0
       });
-
-      // Generate frame - should always use cached 30% version
-      await service.generateFrame(
-        imagePath,
-        { x: 100, y: 100 },
-        { downsampleFactor: 0.5 }  // This should be ignored
-      );
-
-      // Should not have created new scaled version
-      expect(mockFullImage.resize).not.toHaveBeenCalled();
+    });
+    
+    it('should not create duplicate scaled images when multiple calls happen', async () => {
+      const imagePath = '/test/no-duplicates.jpg';
       
-      // Should have used the cached processing image at 30%
-      expect(mockFrameService.generateFrameFromSeed).toHaveBeenCalledWith(
-        mockFullImage,
-        mockProcessingImage,
-        0.3,  // Always 0.3
-        { x: 100, y: 100 },
-        expect.objectContaining({
-          downsampleFactor: 0.3  // Always uses internal value
-        })
-      );
+      const mockFullImage = {
+        width: 3000,
+        height: 2000,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,full'),
+        resize: vi.fn()
+      };
+      
+      const mockScaledImage = {
+        width: 1620,
+        height: 1080,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,scaled')
+      };
+      
+      mockFullImage.resize.mockReturnValue(mockScaledImage);
+      mockImageLoad.mockResolvedValue(mockFullImage as any);
+
+      // Make multiple loadImageAsBase64 calls quickly
+      await Promise.all([
+        service.loadImageAsBase64(imagePath),
+        service.loadImageAsBase64(imagePath),
+        service.loadImageAsBase64(imagePath)
+      ]);
+
+      // Image should only be loaded once
+      expect(mockImageLoad).toHaveBeenCalledTimes(1);
+      
+      // Scaled image should only be created once
+      expect(mockFullImage.resize).toHaveBeenCalledTimes(1);
     });
   });
 

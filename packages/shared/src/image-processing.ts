@@ -32,10 +32,44 @@ export interface ImageProcessingResult {
 }
 
 /**
+ * Find bounding box from a seed point
+ * @param image - The image to process (can be scaled for performance)
+ * @param seed - Seed point in image coordinates
+ * @param config - Processing configuration
+ * @returns Bounding box and region information
+ */
+export const findBoundingBoxFromSeed = (
+  image: Image,
+  seed: Vector2,
+  config: ProcessingConfig = {}
+): { boundingBox: BoundingBox; region: Array<[number, number]>; isValid: boolean } => {
+  // Extract region using flood fill
+  const region = extractRegionWithWhiteBoundary(image, seed, config);
+  
+  if (!region.isValid) {
+    throw new Error(`Invalid region: ${region.validationErrors?.join(', ')}`);
+  }
+  
+  // Find minimal bounding rectangle
+  const boundingBox = findMinimalBoundingRectangle(
+    region.points, 
+    config.minArea || 100,
+    config
+  );
+  
+  return {
+    boundingBox,
+    region: region.points,
+    isValid: true
+  };
+};
+
+/**
  * Process a single seed point to extract a sub-image
- * @param original - Original full-resolution image (or display resolution in coordinated mode)
- * @param scaled - Downsampled image for processing
- * @param seed - Seed point in original image coordinates
+ * @param original - Original full-resolution image for final cropping
+ * @param scaled - Scaled image for bounding box detection
+ * @param seed - Seed point in scaled image coordinates
+ * @param scaleFactor - Scale factor (scaled width / original width)
  * @param config - Processing configuration
  * @returns Processed image result
  */
@@ -43,47 +77,27 @@ export const processSingleSeed = (
   original: Image,
   scaled: Image,
   seed: Vector2,
+  scaleFactor: number,
   config: ProcessingConfig = {}
 ): ProcessedImage => {
-  const { downsampleFactor = 0.75 } = config;  // Better default for precision
+  // Find bounding box on the scaled image
+  const { boundingBox: scaledBoundingBox, region } = findBoundingBoxFromSeed(scaled, seed, config);
   
-  // Calculate the actual scale factor between original and scaled
-  const actualScaleFactor = scaled.width / original.width;
-  
-  // Scale seed point to downsampled coordinates, preserving precision
-  const scaledSeed = scaleCoordinatesFloat(seed, actualScaleFactor);
-  
-  // Extract region using flood fill
-  const region = extractRegionWithWhiteBoundary(scaled, scaledSeed, config);
-  
-  if (!region.isValid) {
-    throw new Error(
-      `Region extraction failed: ${region.validationErrors?.join(', ')}`
-    );
-  }
-  
-  // Scale region points back to original coordinates with floating-point precision
-  const originalRegion = scaleRegionCoordinatesFloat(region.points, 1 / actualScaleFactor);
-  
-  // Find minimal bounding rectangle in original coordinates
-  const boundingBox = findMinimalBoundingRectangle(originalRegion, config.minArea, config);
-  
-  console.log(
-    `🖼️ Found region: ${region.pixelCount} pixels, ` +
-    `bounding box: ${boundingBox.width.toFixed(0)}×${boundingBox.height.toFixed(0)} ` +
-    `at (${boundingBox.x.toFixed(0)}, ${boundingBox.y.toFixed(0)}), ` +
-    `rotation=${boundingBox.rotation.toFixed(1)}°`
+  // Scale the bounding box back to original image dimensions
+  const originalBoundingBox = scaleBoundingBox(
+    scaledBoundingBox, 
+    1 / scaleFactor  // Inverse of scale factor to go from scaled -> original
   );
   
-  // Extract the sub-image using smart crop
-  const extractedImage = smartCrop(original, boundingBox, config);
+  // Apply smart crop on the original full-resolution image
+  const croppedImage = smartCrop(original, originalBoundingBox, config);
   
   return {
-    image: extractedImage,
-    boundingBox,
-    region: originalRegion,
+    image: croppedImage,
+    boundingBox: scaledBoundingBox,  // Return scaled bounding box for UI coordinates
+    region,
     seed,
-    index: 0, // Will be set by caller
+    index: 0 // Will be set by caller
   };
 };
 
@@ -119,7 +133,10 @@ export const processImageWithSeeds = async (
     );
     
     try {
-      const result = processSingleSeed(original, scaled, seed, config);
+      // Scale seed coordinates to the downsampled image space
+      const scaledSeed = scaleCoordinates(seed, scaleFactor);
+      
+      const result = processSingleSeed(original, scaled, scaledSeed, scaleFactor, config);
       result.index = index;
       processedImages.push(result);
       
@@ -128,12 +145,12 @@ export const processImageWithSeeds = async (
         // Scale region for visualization on downsampled image with floating-point precision
         const scaledRegion = scaleRegionCoordinates(result.region, scaleFactor);
         const scaledBoundingBox = scaleBoundingBox(result.boundingBox, scaleFactor);
-        const scaledSeed = scaleCoordinatesFloat(seed, scaleFactor);
+        const scaledSeedFloat = scaleCoordinatesFloat(seed, scaleFactor);
         
         const debugImage = createDebugImage(scaled, {
           region: scaledRegion,
           regionColor: [255, 0, 0, 255], // Red for flood fill region
-          seed: scaledSeed,
+          seed: scaledSeedFloat,
           seedColor: [0, 255, 0, 255], // Green for seed point
           seedRadius: { inner: 15, outer: 20 }, // Blue circle around seed
           boundingBox: scaledBoundingBox,

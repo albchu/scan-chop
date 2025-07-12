@@ -1,35 +1,65 @@
-import { FrameData, Vector2, ProcessingConfig } from '@workspace/shared';
+import { FrameData, Vector2, ProcessingConfig, BoundingBox } from '@workspace/shared';
+import { findBoundingBoxFromSeed, scaleBoundingBox, smartCrop } from '@workspace/shared';
 import type { Image } from 'image-js';
-import { processSingleSeed } from '@workspace/shared';
 
 export class FrameService {
-  private frames: Map<string, FrameData> = new Map();
-  private frameCounter: number = 1;
-  
+  private frames = new Map<string, FrameData>();
+  private frameCounter = 1;
+
+  constructor() {
+    console.log('[FrameService] Initialized');
+  }
+
+  getAllFrames(): FrameData[] {
+    return Array.from(this.frames.values());
+  }
+
+  getFrame(id: string): FrameData | undefined {
+    return this.frames.get(id);
+  }
+
   async generateFrameFromSeed(
-    original: Image,         // Full resolution image
-    scaled: Image,          // Downscaled image for processing
-    scaleFactor: number,    // Scale factor used (scaled width / original width)
+    original: Image,        // Full resolution image for final cropping
+    scaled: Image,          // Scaled image for bounding box detection
+    scaleFactor: number,    // Scale factor (scaled width / original width)
     seed: Vector2,
     config?: ProcessingConfig
   ): Promise<FrameData> {
-    // Process seed point to get bounding box
-    // Note: processSingleSeed expects the actual scale factor to be calculated internally
-    // So we pass the downsample factor through config
-    const result = processSingleSeed(original, scaled, seed, {
+    // Find bounding box on the scaled image for performance
+    const { boundingBox: scaledBoundingBox } = findBoundingBoxFromSeed(scaled, seed, {
       ...config,
-      downsampleFactor: scaleFactor  // Pass the actual scale factor used
+      downsampleFactor: scaleFactor
     });
     
-    // Create FrameData with unique ID
+    // Scale the bounding box back to original image dimensions
+    const originalBoundingBox = scaleBoundingBox(
+      scaledBoundingBox, 
+      1 / scaleFactor  // Inverse of scale factor to go from scaled -> original
+    );
+    
+    console.log(
+      `[FrameService] Bounding box - Scaled: ${scaledBoundingBox.width.toFixed(0)}×${scaledBoundingBox.height.toFixed(0)}, ` +
+      `Original: ${originalBoundingBox.width.toFixed(0)}×${originalBoundingBox.height.toFixed(0)}`
+    );
+    
+    // Perform the smart crop on the original full-resolution image
+    // This gives us the best quality output
+    const croppedImage = smartCrop(original, originalBoundingBox, config);
+    
+    // Store the cropped image data if needed (for future export functionality)
+    // For now, we just log the dimensions
+    console.log(`[FrameService] Cropped image: ${croppedImage.width}×${croppedImage.height}`);
+    
+    // Create FrameData with display coordinates (scaled bounding box)
+    // The UI works in display space, not original image space
     const frameData: FrameData = {
       id: `frame-${this.frameCounter}`,
       label: `Frame ${this.frameCounter}`,
-      x: result.boundingBox.x,
-      y: result.boundingBox.y,
-      width: result.boundingBox.width,
-      height: result.boundingBox.height,
-      rotation: result.boundingBox.rotation,
+      x: scaledBoundingBox.x,
+      y: scaledBoundingBox.y,
+      width: scaledBoundingBox.width,
+      height: scaledBoundingBox.height,
+      rotation: scaledBoundingBox.rotation,
       orientation: 0
     };
     
@@ -42,40 +72,29 @@ export class FrameService {
     console.log(`[FrameService] Generated and persisted frame: ${frameData.id}`);
     return frameData;
   }
-  
-  updateFrame(id: string, updates: Partial<FrameData>): FrameData | null {
+
+  updateFrame(id: string, updates: Partial<FrameData>): FrameData | undefined {
     const frame = this.frames.get(id);
     if (!frame) {
-      console.error(`[FrameService] Frame not found: ${id}`);
-      return null;
+      return undefined;
     }
     
-    // Update frame data, but don't allow changing ID
-    const { id: _, ...safeUpdates } = updates;
-    const updatedFrame = { ...frame, ...safeUpdates };
+    const updatedFrame = { ...frame, ...updates };
     this.frames.set(id, updatedFrame);
     
-    console.log(`[FrameService] Updated frame: ${id}`, safeUpdates);
+    console.log(`[FrameService] Updated frame: ${id}`);
     return updatedFrame;
   }
-  
-  getFrame(id: string): FrameData | undefined {
-    return this.frames.get(id);
-  }
-  
-  getAllFrames(): FrameData[] {
-    return Array.from(this.frames.values());
-  }
-  
+
   deleteFrame(id: string): boolean {
-    const result = this.frames.delete(id);
-    if (result) {
+    const deleted = this.frames.delete(id);
+    if (deleted) {
       console.log(`[FrameService] Deleted frame: ${id}`);
     }
-    return result;
+    return deleted;
   }
-  
-  clearFrames(): void {
+
+  clearAllFrames(): void {
     this.frames.clear();
     this.frameCounter = 1;
     console.log('[FrameService] Cleared all frames');
