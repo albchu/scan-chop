@@ -24,7 +24,7 @@ export type RGB = readonly [number, number, number];
 
 // Processing configuration
 export interface ProcessingConfig {
-  downsampleFactor?: number;
+  downsampleFactor?: number; // Internal use only - ignored when called from frontend APIs
   whiteThreshold?: number; // Minimum brightness to consider as white boundary (0-255)
   minArea?: number;
   maxPixels?: number; // Maximum pixels allowed in flood fill region

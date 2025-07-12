@@ -56,14 +56,14 @@ export const initialState: UIContextState = {
     width: 2480,
     height: 3508,
     imageData: '',
-    originalWidth: 2480,  // NEW - track original dimensions
-    originalHeight: 3508, // NEW
+    originalWidth: 2480,
+    originalHeight: 3508,
   },
   frames: {},
   selectedFrameIds: [],
   nextFrameNumber: 1,
   pageLoadingState: 'empty',
-  currentImagePath: undefined, // NEW
+  currentImagePath: undefined,
 };
 
 // Reducer

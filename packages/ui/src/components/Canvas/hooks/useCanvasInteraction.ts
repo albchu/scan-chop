@@ -1,8 +1,8 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { workspaceApi } from '../../../api/workspace';
 import { useUIContext } from '../../../context/UIContext';
 import { useZoomContext } from '../../../context/ZoomContext';
-import { DEFAULT_FRAME_SIZE_RATIO } from '@workspace/shared';
-import { workspaceApi } from '../../../api/workspace';
+import { DEFAULT_FRAME_SIZE_RATIO, WHITE_THRESHOLD_DEFAULT } from '@workspace/shared';
 
 interface UseCanvasInteractionProps {
   isDragging: boolean;
@@ -10,7 +10,7 @@ interface UseCanvasInteractionProps {
 }
 
 interface UseCanvasInteractionReturn {
-  handleCanvasClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  handleCanvasClick: (e: React.MouseEvent<HTMLDivElement>) => Promise<void>;
   isGenerating: boolean;
 }
 
@@ -69,8 +69,8 @@ export const useCanvasInteraction = ({
             currentImagePath,
             { x: displayX, y: displayY },
             { 
-              whiteThreshold: 220,
-              downsampleFactor: 0.3  // Better precision with higher resolution processing
+              whiteThreshold: WHITE_THRESHOLD_DEFAULT
+              // Backend handles downsampling internally now
             }
           );
           

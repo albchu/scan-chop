@@ -40,14 +40,10 @@ export function setupIpcHandlers(workspaceService: WorkspaceService) {
   });
   
   // Load image file as base64
-  ipcMain.handle('workspace:loadImage', async (event, imagePath: string, options?: {
-    downsampleFactor?: number;
-    maxWidth?: number;
-    maxHeight?: number;
-  }) => {
-    console.log('[IPC] workspace:loadImage called with path:', imagePath, 'options:', options);
+  ipcMain.handle('workspace:loadImage', async (event, imagePath: string) => {
+    console.log('[IPC] workspace:loadImage called with path:', imagePath);
     try {
-      const imageData = await workspaceService.loadImageAsBase64(imagePath, options);
+      const imageData = await workspaceService.loadImageAsBase64(imagePath);
       return { success: true, data: imageData };
     } catch (error) {
       console.error('[IPC] Error loading image:', error);

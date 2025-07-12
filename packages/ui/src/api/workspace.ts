@@ -36,14 +36,10 @@ export const workspaceApi = {
     await window.backend.invoke('workspace:clearCache', path);
   },
   
-  async loadImage(imagePath: string, options?: {
-    downsampleFactor?: number;
-    maxWidth?: number;
-    maxHeight?: number;
-  }): Promise<ImageData> {
-    console.log('[WorkspaceAPI] Loading image:', imagePath, 'with options:', options);
+  async loadImage(imagePath: string): Promise<ImageData> {
+    console.log('[WorkspaceAPI] Loading image:', imagePath);
     
-    const response = await window.backend.invoke('workspace:loadImage', imagePath, options) as ApiResponse<ImageData>;
+    const response = await window.backend.invoke('workspace:loadImage', imagePath) as ApiResponse<ImageData>;
     
     if (response.success && response.data) {
       return response.data;

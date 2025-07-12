@@ -7,18 +7,18 @@ export class FrameService {
   private frameCounter: number = 1;
   
   async generateFrameFromSeed(
-    imagePath: string,
-    image: { original: Image; scaled: Image },
+    original: Image,         // Full resolution image
+    scaled: Image,          // Downscaled image for processing
+    scaleFactor: number,    // Scale factor used (scaled width / original width)
     seed: Vector2,
     config?: ProcessingConfig
   ): Promise<FrameData> {
     // Process seed point to get bounding box
-    const result = processSingleSeed(image.original, image.scaled, seed, {
-      downsampleFactor: 0.75,  // Better default for precision
-      whiteThreshold: 220,
-      minArea: 100,
-      cropInset: 8,
-      ...config
+    // Note: processSingleSeed expects the actual scale factor to be calculated internally
+    // So we pass the downsample factor through config
+    const result = processSingleSeed(original, scaled, seed, {
+      ...config,
+      downsampleFactor: scaleFactor  // Pass the actual scale factor used
     });
     
     // Create FrameData with unique ID

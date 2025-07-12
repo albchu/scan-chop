@@ -16,22 +16,17 @@ const EditorContent: React.FC = () => {
     setPageLoadingState('loading');
     
     try {
-      // Load the image as base64 with max dimensions for display
-      // This prevents loading huge images that could slow down the UI
-      const imageDataResponse = await workspaceApi.loadImage(path, {
-        maxWidth: 2048,   // Max width for display
-        maxHeight: 2048,  // Max height for display
-      });
+      // Load the image as base64 (backend now always returns full size)
+      const imageDataResponse = await workspaceApi.loadImage(path);
       
       // Update the page with the new image data and dimensions
-      // Pass the image path along with the update
       updatePage({ 
         imageData: imageDataResponse.imageData,
         width: imageDataResponse.width,
         height: imageDataResponse.height,
-        originalWidth: imageDataResponse.originalWidth,   // NEW - store original dimensions
-        originalHeight: imageDataResponse.originalHeight, // NEW
-      }, path); // Pass the image path
+        originalWidth: imageDataResponse.originalWidth,
+        originalHeight: imageDataResponse.originalHeight,
+      }, path);
       
       // Set loaded state after successful load
       setPageLoadingState('loaded');
