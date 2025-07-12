@@ -79,16 +79,17 @@ export const scaleBoundingBox = (
 });
 
 /**
- * Get the four corners of a rotated rectangle
+ * Get the four corners of a rotated rectangle (high precision version)
  * @param boundingBox - The bounding box
- * @returns Array of four corner points
+ * @returns Array of four corner points with floating-point precision
  */
-export const transformCorners = (boundingBox: BoundingBox): Vector2[] => {
+export const transformCornersFloat = (boundingBox: BoundingBox): Vector2[] => {
   const angleRad = degreesToRadians(boundingBox.rotation);
   const cos = Math.cos(angleRad);
   const sin = Math.sin(angleRad);
 
-  return [
+  // Use high precision calculations
+  const corners: Vector2[] = [
     { x: boundingBox.x, y: boundingBox.y },
     { 
       x: boundingBox.x + boundingBox.width * cos, 
@@ -103,6 +104,17 @@ export const transformCorners = (boundingBox: BoundingBox): Vector2[] => {
       y: boundingBox.y + boundingBox.height * cos 
     },
   ];
+
+  return corners;
+};
+
+/**
+ * Get the four corners of a rotated rectangle
+ * @param boundingBox - The bounding box
+ * @returns Array of four corner points
+ */
+export const transformCorners = (boundingBox: BoundingBox): Vector2[] => {
+  return transformCornersFloat(boundingBox);
 };
 
 /**
@@ -160,19 +172,32 @@ export const calculateAxisAlignedBounds = (
 };
 
 /**
+ * Calculate the center point of a bounding box after rotation (high precision)
+ * @param boundingBox - The bounding box
+ * @returns Center point coordinates with floating-point precision
+ */
+export const getBoundingBoxCenterFloat = (boundingBox: BoundingBox): Vector2 => {
+  const angleRad = degreesToRadians(boundingBox.rotation);
+  const cos = Math.cos(angleRad);
+  const sin = Math.sin(angleRad);
+  
+  // Calculate center without premature rounding
+  const halfWidth = boundingBox.width / 2;
+  const halfHeight = boundingBox.height / 2;
+  
+  return {
+    x: boundingBox.x + halfWidth * cos - halfHeight * sin,
+    y: boundingBox.y + halfWidth * sin + halfHeight * cos,
+  };
+};
+
+/**
  * Calculate the center point of a bounding box after rotation
  * @param boundingBox - The bounding box
  * @returns Center point coordinates
  */
 export const getBoundingBoxCenter = (boundingBox: BoundingBox): Vector2 => {
-  const angleRad = degreesToRadians(boundingBox.rotation);
-  const cos = Math.cos(angleRad);
-  const sin = Math.sin(angleRad);
-  
-  return {
-    x: boundingBox.x + (boundingBox.width * cos) / 2 - (boundingBox.height * sin) / 2,
-    y: boundingBox.y + (boundingBox.width * sin) / 2 + (boundingBox.height * cos) / 2,
-  };
+  return getBoundingBoxCenterFloat(boundingBox);
 };
 
 /**

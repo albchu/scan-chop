@@ -70,7 +70,7 @@ export const useCanvasInteraction = ({
             { x: displayX, y: displayY },
             { 
               whiteThreshold: 220,
-              downsampleFactor: 0.75  // Better precision with higher resolution processing
+              downsampleFactor: 0.3  // Better precision with higher resolution processing
             }
           );
           
