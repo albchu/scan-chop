@@ -43,7 +43,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
   } = frame;
 
   // Get page context for scaling
-  const { page } = useUIContext();
+  const { currentPage } = useUIContext();
 
   // Get zoom context and calculate moveable zoom
   const { totalScale } = useZoomContext();

@@ -10,8 +10,8 @@ interface UseFrameTransformReturn {
 }
 
 export const useFrameTransform = (id: string): UseFrameTransformReturn => {
-  const { frames, selectedFrameIds } = useUIContext();
-  const frame = frames[id] || null;
+  const { findFrameById, selectedFrameIds } = useUIContext();
+  const frame = findFrameById(id) || null;
   
   const isSelected = selectedFrameIds.includes(id);
   const selectionType: UseFrameTransformReturn['selectionType'] = 

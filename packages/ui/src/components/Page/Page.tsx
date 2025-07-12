@@ -16,13 +16,26 @@ interface PageStyles {
 }
 
 export const Page: React.FC = () => {
-  const { page, frames, updateFrame, pageLoadingState } = useUIContext();
+  const { currentPage, currentPageFrames, updateFrame, pageLoadingState } = useUIContext();
+
+  if (!currentPage) {
+    return (
+      <div
+        data-page="true"
+        className="relative bg-gray-100 overflow-hidden shadow-2xl border-2 border-gray-300 cursor-crosshair"
+        style={{ width: 2480, height: 3508, position: 'relative' }}
+      >
+        <GridPattern />
+        <EmptyState />
+      </div>
+    );
+  }
 
   const pageStyles: PageStyles = {
-    width: page.width,
-    height: page.height,
-    backgroundImage: pageLoadingState === 'loaded' && page.imageData 
-      ? `url(${page.imageData})` 
+    width: currentPage.width,
+    height: currentPage.height,
+    backgroundImage: pageLoadingState === 'loaded' && currentPage.imageData 
+      ? `url(${currentPage.imageData})` 
       : undefined,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
@@ -30,7 +43,7 @@ export const Page: React.FC = () => {
     position: 'relative',
   };
 
-  const shouldShowEmptyState = pageLoadingState === 'empty' && !page.imageData;
+  const shouldShowEmptyState = pageLoadingState === 'empty' && !currentPage.imageData;
   const shouldShowLoadingState = pageLoadingState === 'loading';
 
   return (
@@ -47,7 +60,7 @@ export const Page: React.FC = () => {
       {shouldShowLoadingState && <LoadingState />}
 
       {/* Frames - always rendered but may be hidden behind loading/empty states */}
-      {Object.values(frames).map((frame) => (
+      {currentPageFrames.map((frame) => (
         <Frame 
           key={frame.id} 
           frame={frame} 

@@ -3,14 +3,14 @@ import { IconDownload } from '@tabler/icons-react';
 import { useUIContext } from '../../context/UIContext';
 
 export const BatchControls: React.FC = () => {
-  const { frames, selectedFrameIds, saveFrames, removeFramesBatch } = useUIContext();
-  const frameCount = Object.keys(frames).length;
+  const { currentPageFrames, selectedFrameIds, saveFrames, removeFramesBatch } = useUIContext();
+  const frameCount = currentPageFrames.length;
   const selectedCount = selectedFrameIds.length;
   
   const handleSaveFrames = () => {
     if (selectedCount === 0) {
       // Save all frames
-      saveFrames(Object.keys(frames));
+      saveFrames(currentPageFrames.map(f => f.id));
     } else {
       // Save selected frames
       saveFrames(selectedFrameIds);

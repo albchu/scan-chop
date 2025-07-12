@@ -11,7 +11,7 @@ import { getCursorStyle } from './utils/canvasUtils';
 import { IconLoader2 } from '@tabler/icons-react';
 
 export const CanvasInner: React.FC = () => {
-  const { page } = useUIContext();
+  const { currentPage } = useUIContext();
   const { 
     zoom, 
     baseScale, 
@@ -78,8 +78,8 @@ export const CanvasInner: React.FC = () => {
       />
       
       <CanvasDebugInfo 
-        pageWidth={page.width}
-        pageHeight={page.height}
+        pageWidth={currentPage?.width || 0}
+        pageHeight={currentPage?.height || 0}
         baseScale={baseScale}
         totalScale={totalScale}
       />

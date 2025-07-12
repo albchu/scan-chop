@@ -1,10 +1,11 @@
-import { FrameData, Vector2, ProcessingConfig, BoundingBox } from '@workspace/shared';
+import { FrameData, Vector2, ProcessingConfig, BoundingBox, generatePageId } from '@workspace/shared';
 import { findBoundingBoxFromSeed, scaleBoundingBox, smartCrop } from '@workspace/shared';
 import type { Image } from 'image-js';
 
 // Internal metadata for regenerating frame images
 interface FrameMetadata {
   imagePath: string;
+  pageId: string;
   scaleFactor: number;
 }
 
@@ -70,10 +71,13 @@ export class FrameService {
     
     console.log(`[FrameService] Cropped image: ${croppedImage.width}×${croppedImage.height}`);
     
+    // Generate pageId from imagePath
+    const pageId = generatePageId(imagePath);
+    
     // Create FrameData with display coordinates (scaled bounding box)
     // The UI works in display space, not original image space
     const frameData: FrameData = {
-      id: `frame-${this.frameCounter}`,
+      id: `${pageId}-frame-${this.frameCounter}`,
       label: `Frame ${this.frameCounter}`,
       x: scaledBoundingBox.x,
       y: scaledBoundingBox.y,
@@ -82,16 +86,22 @@ export class FrameService {
       rotation: scaledBoundingBox.rotation,
       orientation: 0,
       imageData, // Include the cropped image data
-      imageScaleFactor: 1 / scaleFactor // Store inverse scale factor (display to original)
+      imageScaleFactor: 1 / scaleFactor, // Store inverse scale factor (display to original)
+      pageId // Include pageId
     };
     
     console.log(`[FrameService] FrameData includes imageData: ${!!frameData.imageData}`);
+    console.log(`[FrameService] FrameData includes pageId: ${frameData.pageId}`);
     
     // Store metadata for regeneration
     const metadata: FrameMetadata = {
       imagePath,
+      pageId,
       scaleFactor
     };
+    
+    // TODO: Future persistence - save frame to SQLite with pageId
+    // await db.frames.insert({ ...frameData, pageId });
     
     // Increment counter for next frame
     this.frameCounter++;
@@ -150,6 +160,9 @@ export class FrameService {
     }
     
     this.frames.set(id, updatedFrame);
+    
+    // TODO: Future persistence - update frame in SQLite
+    // await db.frames.update(id, updatedFrame);
     
     console.log(`[FrameService] Updated frame: ${id}`);
     return updatedFrame;

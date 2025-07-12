@@ -18,25 +18,27 @@ export const useCanvasInteraction = ({
   isDragging, 
   isCommandPressed 
 }: UseCanvasInteractionProps): UseCanvasInteractionReturn => {
-  const { page, addFrame, selectFrame, currentImagePath } = useUIContext();
+  const { currentPage, currentPageId, addFrame, selectFrame } = useUIContext();
   const { zoom, baseScale } = useZoomContext();
   const [isGenerating, setIsGenerating] = useState(false);
 
   const [defaultFrameWidth, defaultFrameHeight] = useMemo(() => {
+    if (!currentPage) return [100, 100]; // Fallback values
     return [
-      page.width * DEFAULT_FRAME_SIZE_RATIO,
-      page.height * DEFAULT_FRAME_SIZE_RATIO,
+      currentPage.width * DEFAULT_FRAME_SIZE_RATIO,
+      currentPage.height * DEFAULT_FRAME_SIZE_RATIO,
     ];
-  }, [page]);
+  }, [currentPage]);
 
   const handleCanvasClick = useCallback(async (e: React.MouseEvent<HTMLDivElement>) => {
     console.log('[useCanvasInteraction] Click handler called');
-    console.log('[useCanvasInteraction] currentImagePath:', currentImagePath);
+    console.log('[useCanvasInteraction] currentPageId:', currentPageId);
+    console.log('[useCanvasInteraction] currentPage?.imagePath:', currentPage?.imagePath);
     console.log('[useCanvasInteraction] isDragging:', isDragging);
     console.log('[useCanvasInteraction] isCommandPressed:', isCommandPressed);
     
-    // Don't add frames if we were dragging
-    if (isDragging) return;
+    // Don't add frames if we were dragging or if no page is loaded
+    if (isDragging || !currentPage || !currentPageId) return;
 
     // Check if we clicked on a frame
     const target = e.target as HTMLElement;
@@ -67,7 +69,7 @@ export const useCanvasInteraction = ({
       console.log('[useCanvasInteraction] Page element found, coordinates:', { displayX, displayY });
       
       // Use seed-based frame generation by default
-      if (currentImagePath) {
+      if (currentPage.imagePath) {
         try {
           setIsGenerating(true);
           
@@ -76,7 +78,7 @@ export const useCanvasInteraction = ({
           
           // Generate frame using seed coordinates in display image space
           const frameData = await workspaceApi.generateFrame(
-            currentImagePath,
+            currentPage.imagePath,
             { x: displayX, y: displayY },
             { 
               whiteThreshold: WHITE_THRESHOLD_DEFAULT
@@ -86,6 +88,7 @@ export const useCanvasInteraction = ({
           
           console.log('[useCanvasInteraction] Frame generated:', frameData);
           console.log('[useCanvasInteraction] Frame has imageData:', !!frameData.imageData);
+          console.log('[useCanvasInteraction] Frame has pageId:', frameData.pageId);
           
           // Frame data is already in display coordinates, no scaling needed
           addFrame(frameData);
@@ -94,8 +97,8 @@ export const useCanvasInteraction = ({
           console.error('Failed to generate frame:', error);
           // If frame generation fails, fall back to manual frame creation
           // Calculate imageScaleFactor if we have original dimensions
-          const imageScaleFactor = page.originalWidth && page.originalHeight
-            ? page.originalWidth / page.width  // Assuming width and height scale equally
+          const imageScaleFactor = currentPage.originalWidth && currentPage.originalHeight
+            ? currentPage.originalWidth / currentPage.width  // Assuming width and height scale equally
             : undefined;
             
           addFrame({
@@ -124,8 +127,8 @@ export const useCanvasInteraction = ({
       console.log('[useCanvasInteraction] Click did not match frame or page element');
       console.log('[useCanvasInteraction] Checking for data-page attribute:', document.querySelector('[data-page="true"]'));
     }
-  }, [isDragging, isCommandPressed, page, addFrame, selectFrame, zoom, baseScale, 
-      defaultFrameWidth, defaultFrameHeight, currentImagePath]);
+  }, [isDragging, isCommandPressed, currentPage, currentPageId, addFrame, selectFrame, zoom, baseScale, 
+      defaultFrameWidth, defaultFrameHeight]);
 
   return { handleCanvasClick, isGenerating };
 }; 

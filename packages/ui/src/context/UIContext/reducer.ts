@@ -1,20 +1,20 @@
 import { produce } from 'immer';
 import {
   UIContextState,
-  UIContextSnapshot,
   FrameData,
   PageData,
   PageLoadingState,
   Vector2,
   MIN_FRAME_SIZE,
   DEFAULT_FRAME_SIZE_RATIO,
+  generatePageId,
 } from '@workspace/shared';
 import { rotateVector } from '../../utils/geometry';
 
 // Action types for reducer
 export type Action =
   | { type: 'ADD_FRAME'; payload: Partial<FrameData> & Pick<FrameData, 'x' | 'y' | 'width' | 'height' | 'rotation'> }
-  | { type: 'ADD_MAGIC_FRAME'; payload: Omit<FrameData, "id" | "label" | "orientation"> }
+  | { type: 'ADD_MAGIC_FRAME'; payload: Omit<FrameData, "id" | "label" | "orientation" | "pageId"> }
   | { type: 'UPDATE_FRAME'; id: string; updates: Partial<FrameData> }
   | { type: 'REMOVE_FRAME'; id: string }
   | { type: 'REMOVE_FRAMES_BATCH'; ids: string[] }
@@ -25,14 +25,8 @@ export type Action =
   | { type: 'TRANSLATE_FRAME_RELATIVE'; id: string; vector: Vector2 }
   | { type: 'ROTATE_FRAME'; id: string; dAngle: number }
   | { type: 'SAVE_FRAMES'; ids: string[] }
-  | { type: 'UPDATE_PAGE'; updates: Partial<PageData>; imagePath?: string }
+  | { type: 'UPDATE_PAGE'; updates: Partial<PageData>; imagePath: string }
   | { type: 'SET_PAGE_LOADING_STATE'; state: PageLoadingState };
-
-// Generate sequential frame ID
-let frameCounter = 0;
-export const generateId = () => {
-  return `frame-${++frameCounter}`;
-};
 
 // Validate frame bounds - only x,y coordinates must stay within page
 export const isFrameWithinBounds = (frame: Partial<FrameData>, page: PageData): boolean => {
@@ -41,29 +35,25 @@ export const isFrameWithinBounds = (frame: Partial<FrameData>, page: PageData): 
   return true;
 };
 
-// Create a snapshot of the current state
-export const createSnapshot = (state: UIContextState): UIContextSnapshot => ({
-  page: state.page,
-  frames: state.frames,
-  selectedFrameIds: state.selectedFrameIds,
-  nextFrameNumber: state.nextFrameNumber
-});
+// Helper to find frame by ID across all pages
+const findFrameById = (framesByPage: Record<string, FrameData[]>, frameId: string): { frame: FrameData; pageId: string } | undefined => {
+  for (const [pageId, frames] of Object.entries(framesByPage)) {
+    const frame = frames.find(f => f.id === frameId);
+    if (frame) {
+      return { frame, pageId };
+    }
+  }
+  return undefined;
+};
 
 // Initial state
 export const initialState: UIContextState = {
-  page: {
-    id: 'page-1',
-    width: 2480,
-    height: 3508,
-    imageData: '',
-    originalWidth: 2480,
-    originalHeight: 3508,
-  },
-  frames: {},
+  currentPage: null,
+  currentPageId: null,
+  framesByPage: {},
   selectedFrameIds: [],
-  nextFrameNumber: 1,
+  nextFrameNumberByPage: {},
   pageLoadingState: 'empty',
-  currentImagePath: undefined,
 };
 
 // Reducer
@@ -74,16 +64,23 @@ export const reducer = (
   switch (action.type) {
     case 'ADD_FRAME': {
       return produce(state, draft => {
-        // If frame already has an ID (from backend), use it
-        const id = action.payload.id || generateId();
-        const label = action.payload.label || `Frame ${draft.nextFrameNumber}`;
+        if (!draft.currentPageId || !draft.currentPage) {
+          console.error('[UIContext] Cannot add frame without active page');
+          return;
+        }
+        
+        const pageId = draft.currentPageId;
+        const frameNumber = draft.nextFrameNumberByPage[pageId] || 1;
+        
+        const id = action.payload.id || `${pageId}-frame-${frameNumber}`;
+        const label = action.payload.label || `Frame ${frameNumber}`;
         
         console.log('[UIContext] Adding frame with payload:', action.payload);
         console.log('[UIContext] Payload has imageData:', !!action.payload.imageData);
         
         const defaultSize = {
-          width: draft.page.width * DEFAULT_FRAME_SIZE_RATIO,
-          height: draft.page.height * DEFAULT_FRAME_SIZE_RATIO
+          width: draft.currentPage.width * DEFAULT_FRAME_SIZE_RATIO,
+          height: draft.currentPage.height * DEFAULT_FRAME_SIZE_RATIO
         };
         
         const frame: FrameData = {
@@ -91,85 +88,115 @@ export const reducer = (
           ...action.payload,
           id,
           label,
-          orientation: action.payload.orientation || 0 as const
+          orientation: action.payload.orientation || 0 as const,
+          pageId // Always include pageId
         };
         
         console.log('[UIContext] Created frame has imageData:', !!frame.imageData);
         
         // Ensure frame position stays within page bounds
-        frame.x = Math.max(0, Math.min(frame.x, draft.page.width));
-        frame.y = Math.max(0, Math.min(frame.y, draft.page.height));
+        frame.x = Math.max(0, Math.min(frame.x, draft.currentPage.width));
+        frame.y = Math.max(0, Math.min(frame.y, draft.currentPage.height));
         frame.width = Math.max(MIN_FRAME_SIZE, frame.width);
         frame.height = Math.max(MIN_FRAME_SIZE, frame.height);
         
-        draft.frames[id] = frame;
+        // Add to page's frame array
+        if (!draft.framesByPage[pageId]) {
+          draft.framesByPage[pageId] = [];
+        }
+        draft.framesByPage[pageId].push(frame);
         
-        // Only increment if we generated the ID
+        // Increment counter only if we generated the ID
         if (!action.payload.id) {
-          draft.nextFrameNumber++;
+          draft.nextFrameNumberByPage[pageId] = frameNumber + 1;
         }
       });
     }
 
     case 'ADD_MAGIC_FRAME': {
-      // Same as ADD_FRAME but with "Magic" prefix
       return produce(state, draft => {
-        const id = generateId();
+        if (!draft.currentPageId || !draft.currentPage) {
+          console.error('[UIContext] Cannot add frame without active page');
+          return;
+        }
+        
+        const pageId = draft.currentPageId;
+        const frameNumber = draft.nextFrameNumberByPage[pageId] || 1;
+        
+        const id = `${pageId}-frame-${frameNumber}`;
         const defaultSize = {
-          width: draft.page.width * DEFAULT_FRAME_SIZE_RATIO,
-          height: draft.page.height * DEFAULT_FRAME_SIZE_RATIO
+          width: draft.currentPage.width * DEFAULT_FRAME_SIZE_RATIO,
+          height: draft.currentPage.height * DEFAULT_FRAME_SIZE_RATIO
         };
+        
         const frame: FrameData = {
           ...defaultSize,
           ...action.payload,
           id,
-          label: `Magic Frame ${draft.nextFrameNumber}`,
-          orientation: 0 as const
+          label: `Magic Frame ${frameNumber}`,
+          orientation: 0 as const,
+          pageId
         };
-        frame.x = Math.max(0, Math.min(frame.x, draft.page.width));
-        frame.y = Math.max(0, Math.min(frame.y, draft.page.height));
+        
+        frame.x = Math.max(0, Math.min(frame.x, draft.currentPage.width));
+        frame.y = Math.max(0, Math.min(frame.y, draft.currentPage.height));
         frame.width = Math.max(MIN_FRAME_SIZE, frame.width);
         frame.height = Math.max(MIN_FRAME_SIZE, frame.height);
         
-        draft.frames[id] = frame;
-        draft.nextFrameNumber++;
+        if (!draft.framesByPage[pageId]) {
+          draft.framesByPage[pageId] = [];
+        }
+        draft.framesByPage[pageId].push(frame);
+        draft.nextFrameNumberByPage[pageId] = frameNumber + 1;
       });
     }
       
     case 'UPDATE_FRAME': {
       return produce(state, draft => {
-        if (draft.frames[action.id]) {
-          const currentFrame = draft.frames[action.id];
-          
-          // Filter out undefined values from updates to prevent overwriting existing values
-          const filteredUpdates = Object.entries(action.updates).reduce((acc, [key, value]) => {
-            if (value !== undefined) {
-              (acc as any)[key] = value;
+        // Find frame across all pages
+        for (const [pageId, frames] of Object.entries(draft.framesByPage)) {
+          const frameIndex = frames.findIndex(f => f.id === action.id);
+          if (frameIndex !== -1) {
+            const frame = frames[frameIndex];
+            
+            // Filter out undefined values from updates
+            const filteredUpdates = Object.entries(action.updates).reduce((acc, [key, value]) => {
+              if (value !== undefined) {
+                (acc as any)[key] = value;
+              }
+              return acc;
+            }, {} as Partial<FrameData>);
+            
+            const updatedFrame = { ...frame, ...filteredUpdates };
+            
+            // Enforce minimum dimensions
+            if (updatedFrame.width < MIN_FRAME_SIZE) updatedFrame.width = MIN_FRAME_SIZE;
+            if (updatedFrame.height < MIN_FRAME_SIZE) updatedFrame.height = MIN_FRAME_SIZE;
+            
+            // Validate bounds if we have current page
+            if (draft.currentPage) {
+              updatedFrame.x = Math.max(0, Math.min(updatedFrame.x, draft.currentPage.width));
+              updatedFrame.y = Math.max(0, Math.min(updatedFrame.y, draft.currentPage.height));
             }
-            return acc;
-          }, {} as Partial<FrameData>);
-          
-          const updatedFrame = { ...currentFrame, ...filteredUpdates };
-          
-          // Enforce minimum dimensions
-          if (updatedFrame.width < MIN_FRAME_SIZE) updatedFrame.width = MIN_FRAME_SIZE;
-          if (updatedFrame.height < MIN_FRAME_SIZE) updatedFrame.height = MIN_FRAME_SIZE;
-          
-          // Validate frame position stays within bounds (width/height can exceed)
-          if (!isFrameWithinBounds(updatedFrame, draft.page)) {
-            // Clamp position to bounds
-            updatedFrame.x = Math.max(0, Math.min(updatedFrame.x, draft.page.width));
-            updatedFrame.y = Math.max(0, Math.min(updatedFrame.y, draft.page.height));
+            
+            frames[frameIndex] = updatedFrame;
+            break;
           }
-          
-          draft.frames[action.id] = updatedFrame;
         }
       });
     }
 
     case 'REMOVE_FRAME': {
       return produce(state, draft => {
-        delete draft.frames[action.id];
+        // Remove from the appropriate page's frame array
+        for (const [pageId, frames] of Object.entries(draft.framesByPage)) {
+          const frameIndex = frames.findIndex(f => f.id === action.id);
+          if (frameIndex !== -1) {
+            frames.splice(frameIndex, 1);
+            break;
+          }
+        }
+        
         // Remove from selection
         draft.selectedFrameIds = draft.selectedFrameIds.filter(id => id !== action.id);
       });
@@ -177,9 +204,17 @@ export const reducer = (
 
     case 'REMOVE_FRAMES_BATCH': {
       return produce(state, draft => {
-        action.ids.forEach(id => {
-          delete draft.frames[id];
+        action.ids.forEach(frameId => {
+          // Find and remove each frame
+          for (const [pageId, frames] of Object.entries(draft.framesByPage)) {
+            const frameIndex = frames.findIndex(f => f.id === frameId);
+            if (frameIndex !== -1) {
+              frames.splice(frameIndex, 1);
+              break;
+            }
+          }
         });
+        
         // Remove from selection
         draft.selectedFrameIds = draft.selectedFrameIds.filter(id => !action.ids.includes(id));
       });
@@ -187,8 +222,12 @@ export const reducer = (
 
     case 'RENAME_FRAME': {
       return produce(state, draft => {
-        if (draft.frames[action.id]) {
-          draft.frames[action.id].label = action.label;
+        const result = findFrameById(draft.framesByPage, action.id);
+        if (result) {
+          const frameIndex = draft.framesByPage[result.pageId].findIndex(f => f.id === action.id);
+          if (frameIndex !== -1) {
+            draft.framesByPage[result.pageId][frameIndex].label = action.label;
+          }
         }
       });
     }
@@ -210,35 +249,44 @@ export const reducer = (
 
     case 'SET_ORIENTATION': {
       return produce(state, draft => {
-        if (draft.frames[action.id]) {
-          draft.frames[action.id].orientation = action.orientation;
+        const result = findFrameById(draft.framesByPage, action.id);
+        if (result) {
+          const frameIndex = draft.framesByPage[result.pageId].findIndex(f => f.id === action.id);
+          if (frameIndex !== -1) {
+            draft.framesByPage[result.pageId][frameIndex].orientation = action.orientation;
+          }
         }
       });
     }
 
     case 'TRANSLATE_FRAME_RELATIVE': {
-      const frame = state.frames[action.id];
-      if (!frame) return state;
-      
-      const rotated = rotateVector(action.vector, frame.rotation);
-      
       return produce(state, draft => {
-        const draftFrame = draft.frames[action.id];
-        if (draftFrame) {
-          const newX = draftFrame.x + rotated.x;
-          const newY = draftFrame.y + rotated.y;
-          
-          // Clamp to page bounds
-          draftFrame.x = Math.max(0, Math.min(newX, draft.page.width));
-          draftFrame.y = Math.max(0, Math.min(newY, draft.page.height));
+        const result = findFrameById(draft.framesByPage, action.id);
+        if (result && draft.currentPage) {
+          const frameIndex = draft.framesByPage[result.pageId].findIndex(f => f.id === action.id);
+          if (frameIndex !== -1) {
+            const frame = draft.framesByPage[result.pageId][frameIndex];
+            const rotated = rotateVector(action.vector, frame.rotation);
+            
+            const newX = frame.x + rotated.x;
+            const newY = frame.y + rotated.y;
+            
+            // Clamp to page bounds
+            frame.x = Math.max(0, Math.min(newX, draft.currentPage.width));
+            frame.y = Math.max(0, Math.min(newY, draft.currentPage.height));
+          }
         }
       });
     }
 
     case 'ROTATE_FRAME': {
       return produce(state, draft => {
-        if (draft.frames[action.id]) {
-          draft.frames[action.id].rotation += action.dAngle;
+        const result = findFrameById(draft.framesByPage, action.id);
+        if (result) {
+          const frameIndex = draft.framesByPage[result.pageId].findIndex(f => f.id === action.id);
+          if (frameIndex !== -1) {
+            draft.framesByPage[result.pageId][frameIndex].rotation += action.dAngle;
+          }
         }
       });
     }
@@ -250,10 +298,28 @@ export const reducer = (
 
     case 'UPDATE_PAGE': {
       return produce(state, draft => {
-        draft.page = { ...draft.page, ...action.updates };
-        // Store image path when provided
-        if (action.imagePath) {
-          draft.currentImagePath = action.imagePath;
+        if (!action.imagePath) {
+          console.error('[UIContext] Cannot update page without image path');
+          return;
+        }
+        
+        // Generate consistent page ID from path
+        const pageId = generatePageId(action.imagePath);
+        
+        // Create/update page
+        draft.currentPage = {
+          ...draft.currentPage,
+          ...action.updates,
+          id: pageId,
+          imagePath: action.imagePath
+        } as PageData;
+        
+        draft.currentPageId = pageId;
+        
+        // Initialize frame array for new pages
+        if (!draft.framesByPage[pageId]) {
+          draft.framesByPage[pageId] = [];
+          draft.nextFrameNumberByPage[pageId] = 1;
         }
       });
     }

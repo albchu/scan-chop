@@ -16,4 +16,5 @@ export * from './image-io';
 export * from './debug-visualization';
 export * from './region-extraction';
 export * from './image-transform';
-export * from './image-processing'; 
+export * from './image-processing';
+export * from './utils/pageUtils'; 

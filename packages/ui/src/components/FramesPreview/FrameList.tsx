@@ -4,8 +4,8 @@ import { FrameCard } from './FrameCard';
 // import { FrameCard as FrameCardOld } from './FrameCardOld';
 
 export const FrameList: React.FC = () => {
-  const { frames } = useUIContext();
-  const frameList = Object.values(frames);
+  const { currentPageFrames } = useUIContext();
+  const frameList = currentPageFrames;
   
   if (frameList.length === 0) {
     return (

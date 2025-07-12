@@ -19,6 +19,7 @@ export interface FrameData extends BoundingBox {
   orientation: 0 | 90 | 180 | 270; // "Up" direction indicator, 0 is default
   imageData?: string; // Base64 data URL of the cropped frame image
   imageScaleFactor?: number; // Scale factor from display to original image (display * scaleFactor = original)
+  pageId: string; // Required - links frame to specific page
 }
 
 // Color types
@@ -41,12 +42,13 @@ export interface ProcessingConfig {
 }
 
 export interface PageData {
-  id: string;
+  id: string; // Hash-based ID from image path
   width: number; // Set to match image dimensions
   height: number; // Set to match image dimensions
   imageData: string; // base64 image data, rendered at 1:1 scale
   originalWidth?: number; // NEW - original image width before any scaling
   originalHeight?: number; // NEW - original image height before any scaling
+  imagePath: string; // Required to generate consistent pageId
 }
 
 export interface ImageData {
@@ -68,9 +70,20 @@ export interface UIContextSnapshot {
   nextFrameNumber: number;
 }
 
-export interface UIContextState extends UIContextSnapshot {
+export interface UIContextState {
+  // Page-related
+  currentPage: PageData | null;
+  currentPageId: string | null;
+  
+  // Frames stored by page
+  framesByPage: Record<string, FrameData[]>; // pageId -> frames array
+  
+  // Frame management
+  selectedFrameIds: string[];
+  nextFrameNumberByPage: Record<string, number>; // Per-page frame counters
+  
+  // Loading state
   pageLoadingState: PageLoadingState;
-  currentImagePath?: string; // NEW - track the current loaded image path
 }
 
 export interface UIContextActions {

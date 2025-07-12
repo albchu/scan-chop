@@ -20,13 +20,14 @@ const EditorContent: React.FC = () => {
       const imageDataResponse = await workspaceApi.loadImage(path);
       
       // Update the page with the new image data and dimensions
+      // UPDATE_PAGE action will handle pageId generation
       updatePage({ 
         imageData: imageDataResponse.imageData,
         width: imageDataResponse.width,
         height: imageDataResponse.height,
         originalWidth: imageDataResponse.originalWidth,
         originalHeight: imageDataResponse.originalHeight,
-      }, path);
+      }, path); // imagePath is required
       
       // Set loaded state after successful load
       setPageLoadingState('loaded');

@@ -46,6 +46,12 @@ export class WorkspaceService {
   // Track in-flight image loads to prevent duplicates
   private loadingPromises = new Map<string, Promise<ImageCacheEntry>>();
   
+  // TODO: Future enhancement - implement frame persistence
+  // - Create SQLite database for storing frames
+  // - Schema: frames table with pageId, frameData JSON, timestamp
+  // - Load frames when loading image (check by pageId)
+  // - Save frames on create/update/delete
+  
   constructor() {
     console.log('[WorkspaceService] Initializing');
     this.cacheManager = new DirectoryCacheManager();

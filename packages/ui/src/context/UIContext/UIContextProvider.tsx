@@ -3,6 +3,7 @@ import React, {
   useCallback,
   createContext,
   useContext,
+  useMemo,
 } from 'react';
 import {
   UIContextState,
@@ -14,7 +15,11 @@ import {
 } from '@workspace/shared';
 import { reducer, initialState } from './reducer';
 
-export type UIContextType = UIContextState & UIContextActions;
+export type UIContextType = UIContextState & UIContextActions & {
+  currentPageFrames: FrameData[];
+  findFrameById: (frameId: string) => FrameData | undefined;
+};
+
 export const UIContext = createContext<UIContextType | null>(null);
 
 export const useUIContext = () => {
@@ -30,6 +35,23 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  // Computed current page frames
+  const currentPageFrames = useMemo(() => {
+    if (!state.currentPageId || !state.framesByPage[state.currentPageId]) {
+      return [];
+    }
+    return state.framesByPage[state.currentPageId];
+  }, [state.currentPageId, state.framesByPage]);
+
+  // Helper to find frame by ID
+  const findFrameById = useCallback((frameId: string): FrameData | undefined => {
+    for (const frames of Object.values(state.framesByPage)) {
+      const frame = frames.find(f => f.id === frameId);
+      if (frame) return frame;
+    }
+    return undefined;
+  }, [state.framesByPage]);
+
   // Action creators
   const addFrame = useCallback(
     (frame: Partial<FrameData> & Pick<FrameData, 'x' | 'y' | 'width' | 'height' | 'rotation'>) => {
@@ -39,7 +61,7 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const addMagicFrame = useCallback(
-    (frame: Omit<FrameData, 'id' | 'label' | 'orientation'>) => {
+    (frame: Omit<FrameData, 'id' | 'label' | 'orientation' | 'pageId'>) => {
       dispatch({ type: 'ADD_MAGIC_FRAME', payload: frame });
     },
     []
@@ -91,7 +113,7 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
     dispatch({ type: 'SAVE_FRAMES', ids });
   }, []);
 
-  const updatePage = useCallback((updates: Partial<PageData>, imagePath?: string) => {
+  const updatePage = useCallback((updates: Partial<PageData>, imagePath: string) => {
     dispatch({ type: 'UPDATE_PAGE', updates, imagePath });
   }, []);
 
@@ -102,8 +124,10 @@ export const UIContextProvider: React.FC<{ children: React.ReactNode }> = ({
     []
   );
 
-  const value: UIContextState & UIContextActions = {
+  const value: UIContextType = {
     ...state,
+    currentPageFrames,
+    findFrameById,
     addFrame,
     addMagicFrame,
     removeFrame,
