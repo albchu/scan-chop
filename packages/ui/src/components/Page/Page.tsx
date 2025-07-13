@@ -1,6 +1,6 @@
 import React from 'react';
 import { Frame } from '../Frame';
-import { useUIContext } from '../../context/UIContext';
+import { useUIContextCompat } from '../../stores';
 import { GridPattern } from './GridPattern';
 import { LoadingState } from './LoadingState';
 import { EmptyState } from './EmptyState';
@@ -17,7 +17,7 @@ interface PageStyles {
 
 export const Page: React.FC = () => {
   const { currentPage, currentPageFrames, updateFrame, pageLoadingState } =
-    useUIContext();
+    useUIContextCompat();
 
   // Determine container dimensions
   const containerStyle = {

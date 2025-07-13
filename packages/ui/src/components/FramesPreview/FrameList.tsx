@@ -1,11 +1,11 @@
 import React from 'react';
-import { useUIContext } from '../../context/UIContext';
+import { useCurrentPageFrames } from '../../stores';
 import { FrameCard } from './FrameCard';
 // import { FrameCard as FrameCardOld } from './FrameCardOld';
 
 export const FrameList: React.FC = () => {
-  const { currentPageFrames } = useUIContext();
-  const frameList = currentPageFrames;
+  // Only re-renders when frames for current page change
+  const frameList = useCurrentPageFrames();
   
   if (frameList.length === 0) {
     return (

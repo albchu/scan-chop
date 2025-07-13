@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useEffect } from 'react';
-import { useUIContext } from '../../context/UIContext';
-import { useZoomContext } from '../../context/ZoomContext';
+import { useUIStore } from '../../stores';
+import { useCanvasStore, useCanvasActions } from '../../stores';
 import { useKeyboardModifiers } from './hooks/useKeyboardModifiers';
 import { usePanAndZoom } from './hooks/usePanAndZoom';
 import { useCanvasInteraction } from './hooks/useCanvasInteraction';
@@ -11,20 +11,21 @@ import { getCursorStyle } from './utils/canvasUtils';
 import { IconLoader2 } from '@tabler/icons-react';
 
 export const CanvasInner: React.FC = () => {
-  const { currentPage } = useUIContext();
-  const { 
-    zoom, 
-    baseScale, 
-    totalScale, 
-    setZoom, 
-    setCanvasSize, 
-    resetView 
-  } = useZoomContext();
+  const currentPage = useUIStore((state) => state.currentPage);
+  
+  // Canvas state from store
+  const zoom = useCanvasStore((state) => state.zoom);
+  const baseScale = useCanvasStore((state) => state.baseScale);
+  const totalScale = useCanvasStore((state) => state.totalScale);
+  const panOffset = useCanvasStore((state) => state.panOffset);
+  
+  // Canvas actions
+  const { setZoom, setCanvasSize, resetView, updateScales } = useCanvasActions();
   
   const canvasRef = useRef<HTMLDivElement>(null);
   const { isCommandPressed } = useKeyboardModifiers();
   
-  const { isDragging, panOffset, handleMouseDown, handleContextMenu } = usePanAndZoom({ 
+  const { isDragging, handleMouseDown, handleContextMenu } = usePanAndZoom({ 
     isCommandPressed 
   });
   
@@ -35,17 +36,24 @@ export const CanvasInner: React.FC = () => {
 
   // Update canvas size on mount and resize
   useEffect(() => {
-    const updateCanvasSize = () => {
+    const updateCanvasSizeLocal = () => {
       if (canvasRef.current) {
         const rect = canvasRef.current.getBoundingClientRect();
         setCanvasSize({ width: rect.width, height: rect.height });
       }
     };
 
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
+    updateCanvasSizeLocal();
+    window.addEventListener('resize', updateCanvasSizeLocal);
+    return () => window.removeEventListener('resize', updateCanvasSizeLocal);
   }, [setCanvasSize]);
+  
+  // Update scales when page or canvas changes
+  useEffect(() => {
+    if (currentPage) {
+      updateScales(currentPage.width, currentPage.height);
+    }
+  }, [currentPage, updateScales]);
 
   const handleReset = useCallback(() => {
     resetView();

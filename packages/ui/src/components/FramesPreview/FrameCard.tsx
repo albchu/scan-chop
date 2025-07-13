@@ -1,16 +1,17 @@
-import React from 'react';
-import { IconTrash, IconRotateClockwise } from '@tabler/icons-react';
+import React, { useState } from 'react';
 import { FrameData } from '@workspace/shared';
+import { FrameInfo } from '../Frame/FrameInfo';
+import { useUIContextCompat } from '../../stores';
 import { useFrameTransform } from '../../hooks/useFrameTransform';
-import { useUIContext } from '../../context/UIContext';
+import { IconRotateClockwise, IconTrash, IconCheck } from '@tabler/icons-react';
 
 interface FrameCardProps {
   frame: FrameData;
 }
 
 export const FrameCard: React.FC<FrameCardProps> = ({ frame }) => {
+  const { selectFrame, setOrientation, removeFrame } = useUIContextCompat();
   const { isSelected, selectionType } = useFrameTransform(frame.id);
-  const { selectFrame, setOrientation, removeFrame } = useUIContext();
   
   console.log(`[FrameCard] Rendering frame ${frame.id}, has imageData: ${!!frame.imageData}`);
   

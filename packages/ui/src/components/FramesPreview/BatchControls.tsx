@@ -1,16 +1,23 @@
 import React from 'react';
 import { IconDownload } from '@tabler/icons-react';
-import { useUIContext } from '../../context/UIContext';
+import { useUIStore, useFrameCount, useSelectedCount } from '../../stores';
 
 export const BatchControls: React.FC = () => {
-  const { currentPageFrames, selectedFrameIds, saveFrames, removeFramesBatch } = useUIContext();
-  const frameCount = currentPageFrames.length;
-  const selectedCount = selectedFrameIds.length;
+  // Granular subscriptions - only re-render when these specific values change
+  const frameCount = useFrameCount();
+  const selectedCount = useSelectedCount();
   
+  // Actions are stable references - no re-render
+  const selectedFrameIds = useUIStore((state) => state.selectedFrameIds);
+  const saveFrames = useUIStore((state) => state.saveFrames);
+  const getCurrentPageFrames = useUIStore((state) => state.getCurrentPageFrames);
+  
+  // No useCallback needed - actions are stable
   const handleSaveFrames = () => {
     if (selectedCount === 0) {
       // Save all frames
-      saveFrames(currentPageFrames.map(f => f.id));
+      const frames = getCurrentPageFrames();
+      saveFrames(frames.map(f => f.id));
     } else {
       // Save selected frames
       saveFrames(selectedFrameIds);

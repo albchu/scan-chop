@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { PanOffset, DragState } from '../types/canvas.types';
-import { useZoomContext } from '../../../context/ZoomContext';
+import { useCanvasStore, useCanvasActions } from '../../../stores';
 
 interface UsePanAndZoomProps {
   isCommandPressed: boolean;
@@ -8,13 +8,13 @@ interface UsePanAndZoomProps {
 
 interface UsePanAndZoomReturn {
   isDragging: boolean;
-  panOffset: PanOffset;
   handleMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   handleContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 export const usePanAndZoom = ({ isCommandPressed }: UsePanAndZoomProps): UsePanAndZoomReturn => {
-  const { panOffset, setPanOffset } = useZoomContext();
+  const panOffset = useCanvasStore((state) => state.panOffset);
+  const { setPanOffset } = useCanvasActions();
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<DragState>({ x: 0, y: 0 });
 
@@ -70,7 +70,6 @@ export const usePanAndZoom = ({ isCommandPressed }: UsePanAndZoomProps): UsePanA
 
   return {
     isDragging,
-    panOffset,
     handleMouseDown,
     handleContextMenu,
   };

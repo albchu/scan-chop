@@ -7,8 +7,8 @@ import Moveable, {
   OnDragEnd,
 } from 'react-moveable';
 import { FrameData } from '@workspace/shared';
-import { useZoomContext } from '../../context/ZoomContext';
-import { useUIContext } from '../../context/UIContext';
+import { useCanvasStore } from '../../stores';
+import { useUIContextCompat } from '../../stores';
 import { FrameInfo } from './FrameInfo';
 import {
   createTransformString,
@@ -43,10 +43,10 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
   } = frame;
 
   // Get page context for scaling
-  const { currentPage } = useUIContext();
+  const { currentPage } = useUIContextCompat();
 
   // Get zoom context and calculate moveable zoom
-  const { totalScale } = useZoomContext();
+  const totalScale = useCanvasStore((state) => state.totalScale);
   const moveableZoom = useMemo(
     () => calculateMoveableZoom(totalScale),
     [totalScale]

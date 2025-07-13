@@ -1,4 +1,4 @@
-import { useUIContext } from '../context/UIContext';
+import { useUIStore } from '../stores';
 import { FrameData } from '@workspace/shared';
 
 interface UseFrameTransformReturn {
@@ -10,7 +10,8 @@ interface UseFrameTransformReturn {
 }
 
 export const useFrameTransform = (id: string): UseFrameTransformReturn => {
-  const { findFrameById, selectedFrameIds } = useUIContext();
+  const findFrameById = useUIStore((state) => state.findFrameById);
+  const selectedFrameIds = useUIStore((state) => state.selectedFrameIds);
   const frame = findFrameById(id) || null;
   
   const isSelected = selectedFrameIds.includes(id);

@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { workspaceApi } from '../../../api/workspace';
-import { useUIContext } from '../../../context/UIContext';
-import { useZoomContext } from '../../../context/ZoomContext';
+import { useUIStore, useCanvasStore } from '../../../stores';
 import { DEFAULT_FRAME_SIZE_RATIO, WHITE_THRESHOLD_DEFAULT } from '@workspace/shared';
 
 interface UseCanvasInteractionProps {
@@ -18,8 +17,15 @@ export const useCanvasInteraction = ({
   isDragging, 
   isCommandPressed 
 }: UseCanvasInteractionProps): UseCanvasInteractionReturn => {
-  const { currentPage, currentPageId, addFrame, selectFrame } = useUIContext();
-  const { zoom, baseScale } = useZoomContext();
+  // Granular subscriptions
+  const currentPage = useUIStore((state) => state.currentPage);
+  const currentPageId = useUIStore((state) => state.currentPageId);
+  const addFrame = useUIStore((state) => state.addFrame);
+  const selectFrame = useUIStore((state) => state.selectFrame);
+  
+  const zoom = useCanvasStore((state) => state.zoom);
+  const baseScale = useCanvasStore((state) => state.baseScale);
+  
   const [isGenerating, setIsGenerating] = useState(false);
 
   const [defaultFrameWidth, defaultFrameHeight] = useMemo(() => {

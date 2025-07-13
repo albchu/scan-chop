@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FrameData, TRANSLATION_STEP, ROTATION_INCREMENT } from '@workspace/shared';
-import { useUIContext } from '../../context/UIContext';
+import { useUIContextCompat } from '../../stores';
 import { useFrameTransform } from '../../hooks/useFrameTransform';
 
 interface FrameControlPanelProps {
@@ -16,7 +16,7 @@ export const FrameControlPanel: React.FC<FrameControlPanelProps> = ({ frame }) =
     setOrientation,
     saveFrames,
     removeFrame
-  } = useUIContext();
+  } = useUIContextCompat();
   
   const { isSelected } = useFrameTransform(frame.id);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
