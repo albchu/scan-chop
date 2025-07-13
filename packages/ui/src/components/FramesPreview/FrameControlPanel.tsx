@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FrameData, TRANSLATION_STEP, ROTATION_INCREMENT } from '@workspace/shared';
-import { useUIContextCompat } from '../../stores';
+import { useUIStore } from '../../stores';
 import { useFrameTransform } from '../../hooks/useFrameTransform';
 
 interface FrameControlPanelProps {
@@ -8,15 +8,14 @@ interface FrameControlPanelProps {
 }
 
 export const FrameControlPanel: React.FC<FrameControlPanelProps> = ({ frame }) => {
-  const {
-    renameFrame,
-    selectFrame,
-    translateFrameRelative,
-    rotateFrame,
-    setOrientation,
-    saveFrames,
-    removeFrame
-  } = useUIContextCompat();
+  // Direct store access for all actions
+  const renameFrame = useUIStore((state) => state.renameFrame);
+  const selectFrame = useUIStore((state) => state.selectFrame);
+  const translateFrameRelative = useUIStore((state) => state.translateFrameRelative);
+  const rotateFrame = useUIStore((state) => state.rotateFrame);
+  const setOrientation = useUIStore((state) => state.setOrientation);
+  const saveFrames = useUIStore((state) => state.saveFrames);
+  const removeFrame = useUIStore((state) => state.removeFrame);
   
   const { isSelected } = useFrameTransform(frame.id);
   const [isEditingLabel, setIsEditingLabel] = useState(false);

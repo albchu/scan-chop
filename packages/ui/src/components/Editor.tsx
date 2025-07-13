@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
-import { UIContextProviderCompat, useUIContextCompat } from '../stores';
-import { WorkspaceProvider } from '../context/WorkspaceContext';
+import { useUIStore } from '../stores';
 import { workspaceApi } from '../api/workspace';
 import { Canvas } from './Canvas';
 import { FramesPreview } from './FramesPreview/FramesPreview';
@@ -8,8 +7,9 @@ import { FileExplorer } from './FileExplorer';
 import { ThreePanelLayout } from './Layout';
 
 const EditorContent: React.FC = () => {
-  // Using compatibility layer temporarily - will migrate to direct store usage later
-  const { updatePage, setPageLoadingState } = useUIContextCompat();
+  // Using stores directly for better performance
+  const updatePage = useUIStore((state) => state.updatePage);
+  const setPageLoadingState = useUIStore((state) => state.setPageLoadingState);
   
   const handleFileSelect = useCallback(async (path: string) => {
     console.log('File selected:', path);
@@ -61,11 +61,5 @@ const EditorContent: React.FC = () => {
 };
 
 export const Editor: React.FC = () => {
-  return (
-    <WorkspaceProvider>
-      <UIContextProviderCompat>
-        <EditorContent />
-      </UIContextProviderCompat>
-    </WorkspaceProvider>
-  );
+  return <EditorContent />;
 }; 

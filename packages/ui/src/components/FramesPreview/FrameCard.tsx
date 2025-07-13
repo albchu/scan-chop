@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FrameData } from '@workspace/shared';
 import { FrameInfo } from '../Frame/FrameInfo';
-import { useUIContextCompat } from '../../stores';
+import { useUIStore } from '../../stores';
 import { useFrameTransform } from '../../hooks/useFrameTransform';
 import { IconRotateClockwise, IconTrash, IconCheck } from '@tabler/icons-react';
 
@@ -10,7 +10,10 @@ interface FrameCardProps {
 }
 
 export const FrameCard: React.FC<FrameCardProps> = ({ frame }) => {
-  const { selectFrame, setOrientation, removeFrame } = useUIContextCompat();
+  // Direct store access with stable action references
+  const selectFrame = useUIStore((state) => state.selectFrame);
+  const setOrientation = useUIStore((state) => state.setOrientation);
+  const removeFrame = useUIStore((state) => state.removeFrame);
   const { isSelected, selectionType } = useFrameTransform(frame.id);
   
   console.log(`[FrameCard] Rendering frame ${frame.id}, has imageData: ${!!frame.imageData}`);

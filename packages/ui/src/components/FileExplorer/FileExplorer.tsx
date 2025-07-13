@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { FileList } from './FileList';
 import { FileListError, FileListNoDir } from './FileListStates';
 import { IconLoader2 } from '@tabler/icons-react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspaceStore } from '../../stores';
 import { PathInput } from './PathInput';
 
 interface FileExplorerProps {
@@ -12,7 +12,18 @@ interface FileExplorerProps {
 export const FileExplorer: React.FC<FileExplorerProps> = ({
   onFileSelect: onFileSelectProp,
 }) => {
-  const { state, loadDirectory, clearError, refreshDirectory, setRootDirectory } = useWorkspace();
+  // Granular subscriptions for optimal performance
+  const currentDirectory = useWorkspaceStore((state) => state.currentDirectory);
+  const rootDirectory = useWorkspaceStore((state) => state.rootDirectory);
+  const directoryTree = useWorkspaceStore((state) => state.directoryTree);
+  const isLoading = useWorkspaceStore((state) => state.isLoading);
+  const error = useWorkspaceStore((state) => state.error);
+  
+  // Actions are stable references
+  const loadDirectory = useWorkspaceStore((state) => state.loadDirectory);
+  const clearError = useWorkspaceStore((state) => state.clearError);
+  const refreshDirectory = useWorkspaceStore((state) => state.refreshDirectory);
+  const setRootDirectory = useWorkspaceStore((state) => state.setRootDirectory);
   
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
@@ -28,84 +39,66 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   );
 
   const handlePathChange = useCallback(async (path: string) => {
-    setSelectedFile(null); // Clear selection when changing directories
+    console.log('[FileExplorer] handlePathChange:', path);
     await loadDirectory(path);
   }, [loadDirectory]);
-
+  
   const handleRefresh = useCallback(async () => {
-    setSelectedFile(null);
+    console.log('[FileExplorer] Refreshing current directory');
     await refreshDirectory();
   }, [refreshDirectory]);
-
+  
   const handleSetAsRoot = useCallback(async (path: string) => {
     console.log('[FileExplorer] Setting as root:', path);
-    setSelectedFile(null); // Clear selection when changing root
     await setRootDirectory(path);
   }, [setRootDirectory]);
 
-  const handlePathValidation = useCallback(
-    (isValid: boolean, error?: string) => {
-      if (isValid) {
-        clearError();
-      }
-      // PathInput handles its own error display
-    },
-    [clearError]
-  );
-
   const renderFileListContent = () => {
-    if (state.error) {
-      return <FileListError message={state.error} />;
-    }
-
-    if (!state.currentDirectory || !state.directoryTree) {
-      return <FileListNoDir />;
-    }
-
-    if (state.isLoading) {
+    if (error) {
       return (
-        <div className="flex items-center justify-center h-full">
-          <IconLoader2 size={32} className="animate-spin text-gray-300" />
-        </div>
+        <FileListError 
+          message={error} 
+          onRetry={clearError} 
+        />
       );
     }
 
+    if (!directoryTree) {
+      return <FileListNoDir onBrowse={() => loadDirectory('/')} />;
+    }
+
     return (
-      <div className="h-full w-full overflow-y-auto p-2">
-        <FileList
-          rootNode={state.directoryTree}
-          rootPath={state.rootDirectory || state.currentDirectory}
-          selectedFile={selectedFile}
-          onFileSelect={handleFileSelect}
-          onSetAsRoot={handleSetAsRoot}
-        />
-      </div>
+      <FileList
+        rootNode={directoryTree}
+        onFileSelect={handleFileSelect}
+        selectedFile={selectedFile}
+        onSetAsRoot={handleSetAsRoot}
+      />
     );
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-900">
-      <div className="flex-shrink-0 p-4 border-b border-gray-700 space-y-3">
-        <PathInput
-          currentPath={state.currentDirectory || ''}
-          onPathChange={handlePathChange}
-          onPathValidation={handlePathValidation}
-          onRefresh={handleRefresh}
-        />
-      </div>
+    <div className="h-full flex flex-col">
+      <PathInput
+        currentPath={currentDirectory || ''}
+        onPathChange={handlePathChange}
+        onRefresh={handleRefresh}
+        onPathValidation={(isValid, error) => {
+          if (!isValid && error) {
+            console.log('[FileExplorer] Path validation error:', error);
+          }
+        }}
+      />
 
-      <div className="flex-1 min-h-0">{renderFileListContent()}</div>
-
-      {/* Footer with selection info */}
-      {selectedFile && (
-        <div className="flex-shrink-0 px-4 py-2 bg-gray-800 border-t border-gray-700">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-400 truncate flex-1">
-              Selected: <span className="text-gray-200">{selectedFile}</span>
-            </p>
+      <div className="flex-1 overflow-y-auto">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <IconLoader2 className="animate-spin text-gray-500" size={32} />
           </div>
-        </div>
-      )}
+        ) : (
+          renderFileListContent()
+        )}
+      </div>
     </div>
   );
 };

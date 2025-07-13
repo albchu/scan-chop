@@ -1,6 +1,6 @@
 import React from 'react';
 import { FileRow } from './FileRow';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspaceStore } from '../../stores';
 import { useTreeState } from './hooks/useTreeState';
 import type { FileListProps } from './types';
 
@@ -11,7 +11,7 @@ export const FileList: React.FC<FileListProps> = ({
   onFileSelect,
   onSetAsRoot,
 }) => {
-  const { loadSubDirectory } = useWorkspace();
+  const loadSubDirectory = useWorkspaceStore((state) => state.loadSubDirectory);
   const { flatList, handleToggle } = useTreeState({ 
     rootNode, 
     loadSubDirectory 

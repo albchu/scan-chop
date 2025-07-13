@@ -1,7 +1,6 @@
 import React, { ReactElement } from 'react';
 import { render, RenderOptions, RenderResult } from '@testing-library/react';
 import { vi } from 'vitest';
-import { WorkspaceProvider } from '../context/WorkspaceContext';
 
 // Mock the workspace API
 vi.mock('../api/workspace', () => ({
@@ -27,16 +26,12 @@ interface AllProvidersProps {
   children: React.ReactNode;
 }
 
-// Wrapper component that includes all providers
+// Wrapper component - no providers needed for Zustand
 const AllProviders: React.FC<AllProvidersProps> = ({ children }) => {
-  return (
-    <WorkspaceProvider>
-      {children}
-    </WorkspaceProvider>
-  );
+  return <>{children}</>;
 };
 
-// Custom render function that includes providers
+// Custom render function
 const customRender = (
   ui: ReactElement,
   options?: Omit<RenderOptions, 'wrapper'>

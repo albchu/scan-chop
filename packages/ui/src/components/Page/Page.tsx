@@ -1,6 +1,6 @@
 import React from 'react';
 import { Frame } from '../Frame';
-import { useUIContextCompat } from '../../stores';
+import { useUIStore, useCurrentPageFrames } from '../../stores';
 import { GridPattern } from './GridPattern';
 import { LoadingState } from './LoadingState';
 import { EmptyState } from './EmptyState';
@@ -16,8 +16,11 @@ interface PageStyles {
 }
 
 export const Page: React.FC = () => {
-  const { currentPage, currentPageFrames, updateFrame, pageLoadingState } =
-    useUIContextCompat();
+  // Granular subscriptions for optimal performance
+  const currentPage = useUIStore((state) => state.currentPage);
+  const pageLoadingState = useUIStore((state) => state.pageLoadingState);
+  const updateFrame = useUIStore((state) => state.updateFrame);
+  const currentPageFrames = useCurrentPageFrames();
 
   // Determine container dimensions
   const containerStyle = {
