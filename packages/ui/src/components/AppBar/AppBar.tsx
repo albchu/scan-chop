@@ -24,16 +24,16 @@ export const AppBar: React.FC<AppBarProps> = () => {
 
   return (
     <header 
-      className="w-full bg-gray-950 border-b border-gray-700 flex items-center px-4 py-2 h-14"
+      className="w-full bg-gray-950 border-b border-gray-700 flex items-center px-4 h-18"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
       <div className="flex items-center gap-4 flex-1">
         {/* Logo/Title */}
-        <h1 className="text-xl font-semibold text-white select-none">Scan Chop</h1>
+        <h1 className="text-xl font-semibold text-white select-none pt-8">Scan Chop</h1>
         
         {/* Path Input in center */}
         <div 
-          className="flex-1 max-w-2xl mx-auto" 
+          className="flex-1 max-w-lg mx-auto" 
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
           <PathInputCompact
