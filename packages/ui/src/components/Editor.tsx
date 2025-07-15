@@ -5,6 +5,7 @@ import { Canvas } from './Canvas';
 import { FramesPreview } from './FramesPreview/FramesPreview';
 import { FileExplorer } from './FileExplorer';
 import { ThreePanelLayout } from './Layout';
+import { AppBar } from './AppBar';
 
 const EditorContent: React.FC = () => {
   // Using stores directly for better performance
@@ -48,15 +49,20 @@ const EditorContent: React.FC = () => {
   }, [updatePage, setPageLoadingState]);
 
   return (
-    <ThreePanelLayout
-      leftPanel={<FileExplorer onFileSelect={handleFileSelect} />}
-      rightPanel={<FramesPreview />}
-      initialLeftWidth={20}
-      initialCenterWidth={60}
-      minPanelWidth={10}
-    >
-      <Canvas />
-    </ThreePanelLayout>
+    <div className="flex flex-col h-screen">
+      <AppBar />
+      <div className="flex-1 overflow-hidden">
+        <ThreePanelLayout
+          leftPanel={<FileExplorer onFileSelect={handleFileSelect} />}
+          rightPanel={<FramesPreview />}
+          initialLeftWidth={20}
+          initialCenterWidth={60}
+          minPanelWidth={10}
+        >
+          <Canvas />
+        </ThreePanelLayout>
+      </div>
+    </div>
   );
 };
 

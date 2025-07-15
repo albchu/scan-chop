@@ -43,7 +43,7 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={`flex h-screen bg-gray-900 text-white overflow-hidden ${isDragging ? 'select-none' : ''}`}
+      className={`flex h-full bg-gray-900 text-white overflow-hidden ${isDragging ? 'select-none' : ''}`}
     >
       {/* Left Panel */}
       {leftPanel && (
