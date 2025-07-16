@@ -64,7 +64,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto mt-14">
       {isLoading ? (
         <div className="flex items-center justify-center h-32">
           <IconLoader2 className="animate-spin text-gray-500" size={32} />

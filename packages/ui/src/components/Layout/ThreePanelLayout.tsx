@@ -49,7 +49,7 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
       {leftPanel && (
         <>
           <div 
-            className={`bg-gray-900 border-r border-gray-700 overflow-hidden flex-shrink-0 ${
+            className={`bg-gray-950 overflow-hidden flex-shrink-0 ${
               isDragging ? '' : 'transition-all duration-300 ease-in-out'
             }`}
             style={{ 

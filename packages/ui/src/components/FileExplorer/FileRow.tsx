@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  IconChevronRight, 
-  IconChevronDown, 
-  IconFolder, 
-  IconFolderOpen, 
-  IconPhoto, 
+import {
+  IconChevronRight,
+  IconChevronDown,
+  IconFolder,
+  IconFolderOpen,
+  IconPhoto,
   IconLoader2,
   IconPin,
-  IconPinFilled
+  IconPinFilled,
 } from '@tabler/icons-react';
 
 interface TreeNode {
@@ -59,12 +59,15 @@ export const FileRow: React.FC<FileRowProps> = ({
   };
 
   // Determine if we should show the chevron
-  const showChevron = node.isDirectory && (node.hasChildren || !node.childrenLoaded);
+  const showChevron =
+    node.isDirectory && (node.hasChildren || !node.childrenLoaded);
 
   return (
     <div
       className={`flex items-center px-2 py-1 rounded-md text-sm transition-colors duration-150 ${
-        isSelected ? 'bg-blue-600 text-white' : 'text-gray-200 hover:bg-gray-700 hover:text-gray-100'
+        isSelected
+          ? 'bg-blue-600 text-white'
+          : 'text-gray-200 hover:bg-gray-700 hover:text-gray-100'
       } cursor-pointer relative group`}
       style={{ paddingLeft: `${node.level * 16 + 8}px` }}
       onClick={handleClick}
@@ -73,15 +76,14 @@ export const FileRow: React.FC<FileRowProps> = ({
     >
       {/* Disclosure triangle or placeholder */}
       <div className="flex items-center justify-center w-4 h-4 mr-1">
-        {showChevron && (
-          isLoading || node.isLoading ? (
+        {showChevron &&
+          (isLoading || node.isLoading ? (
             <IconLoader2 className="w-3 h-3 animate-spin" />
           ) : node.isExpanded ? (
             <IconChevronDown size={12} />
           ) : (
             <IconChevronRight size={12} />
-          )
-        )}
+          ))}
       </div>
 
       {/* Icon */}
@@ -101,24 +103,17 @@ export const FileRow: React.FC<FileRowProps> = ({
       <span className="truncate font-medium flex-1" title={node.name}>
         {node.name}
       </span>
-      
-      {/* Optional: Show count of children if loaded but not expanded */}
-      {node.isDirectory && node.childrenLoaded && !node.isExpanded && node.children && node.children.length > 0 && (
-        <span className="text-xs text-gray-500 ml-2">
-          ({node.children.length})
-        </span>
-      )}
 
       {/* Pin icon for directories */}
       {node.isDirectory && (
-        <div 
+        <div
           className={`ml-2 transition-opacity duration-200 ${
             isRoot ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
         >
           {isRoot ? (
-            <IconPinFilled 
-              size={16} 
+            <IconPinFilled
+              size={16}
               className="text-yellow-500"
               title="Current root directory"
             />
@@ -128,14 +123,25 @@ export const FileRow: React.FC<FileRowProps> = ({
               className="p-1 hover:bg-gray-600 rounded transition-colors"
               title="Set as root directory"
             >
-              <IconPin 
-                size={16} 
+              <IconPin
+                size={16}
                 className="text-gray-400 hover:text-yellow-500"
               />
             </button>
           )}
         </div>
       )}
+
+      {/* Optional: Show count of children if loaded but not expanded */}
+      {node.isDirectory &&
+        node.childrenLoaded &&
+        !node.isExpanded &&
+        node.children &&
+        node.children.length > 0 && (
+          <span className="text-xs text-gray-500 ml-2">
+            ({node.children.length})
+          </span>
+        )}
     </div>
   );
-}; 
+};

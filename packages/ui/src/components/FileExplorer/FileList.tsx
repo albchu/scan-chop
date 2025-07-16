@@ -30,7 +30,7 @@ export const FileList: React.FC<FileListProps> = ({
   const actualRootPath = rootPath || rootNode.path;
 
   return (
-    <div className="space-y-1">
+    <div className="pl-2 pr-4 pb-2">
       {flatList.map((node) => (
         <FileRow
           key={node.path}

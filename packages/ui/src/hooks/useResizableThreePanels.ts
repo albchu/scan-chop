@@ -63,9 +63,9 @@ export const useResizableThreePanels = ({
     if (activeDividerRef.current === 'left') {
       // When dragging left divider and right panel is collapsed,
       // we need to handle the calculation differently
-      if (isRightCollapsed) {
-        // Only adjust between left and center panels
-        const maxLeftWidth = 100 - minPanelWidth; // All remaining space except min for center
+              if (isRightCollapsed) {
+          // Only adjust between left and center panels
+          const maxLeftWidth = 100 - minPanelWidth; // All remaining space except min for center
         const newLeftWidth = Math.max(
           minPanelWidth,
           Math.min(startLeftWidthRef.current + deltaPercent, maxLeftWidth)
@@ -81,10 +81,10 @@ export const useResizableThreePanels = ({
         // Normal three-panel dragging
         const newLeftWidth = Math.max(
           minPanelWidth,
-          Math.min(
-            startLeftWidthRef.current + deltaPercent,
-            100 - minPanelWidth - startRightWidthRef.current // Leave space for center and right
-          )
+                      Math.min(
+              startLeftWidthRef.current + deltaPercent,
+              100 - minPanelWidth - startRightWidthRef.current // Leave space for center and right
+            )
         );
         
         const newCenterWidth = 100 - newLeftWidth - startRightWidthRef.current;
