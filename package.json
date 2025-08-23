@@ -24,6 +24,7 @@
     "package:electron": "turbo run package --filter=electron-app",
     "release:electron": "turbo run release --filter=electron-app",
     "dev": "turbo run build --filter=electron-app && turbo run dev --filter=electron-app",
+    "dev:debug": "DEBUG=true turbo run build --filter=electron-app && DEBUG=true turbo run dev --filter=electron-app",
     "test": "turbo run test",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",

@@ -1,6 +1,9 @@
 import { Image } from 'image-js';
 import { BoundingBox, Vector2 } from './types';
 import { isInBounds, degreesToRadians } from './geometry';
+import { transformCorners } from './coordinate-utils';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 /**
  * Draw a circle on an image using Bresenham's algorithm
@@ -156,6 +159,46 @@ export const drawSquareMarker = (
 };
 
 /**
+ * Draw a crosshair at a specific point
+ * @param image - Image to draw on
+ * @param center - Center point of the crosshair
+ * @param size - Length of each arm of the crosshair
+ * @param color - RGBA color array
+ * @param thickness - Thickness of the crosshair lines (default: 1)
+ */
+export const drawCrosshair = (
+  image: Image,
+  center: Vector2,
+  size: number,
+  color: number[],
+  thickness: number = 1
+): void => {
+  const halfThickness = Math.floor(thickness / 2);
+  
+  // Draw horizontal line
+  for (let dx = -size; dx <= size; dx++) {
+    for (let dy = -halfThickness; dy <= halfThickness; dy++) {
+      const x = Math.round(center.x) + dx;
+      const y = Math.round(center.y) + dy;
+      if (isInBounds(image, x, y)) {
+        image.setPixelXY(x, y, color);
+      }
+    }
+  }
+  
+  // Draw vertical line
+  for (let dy = -size; dy <= size; dy++) {
+    for (let dx = -halfThickness; dx <= halfThickness; dx++) {
+      const x = Math.round(center.x) + dx;
+      const y = Math.round(center.y) + dy;
+      if (isInBounds(image, x, y)) {
+        image.setPixelXY(x, y, color);
+      }
+    }
+  }
+};
+
+/**
  * Highlight a region of points on an image
  * @param image - Image to draw on
  * @param points - Array of points to highlight
@@ -301,4 +344,76 @@ export const createCompositeDebugImage = (
   }
   
   return composite;
+};
+
+/**
+ * Save a debug image with frame corners and bounding box visualization
+ * @param image - The image to annotate
+ * @param boundingBox - The bounding box to visualize
+ * @param seed - The seed point that generated the frame
+ * @param frameId - The frame ID for filename generation
+ * @param debugDir - Optional debug directory path (defaults to 'debug-frames')
+ */
+export const saveFrameDebugImage = async (
+  image: Image,
+  boundingBox: BoundingBox,
+  seed: Vector2,
+  frameId: string,
+  debugDir: string = 'debug-frames'
+): Promise<void> => {
+  try {
+    // Get the correctly calculated corners using the shared utility
+    // Returns corners in order: [top-left, top-right, bottom-right, bottom-left]
+    const rotatedCorners = transformCorners(boundingBox);
+    
+    // Convert to greyscale first for better visibility of colored overlays
+    const greyscaleImage = image.clone();
+    for (let y = 0; y < greyscaleImage.height; y++) {
+      for (let x = 0; x < greyscaleImage.width; x++) {
+        const pixel = greyscaleImage.getPixelXY(x, y);
+        const grey = Math.round(0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]);
+        greyscaleImage.setPixelXY(x, y, [grey, grey, grey, pixel[3] || 255]);
+      }
+    }
+    
+    // Now draw all colored overlays on the greyscale image
+    
+    // Draw red crosshairs at each corner
+    const crosshairColor = [255, 0, 0, 255]; // Red
+    const crosshairSize = 20;
+    const crosshairThickness = 2;
+    
+    rotatedCorners.forEach((corner) => {
+      drawCrosshair(greyscaleImage, corner, crosshairSize, crosshairColor, crosshairThickness);
+    });
+    
+    // Draw green crosshair at seed point
+    const seedColor = [0, 255, 0, 255]; // Green
+    drawCrosshair(greyscaleImage, seed, 15, seedColor, 2);
+    
+    // Use createDebugImage to add the bounding box and additional seed markers
+    const finalDebugImage = createDebugImage(greyscaleImage, {
+      boundingBox,
+      boundingBoxColor: [0, 0, 255, 255], // Blue
+      seed,
+      seedColor: [0, 255, 0, 255], // Green seed center dot
+      seedRadius: { inner: 3, outer: 5 } // Small circle around seed
+    });
+    
+    // Create debug directory if it doesn't exist
+    const fullDebugDir = path.join(process.cwd(), debugDir);
+    await fs.mkdir(fullDebugDir, { recursive: true });
+    
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+    const filename = `frame-debug-${frameId}-${timestamp}.png`;
+    const filepath = path.join(fullDebugDir, filename);
+    
+    // Save the image
+    await finalDebugImage.save(filepath);
+    console.log(`[Debug] Frame debug image saved: ${filepath}`);
+    
+  } catch (error) {
+    console.error('[Debug] Failed to save frame debug image:', error);
+  }
 }; 

@@ -162,7 +162,7 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
           width: `${size.width}px`,
           height: `${size.height}px`,
           transform: transform,
-          transformOrigin: 'center center',
+          transformOrigin: 'top left',
         }}
         data-frame-id={id}
       >
