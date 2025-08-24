@@ -11,9 +11,13 @@ const EditorContent: React.FC = () => {
   // Using stores directly for better performance
   const updatePage = useUIStore((state) => state.updatePage);
   const setPageLoadingState = useUIStore((state) => state.setPageLoadingState);
+  const switchToCanvas = useUIStore((state) => state.switchToCanvas);
   
   const handleFileSelect = useCallback(async (path: string) => {
     console.log('File selected:', path);
+    
+    // Switch to Canvas view when selecting an image
+    switchToCanvas();
     
     // Set loading state when starting to load an image
     setPageLoadingState('loading');
@@ -46,7 +50,7 @@ const EditorContent: React.FC = () => {
       
       // Could show an error notification here
     }
-  }, [updatePage, setPageLoadingState]);
+  }, [updatePage, setPageLoadingState, switchToCanvas]);
 
   return (
     <div className="flex flex-col h-screen">
