@@ -1,11 +1,10 @@
 import React from 'react';
-import { useCurrentPageFrames } from '../../stores';
+import { useUIStore } from '../../stores';
 import { FrameCard } from './FrameCard';
-// import { FrameCard as FrameCardOld } from './FrameCardOld';
 
 export const FrameList: React.FC = () => {
-  // Only re-renders when frames for current page change
-  const frameList = useCurrentPageFrames();
+  // Get all frames across all pages - computed from framesByPage
+  const frameList = useUIStore(state => Object.values(state.framesByPage).flat());
   
   if (frameList.length === 0) {
     return (
@@ -26,13 +25,6 @@ export const FrameList: React.FC = () => {
           <FrameCard key={frame.id} frame={frame} />
         ))}
       </div>
-      {/* Old FrameCard usage commented out:
-      <div className="space-y-3">
-        {frameList.map(frame => (
-          <FrameCardOld key={frame.id} frame={frame} />
-        ))}
-      </div>
-      */}
     </div>
   );
 }; 
