@@ -16,7 +16,12 @@ import type {
 } from '@workspace/shared';
 import { rotateVector } from '../utils/geometry';
 
+export type ViewType = 'canvas' | 'frame-editor';
+
 interface UIState extends UIContextState {
+  // View state
+  activeView: ViewType;
+  
   // Actions
   addFrame: (frame: Partial<FrameData> & Pick<FrameData, 'x' | 'y' | 'width' | 'height' | 'rotation'>) => void;
   addMagicFrame: (frame: Omit<FrameData, 'id' | 'label' | 'orientation' | 'pageId'>) => void;
@@ -32,6 +37,11 @@ interface UIState extends UIContextState {
   saveFrames: (ids: string[]) => void;
   updatePage: (updates: Partial<PageData>, imagePath: string) => void;
   setPageLoadingState: (state: PageLoadingState) => void;
+  
+  // View actions
+  setActiveView: (view: ViewType) => void;
+  switchToCanvas: () => void;
+  switchToFrameEditor: () => void;
   
   // Computed getters
   getCurrentPageFrames: () => FrameData[];
@@ -59,6 +69,7 @@ export const useUIStore = create<UIState>()(
       selectedFrameIds: [],
       nextFrameNumberByPage: {},
       pageLoadingState: 'empty',
+      activeView: 'canvas',
       
       // Actions
       addFrame: (frame) => set((state) => {
@@ -303,6 +314,19 @@ export const useUIStore = create<UIState>()(
       
       setPageLoadingState: (loadingState) => set((state) => {
         state.pageLoadingState = loadingState;
+      }),
+      
+      // View actions
+      setActiveView: (view) => set((state) => {
+        state.activeView = view;
+      }),
+      
+      switchToCanvas: () => set((state) => {
+        state.activeView = 'canvas';
+      }),
+      
+      switchToFrameEditor: () => set((state) => {
+        state.activeView = 'frame-editor';
       }),
       
       // Computed values as functions (not stored in state)

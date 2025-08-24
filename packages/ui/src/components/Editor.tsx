@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { useUIStore } from '../stores';
 import { workspaceApi } from '../api/workspace';
-import { Canvas } from './Canvas';
+import { TabbedView } from './TabbedView';
 import { FramesPreview } from './FramesPreview/FramesPreview';
 import { FileExplorer } from './FileExplorer';
 import { ThreePanelLayout } from './Layout';
@@ -59,7 +59,7 @@ const EditorContent: React.FC = () => {
           initialCenterWidth={60}
           minPanelWidth={10}
         >
-          <Canvas />
+          <TabbedView />
         </ThreePanelLayout>
       </div>
     </div>
