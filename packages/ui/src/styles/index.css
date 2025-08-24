@@ -11,4 +11,84 @@ html, body {
 #root {
   height: 100%;
   overflow: hidden;
+}
+
+/* Masonry layout */
+.masonry-columns {
+  column-fill: auto;
+}
+
+/* Frame Card animations */
+.frame-card-animated {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.frame-card-animated:not(.current):hover {
+  transform: scale(1.02);
+}
+
+.frame-card-animated:active {
+  transform: scale(1.02);
+}
+
+/* Frame Editor Image animations */
+.frame-editor-image-animated {
+  animation: springIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Action Bar animations */
+.action-bar-animated {
+  animation: slideUp 0.3s ease-out 0.1s both;
+}
+
+/* Action Button animations */
+.action-button {
+  transform: scale(1);
+  transition: transform 0.2s ease-out;
+}
+
+.action-button:not(:disabled):hover {
+  transform: scale(1.1);
+}
+
+.action-button:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes springIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 } 

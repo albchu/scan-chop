@@ -21,6 +21,8 @@ export type ViewType = 'canvas' | 'frame-editor';
 interface UIState extends UIContextState {
   // View state
   activeView: ViewType;
+  currentFrameId: string | null;
+  gridColumnWidth: number;
   
   // Actions
   addFrame: (frame: Partial<FrameData> & Pick<FrameData, 'x' | 'y' | 'width' | 'height' | 'rotation'>) => void;
@@ -42,6 +44,8 @@ interface UIState extends UIContextState {
   setActiveView: (view: ViewType) => void;
   switchToCanvas: () => void;
   switchToFrameEditor: () => void;
+  setCurrentFrameId: (id: string | null) => void;
+  setGridColumnWidth: (width: number) => void;
   
   // Computed getters
   getCurrentPageFrames: () => FrameData[];
@@ -70,6 +74,8 @@ export const useUIStore = create<UIState>()(
       nextFrameNumberByPage: {},
       pageLoadingState: 'empty',
       activeView: 'canvas',
+      currentFrameId: null,
+      gridColumnWidth: 240,
       
       // Actions
       addFrame: (frame) => set((state) => {
@@ -202,6 +208,11 @@ export const useUIStore = create<UIState>()(
         
         // Remove from selection
         state.selectedFrameIds = state.selectedFrameIds.filter(frameId => frameId !== id);
+        
+        // Clear currentFrameId if it's the deleted frame
+        if (state.currentFrameId === id) {
+          state.currentFrameId = null;
+        }
       }),
       
       removeFramesBatch: (ids) => set((state) => {
@@ -327,6 +338,14 @@ export const useUIStore = create<UIState>()(
       
       switchToFrameEditor: () => set((state) => {
         state.activeView = 'frame-editor';
+      }),
+      
+      setCurrentFrameId: (id) => set((state) => {
+        state.currentFrameId = id;
+      }),
+      
+      setGridColumnWidth: (width) => set((state) => {
+        state.gridColumnWidth = Math.max(120, Math.min(420, width));
       }),
       
       // Computed values as functions (not stored in state)

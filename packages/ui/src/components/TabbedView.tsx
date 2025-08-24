@@ -1,7 +1,7 @@
 import React from 'react';
 import { useUIStore } from '../stores';
 import { Canvas } from './Canvas';
-import { FrameEditor } from './FrameEditor';
+import { FrameEditorNew } from './FrameEditor/FrameEditorNew';
 
 export const TabbedView: React.FC = () => {
   const activeView = useUIStore((state) => state.activeView);
@@ -47,7 +47,7 @@ export const TabbedView: React.FC = () => {
       {/* Content Area */}
       <div className="flex-1 overflow-hidden">
         {activeView === 'canvas' && <Canvas />}
-        {activeView === 'frame-editor' && <FrameEditor />}
+        {activeView === 'frame-editor' && <FrameEditorNew />}
       </div>
     </div>
   );
