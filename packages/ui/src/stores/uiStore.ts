@@ -75,7 +75,7 @@ export const useUIStore = create<UIState>()(
       pageLoadingState: 'empty',
       activeView: 'canvas',
       currentFrameId: null,
-      gridColumnWidth: 240,
+      gridColumnWidth: 120,
       
       // Actions
       addFrame: (frame) => set((state) => {
