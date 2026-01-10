@@ -11,6 +11,7 @@ const backendAPI = {
       'workspace:loadImage',
       'workspace:generateFrame',
       'workspace:updateFrame',
+      'workspace:saveFrame',
       // Add more channels as needed
     ];
     

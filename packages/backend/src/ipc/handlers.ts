@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { ipcMain, dialog, BrowserWindow } from 'electron';
 import { WorkspaceService } from '../services/WorkspaceService';
 import type { LoadDirectoryOptions, Vector2, FrameData, ProcessingConfig } from '@workspace/shared';
 
@@ -104,6 +104,40 @@ export function setupIpcHandlers(workspaceService: WorkspaceService) {
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to update frame' 
+      };
+    }
+  });
+  
+  // Save frame to disk with user-selected directory
+  ipcMain.handle('workspace:saveFrame', async (
+    event,
+    frameData: FrameData
+  ) => {
+    console.log('[IPC] workspace:saveFrame called for frame:', frameData.id);
+    
+    try {
+      // Get the focused window for the dialog
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      
+      // Show directory selection dialog
+      const result = await dialog.showOpenDialog(focusedWindow!, {
+        title: 'Select folder to save frame',
+        properties: ['openDirectory', 'createDirectory']
+      });
+      
+      if (result.canceled || result.filePaths.length === 0) {
+        return { success: false, error: 'cancelled' };
+      }
+      
+      const outputDir = result.filePaths[0];
+      const savedPath = await workspaceService.saveFrame(frameData, outputDir);
+      
+      return { success: true, data: { filePath: savedPath } };
+    } catch (error) {
+      console.error('[IPC] Error saving frame:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to save frame' 
       };
     }
   });

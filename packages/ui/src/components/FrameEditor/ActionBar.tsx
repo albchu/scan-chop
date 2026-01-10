@@ -6,6 +6,7 @@ import {
   IconPlayerTrackPrev,
   IconPlayerTrackNext,
 } from '@tabler/icons-react';
+import { toast } from 'sonner';
 import { FrameData } from '@workspace/shared';
 import { useUIStore } from '../../stores';
 import { UseFrameNavigationResult } from '../../hooks/useFrameNavigation';
@@ -28,8 +29,17 @@ export const ActionBar: React.FC<ActionBarProps> = ({ frame, navigation }) => {
     setOrientation(frame.id, nextOrientation);
   };
 
-  const handleSave = () => {
-    console.log('TODO: Implement save functionality for frame:', frame.id);
+  const handleSave = async () => {
+    try {
+      const result = await window.backend.invoke('workspace:saveFrame', frame);
+      if (result.success) {
+        toast.success(`Saved to ${result.data.filePath}`);
+      } else if (result.error !== 'cancelled') {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save frame');
+    }
   };
 
   const handleDelete = () => {

@@ -7,6 +7,7 @@ import { FrameService } from './FrameService';
 import type { Image } from 'image-js';
 import { Image as ImageJS } from 'image-js';
 import fs from 'fs/promises';
+import path from 'path';
 import { isImageFile } from '../utils/isImageFile';
 
 // Internal scaling configuration
@@ -203,6 +204,41 @@ export class WorkspaceService {
   
   deleteFrame(id: string): boolean {
     return this.frameService.deleteFrame(id);
+  }
+  
+  /**
+   * Save a frame to disk with orientation rotation applied
+   */
+  async saveFrame(frameData: FrameData, outputDir: string): Promise<string> {
+    if (!frameData.imageData) {
+      throw new Error('Frame has no image data to save');
+    }
+    
+    // Decode base64 data URL to image
+    const image = await ImageJS.load(frameData.imageData);
+    
+    // Apply orientation rotation if needed
+    let rotatedImage: Image = image;
+    if (frameData.orientation !== 0) {
+      rotatedImage = image.rotate(frameData.orientation);
+      console.log(`[WorkspaceService] Rotated image by ${frameData.orientation} degrees`);
+    }
+    
+    // Sanitize filename - remove invalid characters
+    const sanitizedLabel = frameData.label
+      .replace(/[<>:"/\\|?*]/g, '_')
+      .replace(/\s+/g, '_')
+      .trim() || 'frame';
+    
+    const filename = `${sanitizedLabel}.png`;
+    const outputPath = path.join(outputDir, filename);
+    
+    // Convert to PNG buffer and save
+    const buffer = Buffer.from(rotatedImage.toBuffer({ format: 'png' }));
+    await fs.writeFile(outputPath, buffer);
+    
+    console.log(`[WorkspaceService] Saved frame to: ${outputPath}`);
+    return outputPath;
   }
   
   clearCache(path?: string): void {
