@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "apps/electron-app": {
+      "entry": [
+        "src/preload.ts",
+        "src/renderer.tsx"
+      ],
+      "ignoreDependencies": ["@workspace/shared"]
+    },
+    "packages/backend": {},
+    "packages/shared": {},
+    "packages/ui": {
+      "entry": ["src/styles/index.css"]
+    }
+  },
+  "ignoreDependencies": ["prettier"],
+  "ignore": [
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
+}
