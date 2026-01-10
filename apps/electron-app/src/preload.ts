@@ -12,7 +12,7 @@ const backendAPI = {
       'workspace:generateFrame',
       'workspace:updateFrame',
       'workspace:saveFrame',
-      // Add more channels as needed
+      'workspace:rotateFrame',
     ];
     
     if (allowedChannels.includes(channel)) {

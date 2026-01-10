@@ -65,10 +65,6 @@ export const FrameEditorNew: React.FC = () => {
           <img 
             src={currentFrame.imageData}
             alt={currentFrame.label}
-            style={{ 
-              transform: `rotate(${currentFrame.orientation || 0}deg)`,
-              transformOrigin: 'center center'
-            }}
             className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
           />
         </div>

@@ -241,6 +241,36 @@ export class WorkspaceService {
     return outputPath;
   }
   
+  /**
+   * Rotate a frame's imageData by 90 degrees clockwise and swap dimensions
+   */
+  async rotateFrame(frameData: FrameData): Promise<FrameData> {
+    if (!frameData.imageData) {
+      throw new Error('Frame has no image data to rotate');
+    }
+    
+    // Decode base64 data URL to image
+    const image = await ImageJS.load(frameData.imageData);
+    
+    // Rotate 90 degrees clockwise
+    const rotatedImage = image.rotate(90);
+    
+    // Convert back to base64 data URL
+    const dataUrl = `data:image/png;base64,${Buffer.from(
+      rotatedImage.toBuffer({ format: 'png' })
+    ).toString('base64')}`;
+    
+    console.log(`[WorkspaceService] Rotated frame ${frameData.id}: ${frameData.width}x${frameData.height} -> ${frameData.height}x${frameData.width}`);
+    
+    return {
+      ...frameData,
+      imageData: dataUrl,
+      width: frameData.height,  // swap dimensions
+      height: frameData.width,
+      orientation: 0,           // reset since rotation is baked in
+    };
+  }
+  
   clearCache(path?: string): void {
     this.cacheManager.clear(path);
     this.frameService.clearAllFrames();

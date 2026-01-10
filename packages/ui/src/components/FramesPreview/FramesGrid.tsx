@@ -1,6 +1,6 @@
 import React from 'react';
 import { useUIStore } from '../../stores';
-import { FrameCardNew } from './FrameCardNew';
+import { FrameCard } from './FrameCard';
 
 export const FramesGrid: React.FC = () => {
   // Get frames exactly like current FrameList
@@ -31,7 +31,7 @@ export const FramesGrid: React.FC = () => {
         }}
       >
         {frameList.map((frame) => (
-          <FrameCardNew 
+          <FrameCard 
             key={frame.id} 
             frame={frame} 
             isCurrent={frame.id === currentFrameId}

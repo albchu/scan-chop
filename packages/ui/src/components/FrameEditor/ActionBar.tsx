@@ -18,15 +18,28 @@ interface ActionBarProps {
 }
 
 export const ActionBar: React.FC<ActionBarProps> = ({ frame, navigation }) => {
-  const setOrientation = useUIStore((state) => state.setOrientation);
+  const updateFrame = useUIStore((state) => state.updateFrame);
   const removeFrame = useUIStore((state) => state.removeFrame);
   const setCurrentFrameId = useUIStore((state) => state.setCurrentFrameId);
   const frameList = useUIStore(state => Object.values(state.framesByPage).flat());
   
-  const handleRotate = () => {
-    // Cycle orientation: 0 → 90 → 180 → 270 → 0
-    const nextOrientation = ((frame.orientation + 90) % 360) as 0 | 90 | 180 | 270;
-    setOrientation(frame.id, nextOrientation);
+  const handleRotate = async () => {
+    try {
+      const result = await window.backend.invoke('workspace:rotateFrame', frame);
+      if (result.success) {
+        // Update frame in store with rotated imageData and swapped dimensions
+        updateFrame(frame.id, {
+          imageData: result.data.imageData,
+          width: result.data.width,
+          height: result.data.height,
+          orientation: result.data.orientation,
+        });
+      } else {
+        toast.error(result.error || 'Failed to rotate frame');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to rotate frame');
+    }
   };
 
   const handleSave = async () => {
