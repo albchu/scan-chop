@@ -146,3 +146,6 @@ moveable-library-repo/
 
 .DS_Store
 debug*/
+
+# Electron build output
+release/

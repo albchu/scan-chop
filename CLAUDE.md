@@ -127,6 +127,25 @@ window.api.workspace.onImageReady(callback)
 2. Add handler in `packages/backend/src/ipc/handlers.ts`
 3. Expose via `BackendAPI` in `packages/shared/src/api.ts`
 
+## Release Build
+
+Build Mac DMG installers:
+
+```bash
+pnpm build                              # Build all packages
+pnpm --filter electron-app build:prod   # Production build
+pnpm --filter electron-app package      # Create DMG
+```
+
+Output: `apps/electron-app/release/`
+- `Scan Chop-1.0.0-arm64.dmg` - Apple Silicon
+- `Scan Chop-1.0.0.dmg` - Intel x64
+
+**Notes:**
+- App is unsigned (shows security warning on first open)
+- Uses `node-linker=hoisted` in `.npmrc` for electron-builder compatibility
+- electron version pinned in `apps/electron-app/package.json`
+
 ## Conventions
 
 - Bounding boxes use display coordinates (scaled), not original image coordinates
