@@ -207,9 +207,20 @@ export class WorkspaceService {
   }
   
   /**
-   * Save a frame to disk with orientation rotation applied
+   * Get sanitized filename for a frame (without directory path)
    */
-  async saveFrame(frameData: FrameData, outputDir: string): Promise<string> {
+  getSanitizedFrameFilename(frameData: FrameData): string {
+    const sanitizedLabel = frameData.label
+      .replace(/[<>:"/\\|?*]/g, '_')
+      .replace(/\s+/g, '_')
+      .trim() || 'frame';
+    return `${sanitizedLabel}.png`;
+  }
+
+  /**
+   * Save a frame to a specific file path with orientation rotation applied
+   */
+  async saveFrameToPath(frameData: FrameData, outputPath: string): Promise<string> {
     if (!frameData.imageData) {
       throw new Error('Frame has no image data to save');
     }
@@ -223,15 +234,6 @@ export class WorkspaceService {
       rotatedImage = image.rotate(frameData.orientation);
       console.log(`[WorkspaceService] Rotated image by ${frameData.orientation} degrees`);
     }
-    
-    // Sanitize filename - remove invalid characters
-    const sanitizedLabel = frameData.label
-      .replace(/[<>:"/\\|?*]/g, '_')
-      .replace(/\s+/g, '_')
-      .trim() || 'frame';
-    
-    const filename = `${sanitizedLabel}.png`;
-    const outputPath = path.join(outputDir, filename);
     
     // Convert to PNG buffer and save
     const buffer = Buffer.from(rotatedImage.toBuffer({ format: 'png' }));

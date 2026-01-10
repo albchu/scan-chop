@@ -108,7 +108,7 @@ export function setupIpcHandlers(workspaceService: WorkspaceService) {
     }
   });
   
-  // Save frame to disk with user-selected directory
+  // Save frame to disk with user-selected path
   ipcMain.handle('workspace:saveFrame', async (
     event,
     frameData: FrameData
@@ -119,18 +119,21 @@ export function setupIpcHandlers(workspaceService: WorkspaceService) {
       // Get the focused window for the dialog
       const focusedWindow = BrowserWindow.getFocusedWindow();
       
-      // Show directory selection dialog
-      const result = await dialog.showOpenDialog(focusedWindow!, {
-        title: 'Select folder to save frame',
-        properties: ['openDirectory', 'createDirectory']
+      // Generate default filename from label
+      const defaultFilename = workspaceService.getSanitizedFrameFilename(frameData);
+      
+      // Show save dialog with default filename
+      const result = await dialog.showSaveDialog(focusedWindow!, {
+        title: 'Save Frame',
+        defaultPath: defaultFilename,
+        filters: [{ name: 'PNG Image', extensions: ['png'] }]
       });
       
-      if (result.canceled || result.filePaths.length === 0) {
+      if (result.canceled || !result.filePath) {
         return { success: false, error: 'cancelled' };
       }
       
-      const outputDir = result.filePaths[0];
-      const savedPath = await workspaceService.saveFrame(frameData, outputDir);
+      const savedPath = await workspaceService.saveFrameToPath(frameData, result.filePath);
       
       return { success: true, data: { filePath: savedPath } };
     } catch (error) {
