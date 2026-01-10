@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export interface KeyboardModifiers {
+interface KeyboardModifiers {
   isCommandPressed: boolean;
   isShiftPressed: boolean;
   isAltPressed: boolean;

@@ -1,2 +1,1 @@
-export { AppBar } from './AppBar';
-export { PathInputCompact } from './PathInputCompact'; 
+export { AppBar } from './AppBar'; 

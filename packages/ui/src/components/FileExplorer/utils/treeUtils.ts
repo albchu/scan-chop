@@ -42,23 +42,6 @@ export const updateNodeByPath = (
 };
 
 /**
- * Find a node in the tree by path
- */
-export const findNodeByPath = (
-  nodes: TreeNode[],
-  targetPath: string
-): TreeNode | null => {
-  for (const node of nodes) {
-    if (node.path === targetPath) return node;
-    if (node.children) {
-      const found = findNodeByPath(node.children, targetPath);
-      if (found) return found;
-    }
-  }
-  return null;
-};
-
-/**
  * Flatten a tree structure for rendering
  */
 export const flattenTree = (tree: TreeNode[]): TreeNode[] => {

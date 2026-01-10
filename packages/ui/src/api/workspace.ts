@@ -1,7 +1,7 @@
 import type { DirectoryNode, LoadDirectoryOptions, Vector2, FrameData, ProcessingConfig } from '@workspace/shared';
 
 // Define ImageData type to match backend
-export interface ImageData {
+interface ImageData {
   imageData: string;  // base64 data URL
   width: number;      // actual width of the returned image
   height: number;     // actual height of the returned image

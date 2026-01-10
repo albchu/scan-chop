@@ -139,20 +139,3 @@ export const useWorkspaceStore = create<WorkspaceState>()(
     }
   )
 );
-
-// Selectors
-export const useWorkspaceState = () => useWorkspaceStore((state) => ({
-  currentDirectory: state.currentDirectory,
-  rootDirectory: state.rootDirectory,
-  directoryTree: state.directoryTree,
-  isLoading: state.isLoading,
-  error: state.error,
-}));
-
-export const useWorkspaceActions = () => useWorkspaceStore((state) => ({
-  loadDirectory: state.loadDirectory,
-  loadSubDirectory: state.loadSubDirectory,
-  setRootDirectory: state.setRootDirectory,
-  clearError: state.clearError,
-  refreshDirectory: state.refreshDirectory,
-})); 

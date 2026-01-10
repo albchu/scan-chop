@@ -16,9 +16,3 @@ export interface FileListProps {
   onFileSelect: (path: string) => void;
   onSetAsRoot?: (path: string) => void;
 }
-
-// State for tree management
-export interface TreeState {
-  tree: TreeNode[];
-  loadingPaths: Set<string>;
-} 

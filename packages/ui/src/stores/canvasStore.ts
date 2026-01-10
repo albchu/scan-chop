@@ -76,13 +76,6 @@ export const useCanvasStore = create<CanvasState>()(
   )
 );
 
-// Selectors for common use cases
-export const useZoom = () => useCanvasStore((state) => state.zoom);
-export const usePanOffset = () => useCanvasStore((state) => state.panOffset);
-export const useCanvasSize = () => useCanvasStore((state) => state.canvasSize);
-export const useTotalScale = () => useCanvasStore((state) => state.totalScale);
-export const useBaseScale = () => useCanvasStore((state) => state.baseScale);
-
 // Actions selector
 export const useCanvasActions = () => useCanvasStore((state) => ({
   setZoom: state.setZoom,

@@ -16,7 +16,7 @@ import type {
 } from '@workspace/shared';
 import { rotateVector } from '../utils/geometry';
 
-export type ViewType = 'canvas' | 'frame-editor';
+type ViewType = 'canvas' | 'frame-editor';
 
 interface UIState extends UIContextState {
   // View state
@@ -374,25 +374,4 @@ export const useUIStore = create<UIState>()(
 
 // Selectors for common use cases
 export const useCurrentPageFrames = () => 
-  useUIStore((state) => state.getCurrentPageFrames());
-
-export const useSelectedFrames = () => 
-  useUIStore((state) => 
-    state.selectedFrameIds
-      .map(id => state.findFrameById(id))
-      .filter(Boolean) as FrameData[]
-  );
-
-export const useFrameById = (id: string) => 
-  useUIStore((state) => state.findFrameById(id));
-
-// Granular selectors
-export const useFrameCount = () =>
-  useUIStore((state) => 
-    state.currentPageId 
-      ? (state.framesByPage[state.currentPageId]?.length || 0)
-      : 0
-  );
-
-export const useSelectedCount = () =>
-  useUIStore((state) => state.selectedFrameIds.length); 
+  useUIStore((state) => state.getCurrentPageFrames()); 

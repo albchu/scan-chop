@@ -24,7 +24,6 @@
     "scrappy": "tsx src/debug-scrappy.ts"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^1.6.1",
     "tsx": "^4.20.3",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
