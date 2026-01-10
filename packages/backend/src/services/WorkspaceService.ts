@@ -244,32 +244,23 @@ export class WorkspaceService {
   }
   
   /**
-   * Rotate a frame's imageData by 90 degrees clockwise and swap dimensions
+   * Rotate a frame by cycling its orientation (0 → 90 → 180 → 270 → 0).
+   * The imageData remains unchanged; UI applies CSS rotation based on orientation.
    */
-  async rotateFrame(frameData: FrameData): Promise<FrameData> {
-    if (!frameData.imageData) {
-      throw new Error('Frame has no image data to rotate');
-    }
+  rotateFrame(frameData: FrameData): Partial<FrameData> {
+    const orientationCycle: Record<number, 0 | 90 | 180 | 270> = {
+      0: 90,
+      90: 180,
+      180: 270,
+      270: 0,
+    };
     
-    // Decode base64 data URL to image
-    const image = await ImageJS.load(frameData.imageData);
+    const newOrientation = orientationCycle[frameData.orientation] ?? 90;
     
-    // Rotate 90 degrees clockwise
-    const rotatedImage = image.rotate(90);
-    
-    // Convert back to base64 data URL
-    const dataUrl = `data:image/png;base64,${Buffer.from(
-      rotatedImage.toBuffer({ format: 'png' })
-    ).toString('base64')}`;
-    
-    console.log(`[WorkspaceService] Rotated frame ${frameData.id}: ${frameData.width}x${frameData.height} -> ${frameData.height}x${frameData.width}`);
+    console.log(`[WorkspaceService] Rotated frame ${frameData.id}: orientation ${frameData.orientation} -> ${newOrientation}`);
     
     return {
-      ...frameData,
-      imageData: dataUrl,
-      width: frameData.height,  // swap dimensions
-      height: frameData.width,
-      orientation: 0,           // reset since rotation is baked in
+      orientation: newOrientation,
     };
   }
   

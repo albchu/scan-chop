@@ -145,22 +145,14 @@ export function setupIpcHandlers(workspaceService: WorkspaceService) {
     }
   });
   
-  // Rotate frame image by 90 degrees
-  ipcMain.handle('workspace:rotateFrame', async (
+  // Rotate frame by cycling orientation
+  ipcMain.handle('workspace:rotateFrame', (
     event,
     frameData: FrameData
   ) => {
     console.log('[IPC] workspace:rotateFrame called for frame:', frameData.id);
     
-    try {
-      const rotatedFrame = await workspaceService.rotateFrame(frameData);
-      return { success: true, data: rotatedFrame };
-    } catch (error) {
-      console.error('[IPC] Error rotating frame:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to rotate frame' 
-      };
-    }
+    const rotatedFrame = workspaceService.rotateFrame(frameData);
+    return { success: true, data: rotatedFrame };
   });
 } 

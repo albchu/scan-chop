@@ -18,7 +18,10 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, isCurrent = false }
     setActiveView('frame-editor');
   };
   
-  const aspectRatio = frame.width / frame.height;
+  const isRotated = frame.orientation === 90 || frame.orientation === 270;
+  const aspectRatio = isRotated 
+    ? frame.height / frame.width 
+    : frame.width / frame.height;
   
   return (
     <div
@@ -31,14 +34,19 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, isCurrent = false }
       style={{ display: 'inline-block', width: '100%' }}
     >
       <div
-        className="overflow-hidden bg-gray-700"
+        className="relative overflow-hidden bg-gray-700"
         style={{ aspectRatio: aspectRatio.toString() }}
       >
         {frame.imageData ? (
           <img
             src={frame.imageData}
             alt={frame.label}
-            className="w-full h-full object-cover"
+            className="absolute w-full h-auto"
+            style={{
+              top: '50%',
+              left: '50%',
+              transform: `translate(-50%, -50%) rotate(${frame.orientation}deg)${isRotated ? ' scale(1.5)' : ''}`,
+            }}
             loading="lazy"
             decoding="async"
           />

@@ -66,6 +66,7 @@ export const FrameEditorNew: React.FC = () => {
             src={currentFrame.imageData}
             alt={currentFrame.label}
             className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            style={{ transform: `rotate(${currentFrame.orientation}deg)` }}
           />
         </div>
       </div>

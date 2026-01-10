@@ -27,11 +27,8 @@ export const ActionBar: React.FC<ActionBarProps> = ({ frame, navigation }) => {
     try {
       const result = await window.backend.invoke('workspace:rotateFrame', frame);
       if (result.success) {
-        // Update frame in store with rotated imageData and swapped dimensions
+        // Update frame orientation in store
         updateFrame(frame.id, {
-          imageData: result.data.imageData,
-          width: result.data.width,
-          height: result.data.height,
           orientation: result.data.orientation,
         });
       } else {
