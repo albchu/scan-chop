@@ -13,6 +13,9 @@ const backendAPI = {
       'workspace:updateFrame',
       'workspace:saveFrame',
       'workspace:rotateFrame',
+      'workspace:selectDirectory',
+      'workspace:checkFilesExist',
+      'workspace:saveAllFrames',
     ];
     
     if (allowedChannels.includes(channel)) {

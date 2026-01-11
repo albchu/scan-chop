@@ -90,5 +90,63 @@ export const workspaceApi = {
     }
     
     throw new Error(response.error || 'Failed to update frame');
+  },
+
+  async selectDirectory(): Promise<string | null> {
+    console.log('[WorkspaceAPI] Selecting directory');
+    
+    const response = await window.backend.invoke(
+      'workspace:selectDirectory'
+    ) as ApiResponse<{ directory: string }>;
+    
+    if (response.success && response.data) {
+      return response.data.directory;
+    }
+    
+    if (response.error === 'cancelled') {
+      return null;
+    }
+    
+    throw new Error(response.error || 'Failed to select directory');
+  },
+
+  async checkFilesExist(
+    directory: string,
+    filenames: string[]
+  ): Promise<string[]> {
+    console.log('[WorkspaceAPI] Checking files exist in:', directory);
+    
+    const response = await window.backend.invoke(
+      'workspace:checkFilesExist',
+      directory,
+      filenames
+    ) as ApiResponse<{ existingFiles: string[] }>;
+    
+    if (response.success && response.data) {
+      return response.data.existingFiles;
+    }
+    
+    throw new Error(response.error || 'Failed to check files');
+  },
+
+  async saveAllFrames(
+    directory: string,
+    frames: FrameData[],
+    filenames: string[]
+  ): Promise<{ savedPaths: string[]; errors: { filename: string; error: string }[] }> {
+    console.log('[WorkspaceAPI] Saving', frames.length, 'frames to:', directory);
+    
+    const response = await window.backend.invoke(
+      'workspace:saveAllFrames',
+      directory,
+      frames,
+      filenames
+    ) as ApiResponse<{ savedPaths: string[]; errors: { filename: string; error: string }[] }>;
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    throw new Error(response.error || 'Failed to save frames');
   }
 }; 

@@ -33,6 +33,7 @@ interface UIState extends UIContextState {
   renameFrame: (id: string, label: string) => void;
   selectFrame: (id: string) => void;
   clearSelection: () => void;
+  clearAllFrames: () => void;
   translateFrameRelative: (id: string, vector: Vector2) => void;
   rotateFrame: (id: string, dAngle: number) => void;
   setOrientation: (id: string, orientation: 0 | 90 | 180 | 270) => void;
@@ -252,6 +253,13 @@ export const useUIStore = create<UIState>()(
       
       clearSelection: () => set((state) => {
         state.selectedFrameIds = [];
+      }),
+      
+      clearAllFrames: () => set((state) => {
+        state.framesByPage = {};
+        state.nextFrameNumberByPage = {};
+        state.selectedFrameIds = [];
+        state.currentFrameId = null;
       }),
       
       translateFrameRelative: (id, vector) => set((state) => {

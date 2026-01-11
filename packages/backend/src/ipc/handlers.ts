@@ -1,6 +1,8 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron';
 import { WorkspaceService } from '../services/WorkspaceService';
 import type { LoadDirectoryOptions, Vector2, FrameData, ProcessingConfig } from '@workspace/shared';
+import fs from 'fs/promises';
+import path from 'path';
 
 export function setupIpcHandlers(workspaceService: WorkspaceService) {
   // Load directory tree with depth options
@@ -154,5 +156,111 @@ export function setupIpcHandlers(workspaceService: WorkspaceService) {
     
     const rotatedFrame = workspaceService.rotateFrame(frameData);
     return { success: true, data: rotatedFrame };
+  });
+  
+  // Select a directory using native dialog
+  ipcMain.handle('workspace:selectDirectory', async () => {
+    console.log('[IPC] workspace:selectDirectory called');
+    
+    try {
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      
+      const result = await dialog.showOpenDialog(focusedWindow!, {
+        title: 'Select Output Directory',
+        properties: ['openDirectory', 'createDirectory']
+      });
+      
+      if (result.canceled || result.filePaths.length === 0) {
+        return { success: false, error: 'cancelled' };
+      }
+      
+      return { success: true, data: { directory: result.filePaths[0] } };
+    } catch (error) {
+      console.error('[IPC] Error selecting directory:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to select directory' 
+      };
+    }
+  });
+  
+  // Check which files already exist in a directory
+  ipcMain.handle('workspace:checkFilesExist', async (
+    event,
+    directory: string,
+    filenames: string[]
+  ) => {
+    console.log('[IPC] workspace:checkFilesExist called with', filenames.length, 'files');
+    
+    try {
+      const existingFiles: string[] = [];
+      
+      for (const filename of filenames) {
+        const filePath = path.join(directory, filename);
+        try {
+          await fs.access(filePath);
+          existingFiles.push(filename);
+        } catch {
+          // File doesn't exist, which is fine
+        }
+      }
+      
+      return { success: true, data: { existingFiles } };
+    } catch (error) {
+      console.error('[IPC] Error checking files:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to check files' 
+      };
+    }
+  });
+  
+  // Save multiple frames to a directory
+  ipcMain.handle('workspace:saveAllFrames', async (
+    event,
+    directory: string,
+    frames: FrameData[],
+    filenames: string[]
+  ) => {
+    console.log('[IPC] workspace:saveAllFrames called with', frames.length, 'frames');
+    
+    if (frames.length !== filenames.length) {
+      return { 
+        success: false, 
+        error: 'Frames and filenames arrays must have the same length' 
+      };
+    }
+    
+    try {
+      const savedPaths: string[] = [];
+      const errors: { filename: string; error: string }[] = [];
+      
+      for (let i = 0; i < frames.length; i++) {
+        const frame = frames[i];
+        const filename = filenames[i];
+        const outputPath = path.join(directory, filename);
+        
+        try {
+          await workspaceService.saveFrameToPath(frame, outputPath);
+          savedPaths.push(outputPath);
+        } catch (err) {
+          errors.push({
+            filename,
+            error: err instanceof Error ? err.message : 'Unknown error'
+          });
+        }
+      }
+      
+      return { 
+        success: true, 
+        data: { savedPaths, errors } 
+      };
+    } catch (error) {
+      console.error('[IPC] Error saving frames:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to save frames' 
+      };
+    }
   });
 } 
