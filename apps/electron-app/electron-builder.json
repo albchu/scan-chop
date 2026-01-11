@@ -8,7 +8,12 @@
   "files": [
     "dist/**/*",
     "node_modules/**/*",
-    "package.json"
+    "package.json",
+    "!**/node_modules/**/{test,__tests__,tests,coverage,debug-output}/**",
+    "!**/node_modules/**/*.{ts,tsx,map}",
+    "!**/node_modules/**/{tsconfig*.json,vitest.config.*,.turbo}",
+    "!**/node_modules/@workspace/**/src/**",
+    "!**/*.d.ts.map"
   ],
   "extraMetadata": {
     "main": "dist/main.js"
@@ -39,4 +44,4 @@
     ],
     "category": "Office"
   }
-} 
+}
