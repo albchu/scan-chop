@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useUIStore } from '../../stores';
 import { useFrameNavigation } from '../../hooks/useFrameNavigation';
 import { EditableLabel } from '../common';
 import { ActionBar } from './ActionBar';
+import { ZoomSlider } from '../ZoomSlider';
+import { useFrameEditorZoom } from './hooks/useFrameEditorZoom';
 
 export const FrameEditorNew: React.FC = () => {
   const frameList = useUIStore(state => Object.values(state.framesByPage).flat());
@@ -13,6 +15,41 @@ export const FrameEditorNew: React.FC = () => {
   
   // Find current frame
   const currentFrame = frameList.find(f => f.id === currentFrameId);
+  
+  // Container ref for zoom calculations
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Calculate actual image dimensions (considering scale factor and orientation)
+  const getImageDimensions = () => {
+    if (!currentFrame) return { width: 0, height: 0 };
+    const scale = currentFrame.imageScaleFactor || 1;
+    const baseWidth = currentFrame.width * scale;
+    const baseHeight = currentFrame.height * scale;
+    // Swap dimensions if rotated 90 or 270 degrees
+    const isRotated = currentFrame.orientation === 90 || currentFrame.orientation === 270;
+    return {
+      width: isRotated ? baseHeight : baseWidth,
+      height: isRotated ? baseWidth : baseHeight,
+    };
+  };
+  
+  const imageDimensions = getImageDimensions();
+  
+  // Zoom and pan
+  const {
+    zoom,
+    panOffset,
+    totalScale,
+    isDragging,
+    setZoom,
+    resetView,
+    handleMouseDown,
+  } = useFrameEditorZoom({
+    containerRef,
+    imageWidth: imageDimensions.width,
+    imageHeight: imageDimensions.height,
+    frameId: currentFrameId,
+  });
   
   // Navigation (no keyboard support)
   const navigation = useFrameNavigation({
@@ -46,6 +83,8 @@ export const FrameEditorNew: React.FC = () => {
     );
   }
 
+  const cursorStyle = isDragging ? 'cursor-grabbing' : 'cursor-grab';
+
   return (
     <div className="h-full bg-gray-800 relative overflow-hidden">
       {/* Frame title at the top */}
@@ -59,14 +98,26 @@ export const FrameEditorNew: React.FC = () => {
         </div>
       </div>
 
-      {/* Main content area - frame image */}
-      <div className="absolute inset-0 pt-20 pb-24 flex items-center justify-center p-4">
-        <div className="frame-editor-image-animated max-w-full max-h-full">
+      {/* Main content area - frame image with zoom/pan */}
+      <div 
+        ref={containerRef}
+        className={`absolute inset-0 pt-20 pb-24 flex items-center justify-center overflow-hidden ${cursorStyle}`}
+        onMouseDown={handleMouseDown}
+      >
+        <div 
+          className="frame-editor-image-animated"
+          style={{
+            transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${totalScale})`,
+            transformOrigin: 'center center',
+            transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+          }}
+        >
           <img 
             src={currentFrame.imageData}
             alt={currentFrame.label}
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            className="rounded-lg shadow-2xl"
             style={{ transform: `rotate(${currentFrame.orientation}deg)` }}
+            draggable={false}
           />
         </div>
       </div>
@@ -82,6 +133,15 @@ export const FrameEditorNew: React.FC = () => {
             }
           </span>
         </div>
+      </div>
+
+      {/* Zoom controls */}
+      <div className="absolute bottom-4 right-4 bg-gray-800/90 backdrop-blur-sm rounded-lg p-3 border border-gray-600 group hover:opacity-100 opacity-35 transition-opacity duration-300 z-10">
+        <ZoomSlider
+          zoom={zoom}
+          onZoomChange={setZoom}
+          onReset={resetView}
+        />
       </div>
 
       {/* Fixed action bar at bottom center */}
