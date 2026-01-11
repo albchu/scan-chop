@@ -88,7 +88,8 @@ export class FrameService {
       orientation: 0,
       imageData, // Include the cropped image data
       imageScaleFactor: 1 / scaleFactor, // Store inverse scale factor (display to original)
-      pageId // Include pageId
+      pageId, // Include pageId
+      imagePath, // Include source image path for navigation
     };
     
     console.log(`[FrameService] FrameData includes imageData: ${!!frameData.imageData}`);

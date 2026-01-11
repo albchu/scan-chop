@@ -5,12 +5,14 @@ import {
   IconRotateClockwise,
   IconPlayerTrackPrev,
   IconPlayerTrackNext,
+  IconImageInPicture,
 } from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { FrameData } from '@workspace/shared';
 import { useUIStore } from '../../stores';
 import { UseFrameNavigationResult } from '../../hooks/useFrameNavigation';
 import { ActionButton } from './ActionButton';
+import { workspaceApi } from '../../api/workspace';
 
 interface ActionBarProps {
   frame: FrameData;
@@ -22,6 +24,35 @@ export const ActionBar: React.FC<ActionBarProps> = ({ frame, navigation }) => {
   const removeFrame = useUIStore((state) => state.removeFrame);
   const setCurrentFrameId = useUIStore((state) => state.setCurrentFrameId);
   const frameList = useUIStore(state => Object.values(state.framesByPage).flat());
+  const switchToCanvas = useUIStore((state) => state.switchToCanvas);
+  const updatePage = useUIStore((state) => state.updatePage);
+  const setPageLoadingState = useUIStore((state) => state.setPageLoadingState);
+
+  const handleOpenSource = async () => {
+    if (!frame.imagePath) {
+      toast.error('Source image path not available');
+      return;
+    }
+
+    switchToCanvas();
+    setPageLoadingState('loading');
+
+    try {
+      const imageDataResponse = await workspaceApi.loadImage(frame.imagePath);
+      updatePage({
+        imageData: imageDataResponse.imageData,
+        width: imageDataResponse.width,
+        height: imageDataResponse.height,
+        originalWidth: imageDataResponse.originalWidth,
+        originalHeight: imageDataResponse.originalHeight,
+      }, frame.imagePath);
+      setPageLoadingState('loaded');
+    } catch (error) {
+      console.error('Failed to load source image:', error);
+      toast.error('Failed to load source image');
+      setPageLoadingState('empty');
+    }
+  };
   
   const handleRotate = async () => {
     try {
@@ -91,6 +122,13 @@ export const ActionBar: React.FC<ActionBarProps> = ({ frame, navigation }) => {
           <div className="w-px h-8 bg-gray-600/50 mx-1" />
         </>
       )}
+
+      <ActionButton
+        icon={<IconImageInPicture size={20} />}
+        label="Open source"
+        onClick={handleOpenSource}
+        disabled={!frame.imagePath}
+      />
 
       <ActionButton
         icon={<IconRotateClockwise size={20} />}

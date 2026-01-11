@@ -20,6 +20,7 @@ export interface FrameData extends BoundingBox {
   imageData?: string; // Base64 data URL of the cropped frame image
   imageScaleFactor?: number; // Scale factor from display to original image (display * scaleFactor = original)
   pageId: string; // Required - links frame to specific page
+  imagePath?: string; // Source image path for navigation
 }
 
 // Color types
