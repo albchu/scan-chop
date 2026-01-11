@@ -114,7 +114,7 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
           </div>
           
           <div 
-            className={`bg-gray-800 border-l border-gray-700 overflow-y-auto flex-shrink-0 ${
+            className={`bg-gray-800 border-l border-gray-700 overflow-hidden flex-shrink-0 ${
               isDragging ? '' : 'transition-all duration-300 ease-in-out'
             }`}
             style={{ 

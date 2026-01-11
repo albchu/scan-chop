@@ -89,7 +89,7 @@ export const FramesPreview: React.FC = () => {
   }, [hasFrames, clearAllFrames]);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full w-full flex flex-col">
       {/* Header with Grid Controls */}
       <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-200">Frames</h2>

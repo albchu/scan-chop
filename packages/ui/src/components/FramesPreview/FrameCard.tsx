@@ -28,10 +28,9 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, isCurrent = false }
       onClick={handleClick}
       className={`
         frame-card-animated rounded shadow-lg bg-gray-800 overflow-hidden cursor-pointer
-        hover:shadow-xl transition-all duration-300 break-inside-avoid mb-4
+        hover:shadow-xl transition-all duration-300
         ${isCurrent ? 'ring-4 ring-blue-500 shadow-2xl shadow-blue-500/20' : ''}
       `}
-      style={{ display: 'inline-block', width: '100%' }}
     >
       <div
         className="relative overflow-hidden bg-gray-700"

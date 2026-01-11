@@ -13,11 +13,6 @@ html, body {
   overflow: hidden;
 }
 
-/* Masonry layout */
-.masonry-columns {
-  column-fill: auto;
-}
-
 /* Frame Card animations */
 .frame-card-animated {
   animation: fadeIn 0.3s ease-out;

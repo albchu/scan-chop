@@ -21,13 +21,11 @@ export const FramesGrid: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4">
+    <div className="flex-1 w-full min-h-0 overflow-y-auto p-4">
       <div
-        className="masonry-columns"
+        className="grid gap-4"
         style={{
-          columnCount: 'auto',
-          columnWidth: `${gridColumnWidth}px`,
-          columnGap: '16px',
+          gridTemplateColumns: `repeat(auto-fill, minmax(${gridColumnWidth}px, 1fr))`,
         }}
       >
         {frameList.map((frame) => (
