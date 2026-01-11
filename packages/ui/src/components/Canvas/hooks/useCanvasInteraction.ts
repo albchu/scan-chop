@@ -1,7 +1,8 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { workspaceApi } from '../../../api/workspace';
 import { useUIStore, useCanvasStore } from '../../../stores';
-import { DEFAULT_FRAME_SIZE_RATIO, WHITE_THRESHOLD_DEFAULT } from '@workspace/shared';
+import { WHITE_THRESHOLD_DEFAULT } from '@workspace/shared';
 
 interface UseCanvasInteractionProps {
   isDragging: boolean;
@@ -27,14 +28,6 @@ export const useCanvasInteraction = ({
   const baseScale = useCanvasStore((state) => state.baseScale);
   
   const [isGenerating, setIsGenerating] = useState(false);
-
-  const [defaultFrameWidth, defaultFrameHeight] = useMemo(() => {
-    if (!currentPage) return [100, 100]; // Fallback values
-    return [
-      currentPage.width * DEFAULT_FRAME_SIZE_RATIO,
-      currentPage.height * DEFAULT_FRAME_SIZE_RATIO,
-    ];
-  }, [currentPage]);
 
   const handleCanvasClick = useCallback(async (e: React.MouseEvent<HTMLDivElement>) => {
     console.log('[useCanvasInteraction] Click handler called');
@@ -101,40 +94,19 @@ export const useCanvasInteraction = ({
           
         } catch (error) {
           console.error('Failed to generate frame:', error);
-          // If frame generation fails, fall back to manual frame creation
-          // Calculate imageScaleFactor if we have original dimensions
-          const imageScaleFactor = currentPage.originalWidth && currentPage.originalHeight
-            ? currentPage.originalWidth / currentPage.width  // Assuming width and height scale equally
-            : undefined;
-            
-          addFrame({
-            x: displayX - defaultFrameWidth / 2,
-            y: displayY - defaultFrameHeight / 2,
-            width: defaultFrameWidth,
-            height: defaultFrameHeight,
-            rotation: 0,
-            imageScaleFactor,
-          });
+          toast.error('Could not detect a frame at this location. Please try again.');
         } finally {
           setIsGenerating(false);
         }
       } else {
         console.warn('No image loaded - cannot generate frame from seed');
-        // Create a manual frame without scale factor since no image is loaded
-        addFrame({
-          x: displayX - defaultFrameWidth / 2,
-          y: displayY - defaultFrameHeight / 2,
-          width: defaultFrameWidth,
-          height: defaultFrameHeight,
-          rotation: 0,
-        });
+        toast.error('No image loaded');
       }
     } else {
       console.log('[useCanvasInteraction] Click did not match frame or page element');
       console.log('[useCanvasInteraction] Checking for data-page attribute:', document.querySelector('[data-page="true"]'));
     }
-  }, [isDragging, isCommandPressed, currentPage, currentPageId, addFrame, selectFrame, zoom, baseScale, 
-      defaultFrameWidth, defaultFrameHeight]);
+  }, [isDragging, isCommandPressed, currentPage, currentPageId, addFrame, selectFrame, zoom, baseScale]);
 
   return { handleCanvasClick, isGenerating };
 }; 
