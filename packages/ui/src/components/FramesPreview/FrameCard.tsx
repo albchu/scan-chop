@@ -27,7 +27,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, isCurrent = false }
     <div
       onClick={handleClick}
       className={`
-        frame-card-animated rounded shadow-lg bg-gray-800 overflow-hidden cursor-pointer
+        frame-card-animated rounded bg-gray-800 overflow-hidden cursor-pointer
         hover:shadow-xl transition-all duration-300
         ${isCurrent ? 'ring-4 ring-blue-500 shadow-2xl shadow-blue-500/20' : ''}
       `}
