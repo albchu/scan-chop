@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { FrameData } from '@workspace/shared';
 
 vi.spyOn(console, 'log').mockImplementation(() => {});
 
@@ -11,7 +12,7 @@ describe('workspaceApi', () => {
 
   beforeEach(async () => {
     mockInvoke = vi.fn();
-    (globalThis as any).window = {
+    (globalThis as Record<string, unknown>).window = {
       backend: { invoke: mockInvoke },
     };
     // Dynamic import to pick up the mocked window.backend
@@ -215,9 +216,11 @@ describe('workspaceApi', () => {
       const result = { savedPaths: ['/a.png'], errors: [] };
       mockInvoke.mockResolvedValue({ success: true, data: result });
 
-      const response = await workspaceApi.saveAllFrames('/dir', [] as any, [
-        'a.png',
-      ]);
+      const response = await workspaceApi.saveAllFrames(
+        '/dir',
+        [] as FrameData[],
+        ['a.png']
+      );
 
       expect(response).toEqual(result);
     });
@@ -239,7 +242,9 @@ describe('workspaceApi', () => {
         data: { filePath: '/saved.png' },
       });
 
-      const result = await workspaceApi.saveFrame({ id: 'f1' } as any);
+      const result = await workspaceApi.saveFrame({
+        id: 'f1',
+      } as unknown as FrameData);
 
       expect(result).toEqual({ filePath: '/saved.png' });
     });
@@ -247,7 +252,9 @@ describe('workspaceApi', () => {
     it('returns null when user cancels', async () => {
       mockInvoke.mockResolvedValue({ success: false, error: 'cancelled' });
 
-      const result = await workspaceApi.saveFrame({ id: 'f1' } as any);
+      const result = await workspaceApi.saveFrame({
+        id: 'f1',
+      } as unknown as FrameData);
 
       expect(result).toBeNull();
     });
@@ -255,9 +262,9 @@ describe('workspaceApi', () => {
     it('throws on non-cancel errors', async () => {
       mockInvoke.mockResolvedValue({ success: false, error: 'Write failed' });
 
-      await expect(workspaceApi.saveFrame({ id: 'f1' } as any)).rejects.toThrow(
-        'Write failed'
-      );
+      await expect(
+        workspaceApi.saveFrame({ id: 'f1' } as unknown as FrameData)
+      ).rejects.toThrow('Write failed');
     });
   });
 
@@ -269,7 +276,9 @@ describe('workspaceApi', () => {
         data: { orientation: 90 },
       });
 
-      const result = await workspaceApi.rotateFrame({ id: 'f1' } as any);
+      const result = await workspaceApi.rotateFrame({
+        id: 'f1',
+      } as unknown as FrameData);
 
       expect(result).toEqual({ orientation: 90 });
     });
@@ -281,7 +290,7 @@ describe('workspaceApi', () => {
       });
 
       await expect(
-        workspaceApi.rotateFrame({ id: 'f1' } as any)
+        workspaceApi.rotateFrame({ id: 'f1' } as unknown as FrameData)
       ).rejects.toThrow('Rotation failed');
     });
   });

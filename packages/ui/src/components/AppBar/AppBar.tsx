@@ -2,11 +2,7 @@ import React, { useCallback } from 'react';
 import { useWorkspaceStore } from '../../stores';
 import { PathInputCompact } from './PathInputCompact';
 
-interface AppBarProps {
-  // Add props as needed in the future
-}
-
-export const AppBar: React.FC<AppBarProps> = () => {
+export const AppBar: React.FC = () => {
   // Workspace store subscriptions
   const currentDirectory = useWorkspaceStore((state) => state.currentDirectory);
   const loadDirectory = useWorkspaceStore((state) => state.loadDirectory);

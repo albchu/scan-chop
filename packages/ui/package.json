@@ -13,7 +13,7 @@
     "dev:css": "pnpm dlx @tailwindcss/cli -i ./src/styles/index.css -o ./dist/styles/index.css --watch",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint src",
     "test": "vitest --run",
     "test:watch": "vitest"
   },
@@ -37,7 +37,7 @@
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.27",
-    "eslint": "^8.57.0",
+    "eslint": "^10.0.3",
     "eslint-plugin-vitest-globals": "^1.6.1",
     "jsdom": "^23.0.0",
     "postcss": "^8.5.8",

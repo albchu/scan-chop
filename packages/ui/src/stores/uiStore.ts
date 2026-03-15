@@ -154,7 +154,7 @@ export const useUIStore = create<UIState>()(
               const filteredUpdates = Object.entries(updates).reduce(
                 (acc, [key, value]) => {
                   if (value !== undefined) {
-                    (acc as any)[key] = value;
+                    (acc as Record<string, unknown>)[key] = value;
                   }
                   return acc;
                 },

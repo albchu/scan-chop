@@ -3,7 +3,7 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 // Define the API that will be exposed to the renderer
 const backendAPI = {
   // Request-Response pattern
-  invoke: (channel: string, ...args: any[]) => {
+  invoke: (channel: string, ...args: unknown[]) => {
     // Whitelist channels for security
     const allowedChannels = [
       'workspace:loadDirectory',
@@ -17,47 +17,48 @@ const backendAPI = {
       'workspace:checkFilesExist',
       'workspace:saveAllFrames',
     ];
-    
+
     if (allowedChannels.includes(channel)) {
       return ipcRenderer.invoke(channel, ...args);
     }
-    
+
     throw new Error(`Channel ${channel} is not allowed`);
   },
-  
+
   // For future event-based patterns
-  on: (channel: string, callback: (...args: any[]) => void) => {
+  on: (channel: string, callback: (...args: unknown[]) => void) => {
     const allowedChannels: string[] = [
       // Add event channels here when needed
     ];
-    
+
     if (allowedChannels.includes(channel)) {
-      const subscription = (_: IpcRendererEvent, ...args: any[]) => callback(...args);
+      const subscription = (_: IpcRendererEvent, ...args: unknown[]) =>
+        callback(...args);
       ipcRenderer.on(channel, subscription);
-      
+
       // Return unsubscribe function
       return () => ipcRenderer.off(channel, subscription);
     }
-    
+
     throw new Error(`Channel ${channel} is not allowed`);
   },
-  
+
   // For future one-way communication
-  send: (channel: string, ...args: any[]) => {
+  send: (channel: string, ...args: unknown[]) => {
     const allowedChannels: string[] = [
       // Add send channels here when needed
     ];
-    
+
     if (allowedChannels.includes(channel)) {
       ipcRenderer.send(channel, ...args);
     } else {
       throw new Error(`Channel ${channel} is not allowed`);
     }
-  }
+  },
 };
 
 // Expose the API to the renderer process
 contextBridge.exposeInMainWorld('backend', backendAPI);
 
 // Type declaration for TypeScript
-export type BackendAPI = typeof backendAPI; 
+export type BackendAPI = typeof backendAPI;
