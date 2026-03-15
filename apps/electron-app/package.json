@@ -1,6 +1,8 @@
 {
   "name": "electron-app",
   "version": "1.0.0",
+  "description": "A desktop application for automatically detecting and extracting individual images from scanned documents containing multiple photos or images",
+  "author": "Albert Chu <albertchu539@gmail.com>",
   "private": true,
   "main": "dist/main.js",
   "scripts": {
@@ -35,4 +37,4 @@
     "vite": "^5.0.0",
     "wait-on": "^7.0.0"
   }
-} 
+}
