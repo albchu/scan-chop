@@ -5,7 +5,10 @@ import type {
   FrameData,
   ProcessingConfig,
 } from '@workspace/shared';
-import { WHITE_THRESHOLD_DEFAULT } from '@workspace/shared';
+import {
+  WHITE_THRESHOLD_DEFAULT,
+  MAX_SCALED_DIMENSION,
+} from '@workspace/shared';
 import { DirectoryCacheManager } from './DirectoryCacheManager';
 import { DirectoryScanner } from './DirectoryScanner';
 import { DirectoryPreloader } from './DirectoryPreloader';
@@ -15,13 +18,6 @@ import { Image as ImageJS } from 'image-js';
 import fs from 'fs/promises';
 import path from 'path';
 import { isImageFile } from '../utils/isImageFile';
-
-// Internal scaling configuration
-const MAX_DISPLAY_WIDTH = 1920; // Max width for display/processing
-const MAX_DISPLAY_HEIGHT = 1080; // Max height for display/processing
-
-// Default downscale factor for processing (30% of original size)
-const DEFAULT_PROCESSING_DOWNSCALE = 0.3;
 
 // Image data interface (previously from ImageLoader)
 export interface ImageData {
@@ -134,60 +130,20 @@ export class WorkspaceService {
     seed: Vector2,
     config?: ProcessingConfig
   ): Promise<FrameData> {
-    // Always use the default processing downscale internally
-    const processingDownscale = DEFAULT_PROCESSING_DOWNSCALE;
-
-    // Get cached entry
     const cacheEntry = await this.getCachedImage(imagePath, true);
-
-    // Check if we can use the cached processing image
-    let scaledImage: Image;
-    let actualDownscale: number;
-
-    if (
-      cacheEntry.scaledImage &&
-      cacheEntry.scaleFactor &&
-      Math.abs(cacheEntry.scaleFactor - processingDownscale) < 0.01
-    ) {
-      // Use cached scaled image
-      scaledImage = cacheEntry.scaledImage;
-      actualDownscale = cacheEntry.scaleFactor;
-    } else {
-      // Create scaled image on demand if not available
-      const targetWidth = Math.round(
-        cacheEntry.fullImage.width * processingDownscale
-      );
-      scaledImage = cacheEntry.fullImage.resize({ width: targetWidth });
-      actualDownscale = scaledImage.width / cacheEntry.fullImage.width;
-
-      // Update cache with the newly created scaled image
-      cacheEntry.scaledImage = scaledImage;
-      cacheEntry.scaleFactor = actualDownscale;
-    }
-
-    // Calculate the actual scale factor (from display to original)
-    // If the image was scaled for display, we need to account for that
-    const displayToOriginalScale =
-      cacheEntry.fullImage.width / scaledImage.width;
+    const scaledImage = cacheEntry.scaledImage || cacheEntry.fullImage;
+    const scaleFactor = cacheEntry.scaleFactor || 1.0;
 
     console.log(
-      '[WorkspaceService] Using scaled image for frame generation:',
-      scaledImage.width,
-      'x',
-      scaledImage.height
-    );
-    console.log(
-      '[WorkspaceService] Scale factor (display to original):',
-      displayToOriginalScale
+      `[WorkspaceService] Generating frame on ${scaledImage.width}x${scaledImage.height} image (scaleFactor: ${scaleFactor.toFixed(4)})`
     );
 
-    // Generate frame using both images
     const frameData = await this.frameService.generateFrameFromSeed(
-      cacheEntry.fullImage, // Original full-resolution image
-      scaledImage, // Scaled image for detection
-      actualDownscale, // Scale factor
+      cacheEntry.fullImage,
+      scaledImage,
+      scaleFactor,
       seed,
-      imagePath, // Pass the image path for metadata
+      imagePath,
       config
     );
 
@@ -407,15 +363,10 @@ export class WorkspaceService {
     scaleFactor: number;
   } {
     const { width, height } = fullImage;
+    const maxDim = Math.max(width, height);
+    const scaleFactor =
+      maxDim > MAX_SCALED_DIMENSION ? MAX_SCALED_DIMENSION / maxDim : 1.0;
 
-    // Calculate scale factor to fit within max dimensions
-    const widthScale =
-      width > MAX_DISPLAY_WIDTH ? MAX_DISPLAY_WIDTH / width : 1.0;
-    const heightScale =
-      height > MAX_DISPLAY_HEIGHT ? MAX_DISPLAY_HEIGHT / height : 1.0;
-    const scaleFactor = Math.min(widthScale, heightScale);
-
-    // Only scale if necessary
     if (scaleFactor >= 1.0) {
       console.log(
         '[WorkspaceService] Image fits within max dimensions, no scaling needed'
@@ -423,12 +374,11 @@ export class WorkspaceService {
       return { scaledImage: fullImage, scaleFactor: 1.0 };
     }
 
-    // Create scaled image
     const newWidth = Math.round(width * scaleFactor);
     const newHeight = Math.round(height * scaleFactor);
 
     console.log(
-      `[WorkspaceService] Scaling image from ${width}x${height} to ${newWidth}x${newHeight} (factor: ${scaleFactor.toFixed(2)})`
+      `[WorkspaceService] Scaling image from ${width}x${height} to ${newWidth}x${newHeight} (factor: ${scaleFactor.toFixed(4)})`
     );
 
     const scaledImage = fullImage.resize({ width: newWidth });

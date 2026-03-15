@@ -24,8 +24,7 @@ vi.mock('image-js', () => ({
 // Mock the shared module
 vi.mock('@workspace/shared', () => ({
   WHITE_THRESHOLD_DEFAULT: 220,
-  MAX_DISPLAY_WIDTH: 1920,
-  MAX_DISPLAY_HEIGHT: 1080,
+  MAX_SCALED_DIMENSION: 1920,
 }));
 
 // Helper to create mock dirent
@@ -524,18 +523,18 @@ describe('WorkspaceService', () => {
     });
 
     it('should evict least recently used images when cache is full', async () => {
-      // Mock resize for scaled images
+      // Mock resize for scaled images — dimensions must exceed 1920 to trigger scaling
       const mockResize = vi.fn().mockImplementation(() => ({
-        width: 1080, // Scaled to fit within 1920x1080
-        height: 810,
+        width: 1920,
+        height: 1440,
         toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,scaled'),
       }));
 
-      // Mock responses for different images
+      // Mock responses for different images (2400×1800: max dim 2400 > 1920, so scaling triggers)
       for (let i = 1; i <= 12; i++) {
         mockImageLoad.mockResolvedValueOnce({
-          width: 1600,
-          height: 1200,
+          width: 2400,
+          height: 1800,
           toDataURL: vi.fn().mockReturnValue(`data:image/jpeg;base64,img${i}`),
           resize: mockResize,
         } as any);
@@ -626,7 +625,7 @@ describe('WorkspaceService', () => {
       expect(mockFullImage.resize).not.toHaveBeenCalled();
     });
 
-    it('should scale based on height when that is the limiting factor', async () => {
+    it('should scale based on largest dimension', async () => {
       const imagePath = '/test/tall-image.jpg';
 
       const mockFullImage = {
@@ -637,8 +636,8 @@ describe('WorkspaceService', () => {
       };
 
       const mockScaledImage = {
-        width: 360, // 1000 * (1080/3000)
-        height: 1080, // Scaled to fit within max height
+        width: 640, // round(1000 * (1920/3000))
+        height: 1920, // Scaled so largest dim = 1920
         toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,scaled'),
       };
 
@@ -647,12 +646,12 @@ describe('WorkspaceService', () => {
 
       const result = await service.loadImageAsBase64(imagePath);
 
-      expect(result.width).toBe(360);
-      expect(result.height).toBe(1080);
+      expect(result.width).toBe(640);
+      expect(result.height).toBe(1920);
 
-      // Should have scaled based on height constraint
+      // Should have scaled based on largest dimension (height=3000 > 1920)
       expect(mockFullImage.resize).toHaveBeenCalledWith({
-        width: 360,
+        width: 640,
       });
     });
 
@@ -668,8 +667,8 @@ describe('WorkspaceService', () => {
       };
 
       const mockScaledImage = {
-        width: 1620, // 3000 * (1080/2000)
-        height: 1080, // Limited by height
+        width: 1920, // round(3000 * (1920/3000))
+        height: 1280, // round(2000 * (1920/3000))
         toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,scaled'),
       };
 
@@ -706,11 +705,11 @@ describe('WorkspaceService', () => {
       expect(frameData.width).toBe(100);
       expect(frameData.height).toBe(100);
 
-      // Verify frame service was called with both images
+      // Verify frame service was called with both images and unified scale factor
       expect(mockFrameService.generateFrameFromSeed).toHaveBeenCalledWith(
         mockFullImage, // original full-resolution image
         mockScaledImage, // scaled version for detection
-        0.54, // scale factor
+        0.64, // scale factor: 1920/3000
         { x: 100, y: 100 }, // seed
         imagePath, // image path
         undefined // config
