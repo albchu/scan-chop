@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { IconDeviceFloppy, IconTrash } from '@tabler/icons-react';
-import { useUIStore } from '../../stores';
+import { useUIStore, useAllFrames } from '../../stores';
 import { FramesGrid } from './FramesGrid';
 import { GridSizeControls } from './GridSizeControls';
 import { SaveConflictModal } from './SaveConflictModal';
@@ -10,23 +10,21 @@ import type { FrameData } from '@workspace/shared';
 export const FramesPreview: React.FC = () => {
   const gridColumnWidth = useUIStore((state) => state.gridColumnWidth);
   const setGridColumnWidth = useUIStore((state) => state.setGridColumnWidth);
-  const framesByPage = useUIStore((state) => state.framesByPage);
   const clearAllFrames = useUIStore((state) => state.clearAllFrames);
-  
+  const allFrames = useAllFrames();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDirectory, setSelectedDirectory] = useState<string>('');
   const [existingFiles, setExistingFiles] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Get all frames from all pages
-  const allFrames = Object.values(framesByPage).flat();
   const hasFrames = allFrames.length > 0;
 
   const sanitizeFilename = (label: string): string => {
-    const sanitized = label
-      .replace(/[<>:"/\\|?*]/g, '_')
-      .replace(/\s+/g, '_')
-      .trim() || 'frame';
+    const sanitized =
+      label
+        .replace(/[<>:"/\\|?*]/g, '_')
+        .replace(/\s+/g, '_')
+        .trim() || 'frame';
     return `${sanitized}.png`;
   };
 
@@ -58,30 +56,36 @@ export const FramesPreview: React.FC = () => {
     setExistingFiles([]);
   }, []);
 
-  const handleModalConfirm = useCallback(async (filenames: string[]) => {
-    setIsSaving(true);
-    try {
-      const result = await workspaceApi.saveAllFrames(
-        selectedDirectory,
-        allFrames,
-        filenames
-      );
+  const handleModalConfirm = useCallback(
+    async (filenames: string[]) => {
+      setIsSaving(true);
+      try {
+        const result = await workspaceApi.saveAllFrames(
+          selectedDirectory,
+          allFrames,
+          filenames
+        );
 
-      console.log('[FramesPreview] Save result:', result);
-      
-      if (result.errors.length > 0) {
-        console.error('[FramesPreview] Some files failed to save:', result.errors);
+        console.log('[FramesPreview] Save result:', result);
+
+        if (result.errors.length > 0) {
+          console.error(
+            '[FramesPreview] Some files failed to save:',
+            result.errors
+          );
+        }
+
+        setIsModalOpen(false);
+        setSelectedDirectory('');
+        setExistingFiles([]);
+      } catch (error) {
+        console.error('[FramesPreview] Error saving frames:', error);
+      } finally {
+        setIsSaving(false);
       }
-
-      setIsModalOpen(false);
-      setSelectedDirectory('');
-      setExistingFiles([]);
-    } catch (error) {
-      console.error('[FramesPreview] Error saving frames:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [selectedDirectory, allFrames]);
+    },
+    [selectedDirectory, allFrames]
+  );
 
   const handleClearAll = useCallback(() => {
     if (!hasFrames) return;
@@ -93,7 +97,7 @@ export const FramesPreview: React.FC = () => {
       {/* Header with Grid Controls */}
       <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-200">Frames</h2>
-        <GridSizeControls 
+        <GridSizeControls
           value={gridColumnWidth}
           onChange={setGridColumnWidth}
         />
@@ -118,7 +122,7 @@ export const FramesPreview: React.FC = () => {
           Clear All
         </button>
       </div>
-      
+
       {/* Frames Grid */}
       <FramesGrid />
 
@@ -133,4 +137,4 @@ export const FramesPreview: React.FC = () => {
       />
     </div>
   );
-}; 
+};

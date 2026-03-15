@@ -210,6 +210,10 @@ Output: `apps/electron-app/release/`
 - Uses `node-linker=hoisted` in `.npmrc` for electron-builder compatibility
 - electron version pinned in `apps/electron-app/package.json`
 
+## Agent Rules
+
+- **Never perform git operations** (commit, push, branch, stash, etc.) unless explicitly instructed by the user.
+
 ## Conventions
 
 - Bounding boxes use display coordinates (scaled), not original image coordinates

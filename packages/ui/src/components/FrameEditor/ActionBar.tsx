@@ -9,7 +9,7 @@ import {
 } from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { FrameData } from '@workspace/shared';
-import { useUIStore } from '../../stores';
+import { useUIStore, useAllFrames } from '../../stores';
 import { UseFrameNavigationResult } from '../../hooks/useFrameNavigation';
 import { ActionButton } from './ActionButton';
 import { workspaceApi } from '../../api/workspace';
@@ -23,9 +23,7 @@ export const ActionBar: React.FC<ActionBarProps> = ({ frame, navigation }) => {
   const updateFrame = useUIStore((state) => state.updateFrame);
   const removeFrame = useUIStore((state) => state.removeFrame);
   const setCurrentFrameId = useUIStore((state) => state.setCurrentFrameId);
-  const frameList = useUIStore((state) =>
-    Object.values(state.framesByPage).flat()
-  );
+  const frameList = useAllFrames();
   const switchToCanvas = useUIStore((state) => state.switchToCanvas);
   const updatePage = useUIStore((state) => state.updatePage);
   const setPageLoadingState = useUIStore((state) => state.setPageLoadingState);

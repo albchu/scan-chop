@@ -132,8 +132,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       immer:
-        specifier: ^10.0.3
-        version: 10.1.1
+        specifier: ^11.1.4
+        version: 11.1.4
       lodash:
         specifier: ^4.17.23
         version: 4.17.23
@@ -150,8 +150,8 @@ importers:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       zustand:
-        specifier: ^4.5.0
-        version: 4.5.7(@types/react@19.2.14)(immer@10.1.1)(react@19.2.4)
+        specifier: ^5.0.11
+        version: 5.0.11(@types/react@19.2.14)(immer@11.1.4)(react@19.2.4)(use-sync-external-store@1.5.0(react@19.2.4))
     devDependencies:
       '@tailwindcss/cli':
         specifier: ^4.2.1
@@ -2028,8 +2028,8 @@ packages:
     resolution: {integrity: sha512-CFJMJ8QK8lJvRlTCEgarL4ro6hfDQKif2HjSvYCdQZESaIPV4v9imrf7BQHK+sQeTeNeMpWciR9hyC/g8ybXEg==}
     engines: {node: '>=6'}
 
-  immer@10.1.1:
-    resolution: {integrity: sha512-s2MPrmjovJcoMaHtx6K11Ra7oD05NT97w1IC5zpMkT6Atjr7H8LjaDd81iIxUYpMKSRRNMJE703M1Fhr/TctHw==}
+  immer@11.1.4:
+    resolution: {integrity: sha512-XREFCPo6ksxVzP4E0ekD5aMdf8WMwmdNaz6vuvxgI40UaEiu6q3p8X52aU6GdyvLY3XXX/8R7JOTXStz/nBbRw==}
 
   imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
@@ -3358,19 +3358,22 @@ packages:
   zod@4.3.5:
     resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
 
-  zustand@4.5.7:
-    resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
-    engines: {node: '>=12.7.0'}
+  zustand@5.0.11:
+    resolution: {integrity: sha512-fdZY+dk7zn/vbWNCYmzZULHRrss0jx5pPFiOuMZ/5HJN6Yv3u+1Wswy/4MpZEkEGhtNH+pwxZB8OKgUBPzYAGg==}
+    engines: {node: '>=12.20.0'}
     peerDependencies:
-      '@types/react': '>=16.8'
+      '@types/react': '>=18.0.0'
       immer: '>=9.0.6'
-      react: '>=16.8'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
     peerDependenciesMeta:
       '@types/react':
         optional: true
       immer:
         optional: true
       react:
+        optional: true
+      use-sync-external-store:
         optional: true
 
 snapshots:
@@ -5281,7 +5284,7 @@ snapshots:
     dependencies:
       file-type: 10.11.0
 
-  immer@10.1.1: {}
+  immer@11.1.4: {}
 
   imurmurhash@0.1.4: {}
 
@@ -6402,6 +6405,7 @@ snapshots:
   use-sync-external-store@1.5.0(react@19.2.4):
     dependencies:
       react: 19.2.4
+    optional: true
 
   utf8-byte-length@1.0.5: {}
 
@@ -6555,10 +6559,9 @@ snapshots:
 
   zod@4.3.5: {}
 
-  zustand@4.5.7(@types/react@19.2.14)(immer@10.1.1)(react@19.2.4):
-    dependencies:
-      use-sync-external-store: 1.5.0(react@19.2.4)
+  zustand@5.0.11(@types/react@19.2.14)(immer@11.1.4)(react@19.2.4)(use-sync-external-store@1.5.0(react@19.2.4)):
     optionalDependencies:
       '@types/react': 19.2.14
-      immer: 10.1.1
+      immer: 11.1.4
       react: 19.2.4
+      use-sync-external-store: 1.5.0(react@19.2.4)

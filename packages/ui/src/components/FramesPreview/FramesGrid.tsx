@@ -1,12 +1,11 @@
 import React from 'react';
-import { useUIStore } from '../../stores';
+import { useUIStore, useAllFrames } from '../../stores';
 import { FrameCard } from './FrameCard';
 
 export const FramesGrid: React.FC = () => {
-  // Get frames exactly like current FrameList
-  const frameList = useUIStore(state => Object.values(state.framesByPage).flat());
-  const currentFrameId = useUIStore(state => state.currentFrameId);
-  const gridColumnWidth = useUIStore(state => state.gridColumnWidth);
+  const frameList = useAllFrames();
+  const currentFrameId = useUIStore((state) => state.currentFrameId);
+  const gridColumnWidth = useUIStore((state) => state.gridColumnWidth);
 
   if (frameList.length === 0) {
     return (
@@ -29,9 +28,9 @@ export const FramesGrid: React.FC = () => {
         }}
       >
         {frameList.map((frame) => (
-          <FrameCard 
-            key={frame.id} 
-            frame={frame} 
+          <FrameCard
+            key={frame.id}
+            frame={frame}
             isCurrent={frame.id === currentFrameId}
           />
         ))}

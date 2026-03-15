@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
-import { produce } from 'immer';
 import {
   MIN_FRAME_SIZE,
   DEFAULT_FRAME_SIZE_RATIO,
   generatePageId,
 } from '@workspace/shared';
+import { useShallow } from 'zustand/react/shallow';
 import type {
   UIContextState,
   FrameData,
@@ -67,6 +67,9 @@ const findFrameByIdHelper = (
   }
   return undefined;
 };
+
+// Stable empty array to avoid new-reference re-renders when no frames exist
+const EMPTY_FRAMES: FrameData[] = [];
 
 export const useUIStore = create<UIState>()(
   devtools(
@@ -372,7 +375,7 @@ export const useUIStore = create<UIState>()(
       getCurrentPageFrames: () => {
         const state = get();
         if (!state.currentPageId || !state.framesByPage[state.currentPageId]) {
-          return [];
+          return EMPTY_FRAMES;
         }
         return state.framesByPage[state.currentPageId];
       },
@@ -395,3 +398,6 @@ export const useUIStore = create<UIState>()(
 // Selectors for common use cases
 export const useCurrentPageFrames = () =>
   useUIStore((state) => state.getCurrentPageFrames());
+
+export const useAllFrames = () =>
+  useUIStore(useShallow((state) => Object.values(state.framesByPage).flat()));

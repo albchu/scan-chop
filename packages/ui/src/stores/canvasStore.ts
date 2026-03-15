@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
+import { useShallow } from 'zustand/react/shallow';
 import type { Vector2 } from '@workspace/shared';
 
 interface CanvasState {
@@ -105,12 +106,14 @@ export const useCanvasStore = create<CanvasState>()(
   )
 );
 
-// Actions selector
+// Actions selector — useShallow prevents re-renders when action references haven't changed
 export const useCanvasActions = () =>
-  useCanvasStore((state) => ({
-    setZoom: state.setZoom,
-    setPanOffset: state.setPanOffset,
-    setCanvasSize: state.setCanvasSize,
-    resetView: state.resetView,
-    updateScales: state.updateScales,
-  }));
+  useCanvasStore(
+    useShallow((state) => ({
+      setZoom: state.setZoom,
+      setPanOffset: state.setPanOffset,
+      setCanvasSize: state.setCanvasSize,
+      resetView: state.resetView,
+      updateScales: state.updateScales,
+    }))
+  );

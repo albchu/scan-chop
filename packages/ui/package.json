@@ -20,13 +20,13 @@
   "dependencies": {
     "@tabler/icons-react": "^3.40.0",
     "@workspace/shared": "workspace:*",
-    "immer": "^10.0.3",
+    "immer": "^11.1.4",
     "lodash": "^4.17.23",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-moveable": "^0.56.0",
     "sonner": "^2.0.7",
-    "zustand": "^4.5.0"
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.1",
