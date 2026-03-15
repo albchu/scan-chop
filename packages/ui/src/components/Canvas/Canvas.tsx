@@ -12,42 +12,43 @@ import { IconLoader2 } from '@tabler/icons-react';
 
 export const Canvas: React.FC = () => {
   const currentPage = useUIStore((state) => state.currentPage);
-  
+
   // Canvas state from store
   const zoom = useCanvasStore((state) => state.zoom);
   const baseScale = useCanvasStore((state) => state.baseScale);
   const totalScale = useCanvasStore((state) => state.totalScale);
   const panOffset = useCanvasStore((state) => state.panOffset);
-  
+
   // Canvas actions
-  const { setZoom, setCanvasSize, resetView, updateScales } = useCanvasActions();
-  
+  const { setZoom, setCanvasSize, resetView, updateScales } =
+    useCanvasActions();
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const { isCommandPressed } = useKeyboardModifiers();
-  
-  const { isDragging, handleMouseDown, handleContextMenu } = usePanAndZoom({ 
-    isCommandPressed 
-  });
-  
-  const { handleCanvasClick, isGenerating } = useCanvasInteraction({ 
-    isDragging, 
-    isCommandPressed 
+
+  const { isDragging, handleMouseDown, handleContextMenu } = usePanAndZoom({
+    isCommandPressed,
   });
 
-  // Update canvas size on mount and resize
+  const { handleCanvasClick, isGenerating } = useCanvasInteraction({
+    isDragging,
+    isCommandPressed,
+  });
+
+  // Update canvas size on mount and whenever the container resizes (including panel drags)
   useEffect(() => {
-    const updateCanvasSizeLocal = () => {
-      if (canvasRef.current) {
-        const rect = canvasRef.current.getBoundingClientRect();
-        setCanvasSize({ width: rect.width, height: rect.height });
-      }
-    };
+    const el = canvasRef.current;
+    if (!el) return;
 
-    updateCanvasSizeLocal();
-    window.addEventListener('resize', updateCanvasSizeLocal);
-    return () => window.removeEventListener('resize', updateCanvasSizeLocal);
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setCanvasSize({ width, height });
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [setCanvasSize]);
-  
+
   // Update scales when page or canvas changes
   useEffect(() => {
     if (currentPage) {
@@ -60,7 +61,7 @@ export const Canvas: React.FC = () => {
   }, [resetView]);
 
   const cursorStyle = getCursorStyle(isDragging, isCommandPressed);
-  
+
   return (
     <div className="h-full bg-gray-700 flex flex-col relative">
       {/* Main canvas area with zoom and pan */}
@@ -71,7 +72,7 @@ export const Canvas: React.FC = () => {
         onContextMenu={handleContextMenu}
         onClick={handleCanvasClick}
       >
-        <CanvasViewport 
+        <CanvasViewport
           panOffset={panOffset}
           totalScale={totalScale}
           isDragging={isDragging}
@@ -79,19 +80,19 @@ export const Canvas: React.FC = () => {
       </div>
 
       {/* Controls and debug info */}
-      <CanvasControls 
+      <CanvasControls
         zoom={zoom}
         onZoomChange={setZoom}
         onReset={handleReset}
       />
-      
-      <CanvasDebugInfo 
+
+      <CanvasDebugInfo
         pageWidth={currentPage?.width || 0}
         pageHeight={currentPage?.height || 0}
         baseScale={baseScale}
         totalScale={totalScale}
       />
-      
+
       {/* Loading indicator for frame generation */}
       {isGenerating && (
         <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-md shadow-lg">
@@ -103,4 +104,4 @@ export const Canvas: React.FC = () => {
       )}
     </div>
   );
-}; 
+};

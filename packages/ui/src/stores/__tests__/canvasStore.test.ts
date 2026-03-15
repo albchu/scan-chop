@@ -8,6 +8,8 @@ describe('canvasStore', () => {
       zoom: 100,
       panOffset: { x: 0, y: 0 },
       canvasSize: { width: 0, height: 0 },
+      pageWidth: 0,
+      pageHeight: 0,
       baseScale: 1,
       totalScale: 1,
     });
@@ -86,6 +88,31 @@ describe('canvasStore', () => {
       expect(useCanvasStore.getState().baseScale).toBe(1);
     });
 
+    it('persists pageWidth and pageHeight in state', () => {
+      useCanvasStore.setState({
+        canvasSize: { width: 1100, height: 900 },
+      });
+
+      useCanvasStore.getState().updateScales(2000, 1600);
+
+      const state = useCanvasStore.getState();
+      expect(state.pageWidth).toBe(2000);
+      expect(state.pageHeight).toBe(1600);
+    });
+
+    it('retains previous page dimensions when called with undefined', () => {
+      useCanvasStore.setState({
+        canvasSize: { width: 1100, height: 900 },
+      });
+
+      useCanvasStore.getState().updateScales(2000, 1600);
+      useCanvasStore.getState().updateScales(undefined, undefined);
+
+      const state = useCanvasStore.getState();
+      expect(state.pageWidth).toBe(2000);
+      expect(state.pageHeight).toBe(1600);
+    });
+
     it('totalScale reflects current zoom after updateScales', () => {
       useCanvasStore.setState({
         canvasSize: { width: 1100, height: 900 },
@@ -133,6 +160,65 @@ describe('canvasStore', () => {
         width: 800,
         height: 600,
       });
+    });
+
+    it('recalculates baseScale when page dimensions are known', () => {
+      // Simulate: updateScales was called first (page loaded)
+      useCanvasStore.getState().updateScales(2000, 1600);
+
+      // Then canvas container resizes (e.g., panel drag)
+      useCanvasStore.getState().setCanvasSize({ width: 1100, height: 900 });
+
+      const state = useCanvasStore.getState();
+      // scaleX = (1100 - 100) / 2000 = 0.5
+      // scaleY = (900 - 100) / 1600  = 0.5
+      expect(state.baseScale).toBeCloseTo(0.5);
+      expect(state.totalScale).toBeCloseTo(0.5);
+    });
+
+    it('keeps baseScale at 1 when page dimensions are not yet set', () => {
+      // Canvas resizes before any image is loaded
+      useCanvasStore.getState().setCanvasSize({ width: 1100, height: 900 });
+
+      expect(useCanvasStore.getState().baseScale).toBe(1);
+    });
+
+    it('recalculates totalScale using current zoom', () => {
+      useCanvasStore.setState({ zoom: 200 });
+      useCanvasStore.getState().updateScales(2000, 1600);
+
+      useCanvasStore.getState().setCanvasSize({ width: 1100, height: 900 });
+
+      // baseScale = 0.5, totalScale = 0.5 * (200/100) = 1.0
+      expect(useCanvasStore.getState().totalScale).toBeCloseTo(1.0);
+    });
+
+    it('produces correct scale regardless of call order with updateScales', () => {
+      // Simulate the mount scenario: setCanvasSize fires first, then updateScales
+      useCanvasStore.getState().setCanvasSize({ width: 1100, height: 900 });
+      // At this point pageWidth/pageHeight are 0, so baseScale = 1
+      expect(useCanvasStore.getState().baseScale).toBe(1);
+
+      // Now updateScales fires with page dimensions
+      useCanvasStore.getState().updateScales(2000, 1600);
+
+      const state = useCanvasStore.getState();
+      expect(state.baseScale).toBeCloseTo(0.5);
+      expect(state.totalScale).toBeCloseTo(0.5);
+    });
+
+    it('updates baseScale when canvas shrinks (simulates panel expand)', () => {
+      useCanvasStore.getState().updateScales(2000, 1600);
+      useCanvasStore.getState().setCanvasSize({ width: 1100, height: 900 });
+      expect(useCanvasStore.getState().baseScale).toBeCloseTo(0.5);
+
+      // Panel expands, canvas shrinks
+      useCanvasStore.getState().setCanvasSize({ width: 600, height: 900 });
+
+      // scaleX = (600 - 100) / 2000 = 0.25
+      // scaleY = (900 - 100) / 1600 = 0.5
+      // baseScale = min(0.25, 0.5, 1) = 0.25
+      expect(useCanvasStore.getState().baseScale).toBeCloseTo(0.25);
     });
   });
 });
