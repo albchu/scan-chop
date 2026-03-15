@@ -13,116 +13,85 @@ Scan Chop helps digitize collections of physical photos by intelligently splitti
 
 ## Key Features
 
-- **Automatic Image Detection**: Uses computer vision to identify individual images within a larger scan
-- **Lossless Extraction**: Preserves original image quality without recompression
-- **Batch Processing**: Process entire directories of scanned images
-- **Smart Cropping**: Automatically removes borders and adjusts for rotation
-- **Preview & Adjust**: Fine-tune detection results before saving
-- **Multiple Format Support**: Works with JPEG, PNG, and TIFF files
+- **Automatic Image Detection**: Click anywhere on a photo in a scan and Scan Chop detects the boundaries via flood fill + convex hull + rotating calipers
+- **Full-Resolution Extraction**: Detection runs on a downscaled image for speed, but final crops are always from the original resolution
+- **Smart Cropping**: Automatically corrects for rotation and trims edge artifacts
+- **Interactive Adjustment**: Drag, resize, and rotate detected frames directly on the canvas with react-moveable
+- **Batch Save**: Save all detected frames at once with conflict detection and filename management
+- **Multiple Format Support**: Works with JPEG, PNG, GIF, BMP, WebP, SVG, and TIFF files
 
-## 🏗️ Architecture
-
-This application is built using a **modular, type-safe monorepo** with a **backend-managed state architecture**:
+## Architecture
 
 ```
-┌─────────────────┐
-│   Electron App  │
-│   (Desktop)     │
-└─────────┬───────┘
-          │
-┌─────────▼─────────────────┐
-│     Shared React UI       │
-│   (Pure View Layer)       │
-└─────────┬─────────────────┘
-          │
-┌─────────▼─────────────────┐
-│    BackendAPI Interface   │
-└─────────┬─────────────────┘
-          │
-┌─────────▼─────────────────┐
-│    Electron Backend       │
-│    (IPC Communication)    │
-└───────────────────────────┘
+apps/electron-app/     -> Electron main/preload/renderer entry points
+packages/
+  shared/              -> Core types, image processing algorithms (image-js)
+  ui/                  -> React components, Zustand stores, API layer
+  backend/             -> Electron IPC handlers, services, caching
 ```
 
-### Key Architectural Benefits
+The application uses a split architecture:
 
-- **🧠 Backend-Managed State**: All application state lives in the backend, ensuring consistency
-- **🔄 Action-Based UI**: React components dispatch typed actions instead of managing state directly
-- **🧩 Clean Architecture**: Separation between UI layer and Electron backend via `BackendAPI` interface
-- **⚡ Reactive Updates**: UI automatically re-renders when subscribed state changes
-- **🧪 Testable Architecture**: Backend logic and UI components can be tested independently
+- **UI state** (pages, frames, selection, zoom/pan) lives in **Zustand stores** in the renderer process
+- **Heavy processing** (image loading, flood-fill detection, cropping, file I/O) runs in the **Electron main process** via IPC
+- **React components** are the view layer; stores handle state logic; the backend handles compute and disk access
 
-For detailed technical information, see our [Architecture Documentation](docs/ARCHITECTURE.md).
+```
+Renderer (React + Zustand)  <--IPC invoke/response-->  Main Process (Services)
+       |                                                       |
+   Zustand stores                                    WorkspaceService
+   (uiStore, workspaceStore, canvasStore)            FrameService
+       |                                             DirectoryScanner
+   React components                                  DirectoryCacheManager
+   (Canvas, FrameEditor, FileExplorer, etc.)         DirectoryPreloader
+```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ 
-- PNPM 8+
+- Node.js 18+
+- pnpm 8+
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/albchu/scan-chop.git
 cd scan-chop
-
-# Install dependencies
 pnpm install
 ```
 
 ### Development
 
 ```bash
-# Start Electron app
-pnpm dev
-
-# Run all tests
-pnpm test
-
-# Run linting
-pnpm lint
-
-# Type checking
-pnpm type-check
+pnpm dev              # Start Electron app in dev mode
+pnpm dev:debug        # Start with DEBUG=true (saves frame debug images)
+pnpm test             # Run all tests
+pnpm lint             # ESLint
+pnpm type-check       # TypeScript validation
 ```
 
 ### Production Build
 
 ```bash
-# Build and package Electron app
-pnpm build:electron
-pnpm package:electron
+pnpm build                              # Build all packages
+pnpm --filter electron-app build:prod   # Production build
+pnpm --filter electron-app package      # Create platform installers
 ```
 
-## 📁 Project Structure
+Output in `apps/electron-app/release/`.
 
-```
-/apps
-  /electron-app         → Electron desktop application
-/packages
-  /shared               → TypeScript types and interfaces
-  /ui                   → React UI components and hooks
-  /backend              → Electron backend implementation
-```
+## Tech Stack
 
-## 🛠️ Tech Stack
-
-- **Frontend**: React, TypeScript, Vite
-- **Desktop**: Electron with IPC communication
-- **Build System**: Turborepo + PNPM workspaces  
+- **Runtime**: Electron 28 (Node.js backend + Chromium renderer)
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS v4
+- **State Management**: Zustand with Immer middleware
+- **Image Processing**: image-js, custom algorithms (flood fill, convex hull, rotating calipers)
+- **Frame Manipulation**: react-moveable (drag, resize, rotate)
+- **Build System**: Turborepo + pnpm workspaces
 - **Testing**: Vitest + React Testing Library
 - **Code Quality**: ESLint + Prettier
 
-## 📚 Documentation
-
-- [Architecture Documentation](docs/ARCHITECTURE.md) - Detailed architecture and implementation guide
-- [UI Architecture Documentation](docs/UI_ARCHITECTURE.md) - Visual editor UI design and component structure
-- [Development Guide](docs/ARCHITECTURE.md#-development-commands) - Build system and workflow
-- [Testing Strategy](docs/ARCHITECTURE.md#-testing-strategy) - Test architecture and practices
-
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

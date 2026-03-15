@@ -1,6 +1,7 @@
 {
   "appId": "com.albchu.scan-chop",
   "productName": "Scan Chop",
+  "publish": null,
   "directories": {
     "output": "release",
     "buildResources": "build-resources"
