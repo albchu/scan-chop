@@ -30,38 +30,6 @@ export const scaleCoordinates = (
 });
 
 /**
- * Scale an array of points by a scale factor (preserves floating-point precision)
- * @param region - Array of points to scale
- * @param scaleFactor - Scale factor to apply
- * @returns Scaled region with floating-point precision
- */
-export const scaleRegionFloat = (
-  region: ReadonlyArray<[number, number]>,
-  scaleFactor: number
-): Array<[number, number]> => {
-  return region.map(([x, y]) => [
-    x * scaleFactor,
-    y * scaleFactor,
-  ] as [number, number]);
-};
-
-/**
- * Scale an array of points by a scale factor
- * @param region - Array of points to scale
- * @param scaleFactor - Scale factor to apply
- * @returns Scaled region
- */
-export const scaleRegion = (
-  region: ReadonlyArray<[number, number]>,
-  scaleFactor: number
-): Array<[number, number]> => {
-  return region.map(([x, y]) => [
-    Math.round(x * scaleFactor),
-    Math.round(y * scaleFactor),
-  ] as [number, number]);
-};
-
-/**
  * Scale a bounding box by a scale factor
  * @param box - Bounding box to scale
  * @param scaleFactor - Scale factor to apply
@@ -91,17 +59,17 @@ export const transformCornersFloat = (boundingBox: BoundingBox): Vector2[] => {
   // Use high precision calculations
   const corners: Vector2[] = [
     { x: boundingBox.x, y: boundingBox.y },
-    { 
-      x: boundingBox.x + boundingBox.width * cos, 
-      y: boundingBox.y + boundingBox.width * sin 
+    {
+      x: boundingBox.x + boundingBox.width * cos,
+      y: boundingBox.y + boundingBox.width * sin,
     },
     {
       x: boundingBox.x + boundingBox.width * cos - boundingBox.height * sin,
       y: boundingBox.y + boundingBox.width * sin + boundingBox.height * cos,
     },
-    { 
-      x: boundingBox.x - boundingBox.height * sin, 
-      y: boundingBox.y + boundingBox.height * cos 
+    {
+      x: boundingBox.x - boundingBox.height * sin,
+      y: boundingBox.y + boundingBox.height * cos,
     },
   ];
 
@@ -129,18 +97,18 @@ export const calculateAxisAlignedBoundsFloat = (
   imageWidth?: number,
   imageHeight?: number
 ): { minX: number; minY: number; maxX: number; maxY: number } => {
-  const xs = corners.map(c => c.x);
-  const ys = corners.map(c => c.y);
-  
+  const xs = corners.map((c) => c.x);
+  const ys = corners.map((c) => c.y);
+
   const minX = Math.max(0, Math.min(...xs));
   const minY = Math.max(0, Math.min(...ys));
-  const maxX = imageWidth 
+  const maxX = imageWidth
     ? Math.min(imageWidth, Math.max(...xs))
     : Math.max(...xs);
   const maxY = imageHeight
     ? Math.min(imageHeight, Math.max(...ys))
     : Math.max(...ys);
-  
+
   return { minX, minY, maxX, maxY };
 };
 
@@ -156,18 +124,18 @@ export const calculateAxisAlignedBounds = (
   imageWidth?: number,
   imageHeight?: number
 ): { minX: number; minY: number; maxX: number; maxY: number } => {
-  const xs = corners.map(c => c.x);
-  const ys = corners.map(c => c.y);
-  
+  const xs = corners.map((c) => c.x);
+  const ys = corners.map((c) => c.y);
+
   const minX = Math.max(0, Math.floor(Math.min(...xs)));
   const minY = Math.max(0, Math.floor(Math.min(...ys)));
-  const maxX = imageWidth 
+  const maxX = imageWidth
     ? Math.min(imageWidth - 1, Math.ceil(Math.max(...xs)))
     : Math.ceil(Math.max(...xs));
   const maxY = imageHeight
     ? Math.min(imageHeight - 1, Math.ceil(Math.max(...ys)))
     : Math.ceil(Math.max(...ys));
-  
+
   return { minX, minY, maxX, maxY };
 };
 
@@ -176,15 +144,17 @@ export const calculateAxisAlignedBounds = (
  * @param boundingBox - The bounding box
  * @returns Center point coordinates with floating-point precision
  */
-export const getBoundingBoxCenterFloat = (boundingBox: BoundingBox): Vector2 => {
+export const getBoundingBoxCenterFloat = (
+  boundingBox: BoundingBox
+): Vector2 => {
   const angleRad = degreesToRadians(boundingBox.rotation);
   const cos = Math.cos(angleRad);
   const sin = Math.sin(angleRad);
-  
+
   // Calculate center without premature rounding
   const halfWidth = boundingBox.width / 2;
   const halfHeight = boundingBox.height / 2;
-  
+
   return {
     x: boundingBox.x + halfWidth * cos - halfHeight * sin,
     y: boundingBox.y + halfWidth * sin + halfHeight * cos,
@@ -214,4 +184,4 @@ export const translateBoundingBoxCenter = (
 ): Vector2 => ({
   x: center.x - cropX,
   y: center.y - cropY,
-}); 
+});

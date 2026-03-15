@@ -1,4 +1,5 @@
 import { RGB } from './types';
+import { WHITE_THRESHOLD_DEFAULT } from './constants';
 
 /**
  * Calculate the brightness of an RGB color
@@ -11,11 +12,11 @@ export const calculateBrightness = (color: RGB): number =>
 /**
  * Create a white-boundary color predicate
  * Stops propagation only when reaching white or near-white pixels
- * @param whiteThreshold - Minimum brightness to consider as white (0-255)
+ * @param whiteThreshold - Minimum brightness to consider as white (0-255), defaults to WHITE_THRESHOLD_DEFAULT
  * @returns Predicate function that returns false for white pixels
  */
 export const createWhiteBoundaryPredicate = (
-  whiteThreshold: number = 250
+  whiteThreshold: number = WHITE_THRESHOLD_DEFAULT
 ): ColorPredicate => {
   let boundaryHits = 0;
   return (target, reference) => {
@@ -34,4 +35,4 @@ export const createWhiteBoundaryPredicate = (
 
 // Re-export types for convenience
 export type { RGB };
-export type ColorPredicate = (target: RGB, reference: RGB) => boolean; 
+export type ColorPredicate = (target: RGB, reference: RGB) => boolean;

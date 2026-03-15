@@ -1,5 +1,6 @@
 import { Image } from 'image-js';
 import { Vector2, ProcessingConfig } from './types';
+import { WHITE_THRESHOLD_DEFAULT } from './constants';
 import { ColorPredicate, createWhiteBoundaryPredicate } from './color';
 import { floodFill, FloodFillConfig } from './flood-fill';
 import { scaleCoordinates, scaleCoordinatesFloat } from './coordinate-utils';
@@ -28,17 +29,14 @@ export const extractRegionFromSeed = (
   predicate: ColorPredicate,
   config: ProcessingConfig = {}
 ): ExtractedRegion => {
-  const {
-    maxPixels = 2000000,
-    minArea = 100,
-  } = config;
-  
+  const { maxPixels = 2000000, minArea = 100 } = config;
+
   // Configure flood fill
   const floodFillConfig: FloodFillConfig = {
     step: 1,
     maxPixels: maxPixels,
   };
-  
+
   // Perform flood fill to get region points
   // Note: floodFill returns points in original coordinates when scale factor is provided
   const points = floodFill(
@@ -48,28 +46,29 @@ export const extractRegionFromSeed = (
     floodFillConfig,
     1.0 // No scaling factor here since we handle it externally
   );
-  
+
   // Validate the region
   const validationErrors: string[] = [];
   const pixelCount = points.length;
-  
+
   if (pixelCount < minArea) {
     validationErrors.push(
       `Region too small: ${pixelCount} pixels < ${minArea} minimum`
     );
   }
-  
+
   if (pixelCount >= maxPixels) {
     validationErrors.push(
       `Region too large: ${pixelCount} pixels >= ${maxPixels} maximum`
     );
   }
-  
+
   return {
     points: [...points], // Convert readonly array to mutable
     pixelCount,
     isValid: validationErrors.length === 0,
-    validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
+    validationErrors:
+      validationErrors.length > 0 ? validationErrors : undefined,
   };
 };
 
@@ -85,11 +84,11 @@ export const extractRegionWithWhiteBoundary = (
   seed: Vector2,
   config: ProcessingConfig = {}
 ): ExtractedRegion => {
-  const { whiteThreshold = 230 } = config;
-  
+  const { whiteThreshold = WHITE_THRESHOLD_DEFAULT } = config;
+
   // Create predicate that stops at white/light boundaries
   const predicate = createWhiteBoundaryPredicate(whiteThreshold);
-  
+
   return extractRegionFromSeed(image, seed, predicate, config);
 };
 
@@ -106,11 +105,10 @@ export const scaleRegionCoordinatesFloat = (
   if (scaleFactor === 1.0) {
     return [...region];
   }
-  
-  return region.map(([x, y]) => [
-    x * scaleFactor,
-    y * scaleFactor,
-  ] as [number, number]);
+
+  return region.map(
+    ([x, y]) => [x * scaleFactor, y * scaleFactor] as [number, number]
+  );
 };
 
 /**
@@ -126,11 +124,14 @@ export const scaleRegionCoordinates = (
   if (scaleFactor === 1.0) {
     return [...region];
   }
-  
-  return region.map(([x, y]) => [
-    Math.round(x * scaleFactor),
-    Math.round(y * scaleFactor),
-  ] as [number, number]);
+
+  return region.map(
+    ([x, y]) =>
+      [Math.round(x * scaleFactor), Math.round(y * scaleFactor)] as [
+        number,
+        number,
+      ]
+  );
 };
 
 /**
@@ -154,15 +155,15 @@ export const refineRegionBoundaries = (
     fillSmallGaps = false,
     minNeighbors = 2,
   } = config;
-  
+
   if (!removeIsolatedPixels && !fillSmallGaps) {
     return [...region];
   }
-  
+
   // Create a set for fast lookup
   const regionSet = new Set(region.map(([x, y]) => `${x},${y}`));
   const refined: Array<[number, number]> = [];
-  
+
   // Check neighbors for each point
   const countNeighbors = (x: number, y: number): number => {
     let count = 0;
@@ -176,7 +177,7 @@ export const refineRegionBoundaries = (
     }
     return count;
   };
-  
+
   // Remove isolated pixels
   if (removeIsolatedPixels) {
     for (const [x, y] of region) {
@@ -188,37 +189,38 @@ export const refineRegionBoundaries = (
   } else {
     refined.push(...region);
   }
-  
+
   // Fill small gaps (simplified implementation)
   if (fillSmallGaps) {
     const refinedSet = new Set(refined.map(([x, y]) => `${x},${y}`));
     const additions: Array<[number, number]> = [];
-    
+
     // Check for gaps that should be filled
     for (const [x, y] of refined) {
       // Check 3x3 neighborhood
       for (let dx = -1; dx <= 1; dx++) {
         for (let dy = -1; dy <= 1; dy++) {
           if (dx === 0 && dy === 0) continue;
-          
+
           const nx = x + dx;
           const ny = y + dy;
           const key = `${nx},${ny}`;
-          
+
           // If this pixel is not in the region but has many region neighbors
           if (!refinedSet.has(key) && !regionSet.has(key)) {
             const neighbors = countNeighbors(nx, ny);
-            if (neighbors >= 6) { // Surrounded by region pixels
+            if (neighbors >= 6) {
+              // Surrounded by region pixels
               additions.push([nx, ny]);
             }
           }
         }
       }
     }
-    
+
     refined.push(...additions);
   }
-  
+
   return refined;
 };
 
@@ -236,23 +238,21 @@ export const validateRegion = (
 ): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   const pixelCount = region.length;
-  
+
   if (pixelCount < minArea) {
-    errors.push(
-      `Region too small: ${pixelCount} pixels < ${minArea} minimum`
-    );
+    errors.push(`Region too small: ${pixelCount} pixels < ${minArea} minimum`);
   }
-  
+
   if (pixelCount > maxPixels) {
     errors.push(
       `Region too large: ${pixelCount} pixels > ${maxPixels} maximum`
     );
   }
-  
+
   if (pixelCount === 0) {
     errors.push('Region is empty');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -274,18 +274,24 @@ export const extractMultipleRegions = (
   config: ProcessingConfig = {}
 ): ExtractedRegion[] => {
   return seeds.map((seed, index) => {
-    console.log(`🎯 Extracting region ${index + 1}/${seeds.length} from seed (${seed.x}, ${seed.y})`);
-    
+    console.log(
+      `🎯 Extracting region ${index + 1}/${seeds.length} from seed (${seed.x}, ${seed.y})`
+    );
+
     try {
       const region = extractRegionFromSeed(image, seed, predicate, config);
-      
+
       if (!region.isValid) {
-        console.warn(`⚠️ Region ${index + 1} validation failed:`, region.validationErrors);
+        console.warn(
+          `⚠️ Region ${index + 1} validation failed:`,
+          region.validationErrors
+        );
       }
-      
+
       return region;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.error(`❌ Failed to extract region ${index + 1}:`, error);
       return {
         points: [],
@@ -295,4 +301,4 @@ export const extractMultipleRegions = (
       };
     }
   });
-}; 
+};
