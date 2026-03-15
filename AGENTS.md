@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 ## Project Overview
 
@@ -22,7 +22,13 @@ packages/
   backend/             → Electron IPC handlers, services
 ```
 
-**Key pattern**: UI state lives in Zustand stores. Heavy processing (image analysis, cropping) delegates to backend via IPC. React components are the view layer; stores handle state logic.
+**Key patterns**:
+
+- UI state lives in Zustand stores. Heavy processing (image analysis, cropping) delegates to backend via IPC. React components are the view layer; stores handle state logic.
+- **Dual-resolution image strategy**: Images are cached at both full resolution and scaled down (max 1920px via `MAX_SCALED_DIMENSION`). Bounding box detection runs on the scaled version for performance, then coordinates are scaled up and cropping is performed on the full-resolution original for output quality.
+- **In-memory persistence**: Frames exist only in memory during a session. There is no database; closing the app loses unsaved frame state.
+
+**Build formats**: `shared` produces dual CJS/ESM output (three separate tsconfig files). `backend` is CJS-only (required by Electron main process). `ui` is ESM.
 
 ## Dependency Graph
 
@@ -52,7 +58,14 @@ pnpm build:electron   # Production Electron build
 | `packages/shared/src/constants.ts`              | Shared constants: `MIN_FRAME_SIZE`, `DEFAULT_FRAME_SIZE_RATIO`         |
 | `packages/shared/src/image-processing.ts`       | Main image processing pipeline                                         |
 | `packages/shared/src/region-extraction.ts`      | Flood-fill region detection                                            |
+| `packages/shared/src/flood-fill.ts`             | BFS flood fill with color predicate and pixel cap                      |
+| `packages/shared/src/convex-hull.ts`            | Andrew's monotone chain convex hull                                    |
 | `packages/shared/src/bounding-rectangle.ts`     | Oriented bounding box calculation                                      |
+| `packages/shared/src/orientation.ts`            | PCA orientation estimation and angle refinement                        |
+| `packages/shared/src/image-transform.ts`        | `smartCrop()` and rotation-aware sub-image extraction                  |
+| `packages/shared/src/color.ts`                  | Brightness calculation and white boundary predicate                    |
+| `packages/shared/src/geometry.ts`               | Point rotation, bounds checking, angle normalization                   |
+| `packages/shared/src/coordinate-utils.ts`       | Scale/transform between display and original coordinates               |
 | `packages/backend/src/services/FrameService.ts` | Frame creation/update/delete logic                                     |
 | `packages/backend/src/ipc/handlers.ts`          | IPC handler registration                                               |
 | `packages/ui/src/stores/`                       | Zustand stores (uiStore, workspaceStore, canvasStore)                  |
@@ -62,11 +75,14 @@ pnpm build:electron   # Production Electron build
 
 ## Image Processing Flow
 
+Detection runs on the scaled image for performance; cropping uses the full-resolution original for output quality.
+
 1. User clicks seed point on image in Canvas
 2. `extractRegionWithWhiteBoundary()` - flood-fill from seed until white boundary (threshold: 230)
 3. `findMinimalBoundingRectangle()` - convex hull with rotating calipers (+ optional PCA via `usePca` config)
-4. `smartCrop()` - extract sub-image at full resolution with rotation correction
-5. `FrameData` created with coordinates, rotation, base64 imageData
+4. Bounding box coordinates are scaled up from display to original resolution
+5. `smartCrop()` - extract sub-image at full resolution with rotation correction
+6. `FrameData` created with coordinates, rotation, base64 imageData
 
 ## Important Types
 
@@ -110,6 +126,10 @@ Uses Zustand stores in `packages/ui/src/stores/`:
 - `workspaceStore` - Directory/file navigation state
 - `canvasStore` - Canvas zoom, pan, scale calculations
 
+All stores use `immer` middleware, so update actions use direct mutation syntax that produces immutable state updates.
+
+**Component hierarchy**: `App` -> `Editor` -> `AppBar` + `ThreePanelLayout(FileExplorer, TabbedView, FramesPreview)`. `TabbedView` switches between the `Canvas` (interactive image viewer) and `FrameEditorNew` (frame adjustment view).
+
 ## IPC Communication
 
 Backend exposes API via `contextBridge` in preload as `window.backend`:
@@ -130,6 +150,19 @@ window.backend.invoke('workspace:saveAllFrames', directory, frames, filenames)
 Note: The backend also registers `workspace:clearImageCache` and `workspace:getImageCacheStats` handlers, but these are **not whitelisted** in `preload.ts` and are unreachable from the renderer.
 
 UI wraps these calls in `packages/ui/src/api/workspace.ts`.
+
+## Backend Services
+
+`ElectronBackend` is the entry point, instantiated in `main.ts`. It creates a `WorkspaceService` and wires up IPC handlers.
+
+**`WorkspaceService`** (`packages/backend/src/services/WorkspaceService.ts`) is the main facade, composing:
+
+- **`FrameService`** - Frame CRUD and the seed-to-frame generation pipeline
+- **`DirectoryScanner`** - Recursive directory scanning with depth control
+- **`DirectoryCacheManager`** - TTL-based directory tree cache (5 min default)
+- **`DirectoryPreloader`** - Background preloading of subdirectories
+
+**Image cache**: `WorkspaceService` maintains an LRU cache of 10 images, storing both full-resolution and scaled pairs. In-flight loads are deduplicated via a promises map to avoid redundant I/O.
 
 ## Testing
 
