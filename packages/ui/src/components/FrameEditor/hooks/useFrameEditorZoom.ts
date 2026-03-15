@@ -6,7 +6,7 @@ interface Vector2 {
 }
 
 interface UseFrameEditorZoomProps {
-  containerRef: RefObject<HTMLDivElement>;
+  containerRef: RefObject<HTMLDivElement | null>;
   imageWidth: number;
   imageHeight: number;
   frameId: string | null;

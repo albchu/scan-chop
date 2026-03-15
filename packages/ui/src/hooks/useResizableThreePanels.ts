@@ -14,7 +14,7 @@ interface UseResizableThreePanelsReturn {
   isRightCollapsed: boolean;
   isDraggingLeft: boolean;
   isDraggingRight: boolean;
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   handleLeftMouseDown: (e: React.MouseEvent) => void;
   handleRightMouseDown: (e: React.MouseEvent) => void;
   toggleLeftPanel: () => void;

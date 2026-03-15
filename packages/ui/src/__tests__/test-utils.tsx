@@ -80,7 +80,7 @@ const AllProviders: React.FC<AllProvidersProps> = ({ children }) => {
 
 // Custom render function
 const customRender = (
-  ui: ReactElement,
+  ui: ReactElement<any>,
   options?: Omit<RenderOptions, 'wrapper'>
 ): RenderResult => {
   return render(ui, { wrapper: AllProviders, ...options });
