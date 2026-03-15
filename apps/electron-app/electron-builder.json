@@ -21,6 +21,13 @@
   },
   "mac": {
     "category": "public.app-category.productivity",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "entitlements": "build-resources/entitlements.mac.plist",
+    "entitlementsInherit": "build-resources/entitlements.mac.plist",
+    "notarize": {
+      "teamId": "W486ZH6RNZ"
+    },
     "target": [
       {
         "target": "dmg",

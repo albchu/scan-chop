@@ -81,6 +81,25 @@ pnpm --filter electron-app package      # Create platform installers
 
 Output in `apps/electron-app/release/`.
 
+### Signed macOS Build
+
+To produce a signed and notarized macOS binary that passes Gatekeeper without warnings:
+
+1. Install a **Developer ID Application** certificate in your Keychain ([Apple Developer docs](https://developer.apple.com/help/account/certificates/create-developer-id-certificates))
+2. Populate `.env.build` with your credentials (see `.env.build` for details)
+3. Build:
+
+```bash
+source .env.build
+pnpm build && pnpm --filter electron-app package
+```
+
+| Environment Variable          | Description                                                               | Sensitive |
+| ----------------------------- | ------------------------------------------------------------------------- | --------- |
+| `APPLE_ID`                    | Apple ID email for the developer account                                  | Yes       |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password from [account.apple.com](https://account.apple.com) | Yes       |
+| `APPLE_TEAM_ID`               | 10-character Team ID from your signing certificate                        | No        |
+
 ## Tech Stack
 
 - **Runtime**: Electron 28 (Node.js backend + Chromium renderer)
