@@ -24,8 +24,8 @@
     "scrappy": "tsx src/debug-scrappy.ts"
   },
   "devDependencies": {
-    "tsx": "^4.20.3",
-    "typescript": "^5.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
     "vitest": "^1.0.0"
   },
   "dependencies": {

@@ -136,6 +136,7 @@ UI wraps these calls in `packages/ui/src/api/workspace.ts`.
 - Unit tests in `__tests__/` directories within each package
 - Run specific package: `pnpm --filter @workspace/shared test`
 - Coverage: `pnpm test -- --coverage`
+- **Caveat**: `@workspace/shared` configures vitest without `--run`, so `pnpm test` enters watch mode for that package and never exits. When running tests non-interactively (CI, scripts, agents), use `pnpm --filter @workspace/shared test:once` or run `vitest run` directly to avoid hanging.
 
 ## Common Modifications
 
