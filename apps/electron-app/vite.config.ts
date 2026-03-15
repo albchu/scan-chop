@@ -9,15 +9,15 @@ export default defineConfig({
     outDir: 'dist/renderer',
     // Electron apps can handle larger chunks since they load from disk
     chunkSizeWarningLimit: 800,
-    rollupOptions: {
+    rolldownOptions: {
       input: {
-        main: resolve(__dirname, 'renderer.html')
-      }
-    }
+        main: resolve(__dirname, 'renderer.html'),
+      },
+    },
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src')
-    }
-  }
-}); 
+      '@': resolve(__dirname, 'src'),
+    },
+  },
+});

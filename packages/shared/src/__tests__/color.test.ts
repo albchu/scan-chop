@@ -76,7 +76,9 @@ describe('createWhiteBoundaryPredicate', () => {
   });
 
   it('should log boundary hits for first 5 occurrences', () => {
+    // Vitest 4 reuses existing spies — clear accumulated calls from prior tests
     const logSpy = vi.spyOn(console, 'log');
+    logSpy.mockClear();
     const predicate = createWhiteBoundaryPredicate(100);
 
     // Hit boundary 7 times

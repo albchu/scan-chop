@@ -6,25 +6,25 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/preload.ts'),
       formats: ['cjs'], // CommonJS format for Electron
-      fileName: () => 'preload.js'
+      fileName: () => 'preload.js',
     },
     outDir: 'dist',
     emptyOutDir: false,
-    rollupOptions: {
+    rolldownOptions: {
       external: ['electron'], // Electron is available in preload
       output: {
-        // Bundle all @workspace/shared imports
-        inlineDynamicImports: true,
-      }
+        // Bundle all @workspace/shared imports into a single chunk
+        codeSplitting: false,
+      },
     },
     // Target Node.js environment
     target: 'node16',
     // Minification off for easier debugging
-    minify: false
+    minify: false,
   },
   resolve: {
     alias: {
-      '@workspace/shared': resolve(__dirname, '../../packages/shared/src')
-    }
-  }
-}); 
+      '@workspace/shared': resolve(__dirname, '../../packages/shared/src'),
+    },
+  },
+});

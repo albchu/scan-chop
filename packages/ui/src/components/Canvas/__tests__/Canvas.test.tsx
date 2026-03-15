@@ -38,8 +38,12 @@ const observeMock = vi.fn();
 const disconnectMock = vi.fn();
 
 beforeEach(() => {
-  // jsdom does not provide ResizeObserver — supply a controllable mock
-  global.ResizeObserver = vi.fn((cb) => {
+  // jsdom does not provide ResizeObserver — supply a controllable mock.
+  // Vitest 4 requires function/class for mocks invoked with `new`.
+  global.ResizeObserver = vi.fn(function (
+    this: ResizeObserver,
+    cb: ResizeObserverCallback
+  ) {
     resizeCallback = cb;
     return {
       observe: observeMock,
