@@ -819,4 +819,164 @@ describe('WorkspaceService', () => {
       expect(imageNames).not.toContain('script.js');
     });
   });
+
+  describe('getSanitizedFrameFilename', () => {
+    it('should produce label.png for normal labels', () => {
+      const result = service.getSanitizedFrameFilename({
+        label: 'Photo 1',
+      } as any);
+      expect(result).toBe('Photo_1.png');
+    });
+
+    it('should replace special characters with underscores', () => {
+      const result = service.getSanitizedFrameFilename({
+        label: 'file<>:"/\\|?*name',
+      } as any);
+      expect(result).toBe('file_________name.png');
+    });
+
+    it('should fall back to frame.png for empty label', () => {
+      const result = service.getSanitizedFrameFilename({
+        label: '',
+      } as any);
+      expect(result).toBe('frame.png');
+    });
+
+    it('should produce underscore filename for whitespace-only label', () => {
+      const result = service.getSanitizedFrameFilename({
+        label: '   ',
+      } as any);
+      expect(result).toBe('_.png');
+    });
+  });
+
+  describe('rotateFrame', () => {
+    it('should cycle through 0 -> 90 -> 180 -> 270 -> 0', () => {
+      const orientations = [0, 90, 180, 270] as const;
+      const expected = [90, 180, 270, 0];
+
+      for (let i = 0; i < orientations.length; i++) {
+        const result = service.rotateFrame({
+          orientation: orientations[i],
+        } as any);
+        expect(result.orientation).toBe(expected[i]);
+      }
+    });
+
+    it('should default to 90 for unexpected orientation value', () => {
+      const result = service.rotateFrame({
+        orientation: 45,
+      } as any);
+      expect(result.orientation).toBe(90);
+    });
+
+    it('should return only { orientation }, no other frame fields', () => {
+      const result = service.rotateFrame({
+        id: 'frame-1',
+        label: 'test',
+        orientation: 0,
+        x: 10,
+        y: 20,
+      } as any);
+
+      expect(Object.keys(result)).toEqual(['orientation']);
+    });
+  });
+
+  describe('saveFrameToPath', () => {
+    it('should throw when imageData is missing', async () => {
+      await expect(
+        service.saveFrameToPath(
+          { imageData: undefined, orientation: 0 } as any,
+          '/out/test.png'
+        )
+      ).rejects.toThrow('no image data');
+    });
+
+    it('should apply orientation rotation before saving', async () => {
+      const mockRotatedImage = {
+        width: 600,
+        height: 800,
+        toBuffer: vi.fn().mockReturnValue(new Uint8Array([1, 2, 3])),
+      };
+      const mockLoadedImage = {
+        width: 800,
+        height: 600,
+        rotate: vi.fn().mockReturnValue(mockRotatedImage),
+        toBuffer: vi.fn().mockReturnValue(new Uint8Array([1, 2, 3])),
+      };
+      mockImageLoad.mockResolvedValue(mockLoadedImage as any);
+
+      const mockWriteFile = fs.writeFile as MockedFunction<typeof fs.writeFile>;
+      mockWriteFile.mockResolvedValue(undefined);
+
+      await service.saveFrameToPath(
+        {
+          imageData: 'data:image/png;base64,abc',
+          orientation: 90,
+        } as any,
+        '/out/photo.png'
+      );
+
+      expect(mockLoadedImage.rotate).toHaveBeenCalledWith(90);
+      expect(mockWriteFile).toHaveBeenCalledWith(
+        '/out/photo.png',
+        expect.any(Buffer)
+      );
+    });
+  });
+
+  describe('clearCache', () => {
+    it('should clear all frames and image cache even with specific path', async () => {
+      // Load an image to populate cache
+      mockStat.mockResolvedValue({
+        isFile: () => true,
+        isDirectory: () => false,
+      } as any);
+      const mockImage = {
+        width: 800,
+        height: 600,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,data'),
+        resize: vi.fn(),
+      };
+      mockImageLoad.mockResolvedValue(mockImage as any);
+      await service.loadImageAsBase64('/test/image.jpg');
+
+      // Clear with a specific path
+      service.clearCache('/some/specific/path');
+
+      // Image cache should be wiped (requires reload)
+      await service.loadImageAsBase64('/test/image.jpg');
+      expect(mockImageLoad).toHaveBeenCalledTimes(2);
+    });
+
+    it('should clear everything when called with no arguments', async () => {
+      mockStat.mockResolvedValue({
+        isFile: () => true,
+        isDirectory: () => false,
+      } as any);
+      const mockImage = {
+        width: 800,
+        height: 600,
+        toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,data'),
+        resize: vi.fn(),
+      };
+      mockImageLoad.mockResolvedValue(mockImage as any);
+
+      // Populate both directory and image caches
+      mockReaddir.mockResolvedValue([
+        createMockDirent('image.jpg', false),
+      ] as any);
+      await service.loadDirectory('/test/dir');
+      await service.loadImageAsBase64('/test/image.jpg');
+
+      service.clearCache();
+
+      // Both caches should be empty: directory requires re-read, image requires re-load
+      await service.loadDirectory('/test/dir');
+      expect(mockReaddir).toHaveBeenCalledTimes(2);
+      await service.loadImageAsBase64('/test/image.jpg');
+      expect(mockImageLoad).toHaveBeenCalledTimes(2);
+    });
+  });
 });
