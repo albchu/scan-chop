@@ -8,21 +8,24 @@ interface FrameCardProps {
   isCurrent?: boolean;
 }
 
-export const FrameCard: React.FC<FrameCardProps> = ({ frame, isCurrent = false }) => {
+export const FrameCard: React.FC<FrameCardProps> = ({
+  frame,
+  isCurrent = false,
+}) => {
   const updateFrame = useUIStore((state) => state.updateFrame);
   const setCurrentFrameId = useUIStore((state) => state.setCurrentFrameId);
   const setActiveView = useUIStore((state) => state.setActiveView);
-  
+
   const handleClick = () => {
     setCurrentFrameId(frame.id);
     setActiveView('frame-editor');
   };
-  
+
   const isRotated = frame.orientation === 90 || frame.orientation === 270;
-  const aspectRatio = isRotated 
-    ? frame.height / frame.width 
+  const aspectRatio = isRotated
+    ? frame.height / frame.width
     : frame.width / frame.height;
-  
+
   return (
     <div
       onClick={handleClick}
@@ -44,7 +47,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, isCurrent = false }
             style={{
               top: '50%',
               left: '50%',
-              transform: `translate(-50%, -50%) rotate(${frame.orientation}deg)${isRotated ? ' scale(1.5)' : ''}`,
+              transform: `translate(-50%, -50%) rotate(${frame.orientation}deg)${isRotated ? ` scale(${frame.width / frame.height})` : ''}`,
             }}
             loading="lazy"
             decoding="async"
@@ -60,10 +63,9 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, isCurrent = false }
           onChange={(label) => updateFrame(frame.id, { label })}
         />
         <span className="text-xs text-gray-500">
-          {frame.imageScaleFactor 
+          {frame.imageScaleFactor
             ? `${Math.round(frame.width * frame.imageScaleFactor)} × ${Math.round(frame.height * frame.imageScaleFactor)}`
-            : `${Math.round(frame.width)} × ${Math.round(frame.height)}`
-          }
+            : `${Math.round(frame.width)} × ${Math.round(frame.height)}`}
         </span>
       </footer>
     </div>
