@@ -33,7 +33,7 @@ vi.mock('../hooks/useCanvasInteraction', () => ({
 }));
 
 // Capture the ResizeObserver callback so tests can trigger it manually
-let resizeCallback: ResizeObserverCallback;
+let resizeCallback: ConstructorParameters<typeof ResizeObserver>[0];
 const observeMock = vi.fn();
 const disconnectMock = vi.fn();
 
