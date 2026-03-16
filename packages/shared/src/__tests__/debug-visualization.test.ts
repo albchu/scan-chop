@@ -5,7 +5,7 @@ import {
   setPixel,
   getPixel,
   clone,
-} from '../image-adapter';
+} from '../image-adapter.js';
 import {
   drawCircle,
   drawThickCircle,
@@ -14,8 +14,8 @@ import {
   highlightRegion,
   createDebugImage,
   createCompositeDebugImage,
-} from '../debug-visualization';
-import type { BoundingBox, Vector2 } from '../types';
+} from '../debug-visualization.js';
+import type { BoundingBox, Vector2 } from '../types.js';
 
 // Suppress console noise from drawing functions and fs operations
 vi.spyOn(console, 'log').mockImplementation(() => {});

@@ -16,13 +16,13 @@ import {
   rotateRightAngle,
   resize,
 } from '@workspace/shared';
-import { DirectoryCacheManager } from './DirectoryCacheManager';
-import { DirectoryScanner } from './DirectoryScanner';
-import { DirectoryPreloader } from './DirectoryPreloader';
-import { FrameService } from './FrameService';
+import { DirectoryCacheManager } from './DirectoryCacheManager.js';
+import { DirectoryScanner } from './DirectoryScanner.js';
+import { DirectoryPreloader } from './DirectoryPreloader.js';
+import { FrameService } from './FrameService.js';
 import fs from 'fs/promises';
 import path from 'path';
-import { isImageFile } from '../utils/isImageFile';
+import { isImageFile } from '../utils/isImageFile.js';
 
 // Image data interface (previously from ImageLoader)
 export interface ImageData {

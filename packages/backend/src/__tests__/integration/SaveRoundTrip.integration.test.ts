@@ -3,15 +3,15 @@ import { resize, read, decode } from '@workspace/shared';
 import type { Image } from '@workspace/shared';
 import path from 'path';
 import fs from 'fs/promises';
-import { FrameService } from '../../services/FrameService';
-import { WorkspaceService } from '../../services/WorkspaceService';
+import { FrameService } from '../../services/FrameService.js';
+import { WorkspaceService } from '../../services/WorkspaceService.js';
 import type { FrameData } from '@workspace/shared';
 import {
   createPageWithRectangle,
   createPageWithRectangles,
   createTempDir,
   cleanupTempDir,
-} from './helpers';
+} from './helpers.js';
 
 // Suppress console noise from the processing pipeline
 vi.spyOn(console, 'log').mockImplementation(() => {});

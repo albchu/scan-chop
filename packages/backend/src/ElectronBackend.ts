@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { BrowserWindow } from 'electron';
-import { WorkspaceService } from './services/WorkspaceService';
-import { setupIpcHandlers } from './ipc/handlers';
+import { WorkspaceService } from './services/WorkspaceService.js';
+import { setupIpcHandlers } from './ipc/handlers.js';
 
 export class ElectronBackend extends EventEmitter {
   private workspaceService: WorkspaceService;
@@ -26,4 +26,4 @@ export class ElectronBackend extends EventEmitter {
   public getWorkspaceService(): WorkspaceService {
     return this.workspaceService;
   }
-} 
+}

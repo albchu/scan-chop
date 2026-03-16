@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { findMinimalBoundingRectangle } from '../bounding-rectangle';
-import type { ProcessingConfig, BoundingBox } from '../types';
+import { findMinimalBoundingRectangle } from '../bounding-rectangle.js';
+import type { ProcessingConfig, BoundingBox } from '../types.js';
 
 // Mock console methods
 vi.spyOn(console, 'log').mockImplementation(() => {});

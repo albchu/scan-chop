@@ -1,21 +1,15 @@
-// Re-export all types and utilities
-export * from './types';
-export * from './geometry';
-export * from './constants';
-export * from './color';
-export * from './flood-fill';
-export * from './orientation';
-export * from './convex-hull';
-export * from './bounding-rectangle';
-
-// New module exports
-export * from './coordinate-utils';
-export * from './image-io';
-export * from './debug-visualization';
-export * from './region-extraction';
-export * from './image-transform';
-export * from './image-processing';
-export * from './utils/pageUtils';
-
-// image-js adapter — single point of contact with image-js
-export * from './image-adapter';
+// Renderer-safe exports: types, geometry, constants, and pure utilities.
+// These have no dependency on Node.js APIs or image-js and are safe to
+// bundle into browser/renderer contexts.
+//
+// For Node.js-only exports (image-adapter, image-io, flood-fill, etc.),
+// import from '@workspace/shared/node' instead.
+export * from './types.js';
+export * from './geometry.js';
+export * from './constants.js';
+export * from './color.js';
+export * from './orientation.js';
+export * from './convex-hull.js';
+export * from './bounding-rectangle.js';
+export * from './coordinate-utils.js';
+export * from './utils/pageUtils.js';

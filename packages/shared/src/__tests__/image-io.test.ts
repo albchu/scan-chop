@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import type { Image } from '../image-adapter';
+import type { Image } from '../image-adapter.js';
 
 // vi.hoisted runs before vi.mock factories, so these are available in both
 const { mockRead, mockWrite, mockResize, mockImage, mockScaledImage } =
@@ -25,7 +25,7 @@ vi.mock('fs/promises', () => ({
   writeFile: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('../image-adapter', () => ({
+vi.mock('../image-adapter.js', () => ({
   read: mockRead,
   write: mockWrite,
   resize: mockResize,
@@ -40,7 +40,7 @@ import {
   saveProcessedImage,
   createOutputDirectories,
   saveDebugArtifacts,
-} from '../image-io';
+} from '../image-io.js';
 
 beforeEach(() => {
   vi.clearAllMocks();

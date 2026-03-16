@@ -1,4 +1,4 @@
-import { Vector2 } from './types';
+import { Vector2 } from './types.js';
 
 /**
  * Compute the convex hull of a set of points

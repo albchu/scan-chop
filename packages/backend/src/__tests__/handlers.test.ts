@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { setupIpcHandlers } from '../ipc/handlers';
+import { setupIpcHandlers } from '../ipc/handlers.js';
 import type { FrameData, DirectoryNode } from '@workspace/shared';
 
 // Mock electron -- capture registered handlers so we can invoke them directly

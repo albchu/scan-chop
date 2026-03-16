@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { chooseBestAngle, computePCAOrientation, refineAngle } from '../orientation';
-import { Vector2 } from '../types';
+import { chooseBestAngle, computePCAOrientation, refineAngle } from '../orientation.js';
+import { Vector2 } from '../types.js';
 
 // Mock console methods to avoid noise in tests
 vi.spyOn(console, 'log').mockImplementation(() => {});

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeConvexHull } from '../convex-hull';
+import { computeConvexHull } from '../convex-hull.js';
 
 describe('computeConvexHull', () => {
   it('should return empty array for empty input', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { DirectoryScanner } from '../services/DirectoryScanner';
+import { DirectoryScanner } from '../services/DirectoryScanner.js';
 import type { DirectoryNode } from '@workspace/shared';
 
 vi.mock('fs/promises', () => ({
@@ -8,12 +8,12 @@ vi.mock('fs/promises', () => ({
   },
 }));
 
-vi.mock('../utils/isImageFile', () => ({
+vi.mock('../utils/isImageFile.js', () => ({
   isImageFile: vi.fn(),
 }));
 
 import fs from 'fs/promises';
-import { isImageFile } from '../utils/isImageFile';
+import { isImageFile } from '../utils/isImageFile.js';
 
 const mockReaddir = fs.readdir as ReturnType<typeof vi.fn>;
 const mockIsImageFile = isImageFile as ReturnType<typeof vi.fn>;

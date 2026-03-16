@@ -3,10 +3,10 @@ import {
   Image,
   createImage,
   setPixel as adapterSetPixel,
-} from '../image-adapter';
-import { floodFill, type FloodFillConfig } from '../flood-fill';
-import { createWhiteBoundaryPredicate } from '../color';
-import type { Vector2, RGB } from '../types';
+} from '../image-adapter.js';
+import { floodFill, type FloodFillConfig } from '../flood-fill.js';
+import { createWhiteBoundaryPredicate } from '../color.js';
+import type { Vector2, RGB } from '../types.js';
 
 // Mock console methods
 vi.spyOn(console, 'log').mockImplementation(() => {});

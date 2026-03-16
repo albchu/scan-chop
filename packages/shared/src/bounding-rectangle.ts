@@ -1,7 +1,7 @@
-import { BoundingBox, ProcessingConfig, Vector2 } from './types';
-import { computeConvexHull } from './convex-hull';
-import { degreesToRadians, normalizeRotation, rotatePoint } from './geometry';
-import { chooseBestAngle, computePCAOrientation, refineAngle } from './orientation';
+import { BoundingBox, ProcessingConfig, Vector2 } from './types.js';
+import { computeConvexHull } from './convex-hull.js';
+import { degreesToRadians, normalizeRotation, rotatePoint } from './geometry.js';
+import { chooseBestAngle, computePCAOrientation, refineAngle } from './orientation.js';
 
 /**
  * Find the minimum area bounding rectangle using rotating calipers

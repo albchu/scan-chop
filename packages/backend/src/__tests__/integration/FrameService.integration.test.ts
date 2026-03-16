@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { resize, decode } from '@workspace/shared';
 import type { Image } from '@workspace/shared';
-import { FrameService } from '../../services/FrameService';
+import { FrameService } from '../../services/FrameService.js';
 import {
   createPageWithRectangle,
   createPageWithRectangles,
   createWhitePage,
-} from './helpers';
+} from './helpers.js';
 
 // Suppress console noise from the processing pipeline
 vi.spyOn(console, 'log').mockImplementation(() => {});

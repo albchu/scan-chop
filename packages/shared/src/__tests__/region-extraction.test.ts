@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Image, createImage, setPixel } from '../image-adapter';
+import { Image, createImage, setPixel } from '../image-adapter.js';
 import {
   extractRegionFromSeed,
   extractMultipleRegions,
   refineRegionBoundaries,
   validateRegion,
-} from '../region-extraction';
-import { createWhiteBoundaryPredicate } from '../color';
-import type { RGB } from '../types';
+} from '../region-extraction.js';
+import { createWhiteBoundaryPredicate } from '../color.js';
+import type { RGB } from '../types.js';
 
 // Mock console methods to suppress log noise from flood-fill and extractMultipleRegions
 vi.spyOn(console, 'log').mockImplementation(() => {});

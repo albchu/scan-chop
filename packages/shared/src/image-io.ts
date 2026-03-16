@@ -1,4 +1,4 @@
-import { Image, read, write, resize } from './image-adapter';
+import { Image, read, write, resize } from './image-adapter.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 

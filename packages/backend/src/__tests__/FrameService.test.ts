@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { FrameService } from '../services/FrameService';
+import { FrameService } from '../services/FrameService.js';
 import type { BoundingBox, Vector2, ProcessingConfig } from '@workspace/shared';
 
 // Mock all @workspace/shared processing functions

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ElectronBackend } from '../ElectronBackend';
+import { ElectronBackend } from '../ElectronBackend.js';
 
 // Mock electron modules
 vi.mock('electron', () => ({
@@ -41,4 +41,4 @@ describe('ElectronBackend', () => {
     expect(typeof backend.emit).toBe('function');
     expect(typeof backend.off).toBe('function');
   });
-}); 
+});

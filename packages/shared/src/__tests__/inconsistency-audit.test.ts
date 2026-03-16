@@ -20,15 +20,15 @@ import {
   Image,
   createImage,
   setPixel as adapterSetPixel,
-} from '../image-adapter';
-import type { RGB } from '../types';
-import { WHITE_THRESHOLD_DEFAULT } from '../constants';
-import { createWhiteBoundaryPredicate, calculateBrightness } from '../color';
+} from '../image-adapter.js';
+import type { RGB } from '../types.js';
+import { WHITE_THRESHOLD_DEFAULT } from '../constants.js';
+import { createWhiteBoundaryPredicate, calculateBrightness } from '../color.js';
 import {
   extractRegionWithWhiteBoundary,
   scaleRegionCoordinates,
   scaleRegionCoordinatesFloat,
-} from '../region-extraction';
+} from '../region-extraction.js';
 
 vi.spyOn(console, 'log').mockImplementation(() => {});
 vi.spyOn(console, 'warn').mockImplementation(() => {});

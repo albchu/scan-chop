@@ -6,7 +6,7 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/preload.ts'),
       formats: ['cjs'], // CommonJS format for Electron
-      fileName: () => 'preload.js',
+      fileName: () => 'preload.cjs',
     },
     outDir: 'dist',
     emptyOutDir: false,

@@ -1,5 +1,5 @@
-import { RGB } from './types';
-import { WHITE_THRESHOLD_DEFAULT } from './constants';
+import { RGB } from './types.js';
+import { WHITE_THRESHOLD_DEFAULT } from './constants.js';
 
 /**
  * Calculate the brightness of an RGB color

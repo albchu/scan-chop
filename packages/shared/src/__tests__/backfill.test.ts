@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Image, createImage, setPixel } from '../image-adapter';
-import { findMinimalBoundingRectangle } from '../bounding-rectangle';
+import { Image, createImage, setPixel } from '../image-adapter.js';
+import { findMinimalBoundingRectangle } from '../bounding-rectangle.js';
 import {
   computePCAOrientation,
   refineAngle,
   chooseBestAngle,
-} from '../orientation';
-import { floodFill } from '../flood-fill';
-import { createWhiteBoundaryPredicate } from '../color';
-import type { Vector2 } from '../types';
+} from '../orientation.js';
+import { floodFill } from '../flood-fill.js';
+import { createWhiteBoundaryPredicate } from '../color.js';
+import type { Vector2 } from '../types.js';
 
 // Suppress console noise from all modules under test
 vi.spyOn(console, 'log').mockImplementation(() => {});

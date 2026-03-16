@@ -10,8 +10,8 @@ import {
   getBoundingBoxCenterFloat,
   getBoundingBoxCenter,
   translateBoundingBoxCenter,
-} from '../coordinate-utils';
-import type { BoundingBox, Vector2 } from '../types';
+} from '../coordinate-utils.js';
+import type { BoundingBox, Vector2 } from '../types.js';
 
 // Mock console methods
 vi.spyOn(console, 'log').mockImplementation(() => {});

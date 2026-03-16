@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { DirectoryPreloader } from '../services/DirectoryPreloader';
+import { DirectoryPreloader } from '../services/DirectoryPreloader.js';
 import type { DirectoryNode } from '@workspace/shared';
 
 function createMockDirectoryNode(

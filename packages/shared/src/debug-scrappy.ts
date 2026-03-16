@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
-import { Vector2 } from './types';
-import { batchProcessImages, ProcessingJob } from './image-processing';
+import { Vector2 } from './types.js';
+import { batchProcessImages, ProcessingJob } from './image-processing.js';
 
 // ============================================================================
 // Types

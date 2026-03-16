@@ -5,10 +5,10 @@ import {
   clone,
   write,
   createImage,
-} from './image-adapter';
-import { BoundingBox, Vector2 } from './types';
-import { isInBounds, degreesToRadians } from './geometry';
-import { transformCorners } from './coordinate-utils';
+} from './image-adapter.js';
+import { BoundingBox, Vector2 } from './types.js';
+import { isInBounds, degreesToRadians } from './geometry.js';
+import { transformCorners } from './coordinate-utils.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 

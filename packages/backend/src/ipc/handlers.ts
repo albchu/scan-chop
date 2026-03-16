@@ -1,5 +1,5 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron';
-import { WorkspaceService } from '../services/WorkspaceService';
+import { WorkspaceService } from '../services/WorkspaceService.js';
 import type {
   LoadDirectoryOptions,
   Vector2,

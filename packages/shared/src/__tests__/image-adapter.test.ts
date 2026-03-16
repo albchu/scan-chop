@@ -17,7 +17,7 @@ import {
   transformRotate,
   resize,
   clone,
-} from '../image-adapter';
+} from '../image-adapter.js';
 
 // Guard that the adapter's Image is the v1 constructor during migration.
 // Remove this import and the test block below in Phase 4 when the alias is eliminated.

@@ -1,5 +1,5 @@
-import { Vector2 } from './types';
-import { normalizeAngle } from './geometry';
+import { Vector2 } from './types.js';
+import { normalizeAngle } from './geometry.js';
 
 /**
  * Compute the principal axis orientation using PCA

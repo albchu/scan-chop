@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generatePageId } from '../utils/pageUtils';
+import { generatePageId } from '../utils/pageUtils.js';
 
 describe('generatePageId', () => {
   it('should be deterministic — same path returns same ID', () => {

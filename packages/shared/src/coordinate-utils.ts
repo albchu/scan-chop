@@ -1,5 +1,5 @@
-import { BoundingBox, Vector2 } from './types';
-import { degreesToRadians } from './geometry';
+import { BoundingBox, Vector2 } from './types.js';
+import { degreesToRadians } from './geometry.js';
 
 /**
  * Scale a single point by a scale factor (preserves floating-point precision)

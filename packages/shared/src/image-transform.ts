@@ -4,15 +4,15 @@ import {
   transformRotate,
   setPixel,
   createImage,
-} from './image-adapter';
-import { BoundingBox, ProcessingConfig } from './types';
-import { normalizeAngle, normalizeRotation } from './geometry';
+} from './image-adapter.js';
+import { BoundingBox, ProcessingConfig } from './types.js';
+import { normalizeAngle, normalizeRotation } from './geometry.js';
 import {
   transformCorners,
   calculateAxisAlignedBounds,
   getBoundingBoxCenter,
   translateBoundingBoxCenter,
-} from './coordinate-utils';
+} from './coordinate-utils.js';
 
 /**
  * Crop configuration for image extraction

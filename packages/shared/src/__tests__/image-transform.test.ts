@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Image, createImage, setPixel, getPixel } from '../image-adapter';
+import { Image, createImage, setPixel, getPixel } from '../image-adapter.js';
 import {
   calculateRotatedBounds,
   applyInsetCrop,
@@ -8,8 +8,8 @@ import {
   smartCrop,
   createRotatedRectangleMask,
   batchTransform,
-} from '../image-transform';
-import type { BoundingBox } from '../types';
+} from '../image-transform.js';
+import type { BoundingBox } from '../types.js';
 
 // Suppress console.log from production code
 vi.spyOn(console, 'log').mockImplementation(() => {});

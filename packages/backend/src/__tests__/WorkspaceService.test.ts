@@ -7,7 +7,7 @@ import {
   vi,
   MockedFunction,
 } from 'vitest';
-import { WorkspaceService } from '../services/WorkspaceService';
+import { WorkspaceService } from '../services/WorkspaceService.js';
 import fs from 'fs/promises';
 import path from 'path';
 import type { DirectoryNode } from '@workspace/shared';

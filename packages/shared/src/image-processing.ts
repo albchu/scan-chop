@@ -1,25 +1,25 @@
-import type { Image } from './image-adapter';
-import { BoundingBox, Vector2, ProcessingConfig } from './types';
-import { findMinimalBoundingRectangle } from './bounding-rectangle';
+import type { Image } from './image-adapter.js';
+import { BoundingBox, Vector2, ProcessingConfig } from './types.js';
+import { findMinimalBoundingRectangle } from './bounding-rectangle.js';
 import {
   loadAndPrepareImage,
   saveProcessedImage,
   createOutputDirectories,
   DebugArtifacts,
   saveDebugArtifacts,
-} from './image-io';
+} from './image-io.js';
 import {
   extractRegionWithWhiteBoundary,
   scaleRegionCoordinates,
   scaleRegionCoordinatesFloat,
-} from './region-extraction';
-import { smartCrop } from './image-transform';
-import { createDebugImage } from './debug-visualization';
+} from './region-extraction.js';
+import { smartCrop } from './image-transform.js';
+import { createDebugImage } from './debug-visualization.js';
 import {
   scaleCoordinates,
   scaleBoundingBox,
   scaleCoordinatesFloat,
-} from './coordinate-utils';
+} from './coordinate-utils.js';
 
 /**
  * Result of processing a single image with seed points

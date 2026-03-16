@@ -1,7 +1,7 @@
-import { Image, getPixel } from './image-adapter';
-import { Vector2, RGB } from './types';
-import { ColorPredicate } from './color';
-import { isInBounds } from './geometry';
+import { Image, getPixel } from './image-adapter.js';
+import { Vector2, RGB } from './types.js';
+import { ColorPredicate } from './color.js';
+import { isInBounds } from './geometry.js';
 
 /** Configuration for flood fill algorithm */
 export type FloodFillConfig = {

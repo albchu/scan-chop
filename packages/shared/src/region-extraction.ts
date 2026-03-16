@@ -1,9 +1,9 @@
-import type { Image } from './image-adapter';
-import { Vector2, ProcessingConfig } from './types';
-import { WHITE_THRESHOLD_DEFAULT } from './constants';
-import { ColorPredicate, createWhiteBoundaryPredicate } from './color';
-import { floodFill, FloodFillConfig } from './flood-fill';
-import { scaleCoordinates, scaleCoordinatesFloat } from './coordinate-utils';
+import type { Image } from './image-adapter.js';
+import { Vector2, ProcessingConfig } from './types.js';
+import { WHITE_THRESHOLD_DEFAULT } from './constants.js';
+import { ColorPredicate, createWhiteBoundaryPredicate } from './color.js';
+import { floodFill, FloodFillConfig } from './flood-fill.js';
+import { scaleCoordinates, scaleCoordinatesFloat } from './coordinate-utils.js';
 
 /**
  * Region extraction result

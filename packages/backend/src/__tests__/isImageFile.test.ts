@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isImageFile } from '../utils/isImageFile';
+import { isImageFile } from '../utils/isImageFile.js';
 
 describe('isImageFile', () => {
   it('should recognize all supported extensions', () => {

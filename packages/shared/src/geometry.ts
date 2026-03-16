@@ -1,5 +1,5 @@
-import type { Image } from './image-adapter';
-import { Vector2 } from './types';
+import type { Image } from './image-adapter.js';
+import { Vector2 } from './types.js';
 
 /**
  * Check if a point is within image bounds

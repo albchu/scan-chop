@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Image } from '../image-adapter';
+import { Image } from '../image-adapter.js';
 import {
   degreesToRadians,
   isInBounds,
   normalizeAngle,
   normalizeRotation,
   rotatePoint,
-} from '../geometry';
-import type { Vector2 } from '../types';
+} from '../geometry.js';
+import type { Vector2 } from '../types.js';
 
 // Mock console methods
 vi.spyOn(console, 'log').mockImplementation(() => {});

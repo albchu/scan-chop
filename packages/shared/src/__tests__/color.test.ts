@@ -3,8 +3,8 @@ import {
   calculateBrightness,
   createWhiteBoundaryPredicate,
   type ColorPredicate,
-} from '../color';
-import type { RGB } from '../types';
+} from '../color.js';
+import type { RGB } from '../types.js';
 
 // Mock console methods
 vi.spyOn(console, 'log').mockImplementation(() => {});
