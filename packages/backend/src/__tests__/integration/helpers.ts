@@ -1,8 +1,8 @@
-import { Image } from 'image-js';
+import { createImage, setPixel } from '@workspace/shared';
+import type { Image, RGB } from '@workspace/shared';
 import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
-import type { RGB } from '@workspace/shared';
 
 const DEFAULT_DARK: RGB = [80, 80, 80];
 const WHITE: RGB = [255, 255, 255];
@@ -11,10 +11,10 @@ const WHITE: RGB = [255, 255, 255];
  * Create a solid white page representing a blank scanner bed.
  */
 export function createWhitePage(width: number, height: number): Image {
-  const image = new Image(width, height);
+  const image = createImage(width, height, { colorModel: 'RGBA' });
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      image.setPixelXY(x, y, [WHITE[0], WHITE[1], WHITE[2], 255]);
+      setPixel(image, x, y, [WHITE[0], WHITE[1], WHITE[2], 255]);
     }
   }
   return image;
@@ -34,7 +34,7 @@ export function fillRect(
   for (let row = y; row < y + h; row++) {
     for (let col = x; col < x + w; col++) {
       if (col >= 0 && col < image.width && row >= 0 && row < image.height) {
-        image.setPixelXY(col, row, [color[0], color[1], color[2], 255]);
+        setPixel(image, col, row, [color[0], color[1], color[2], 255]);
       }
     }
   }

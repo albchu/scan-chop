@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Image } from 'image-js';
+import { Image, createImage, setPixel } from '../image-adapter';
 import {
   extractRegionFromSeed,
   extractMultipleRegions,
@@ -20,17 +20,17 @@ function createTestImage(
   height: number,
   fillColor: RGB = [0, 0, 0]
 ): Image {
-  const image = new Image(width, height);
+  const image = createImage(width, height, { colorModel: 'RGBA' });
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      image.setPixelXY(x, y, [fillColor[0], fillColor[1], fillColor[2], 255]);
+      setPixel(image, x, y, [fillColor[0], fillColor[1], fillColor[2], 255]);
     }
   }
   return image;
 }
 
-function setPixel(image: Image, x: number, y: number, color: RGB): void {
-  image.setPixelXY(x, y, [color[0], color[1], color[2], 255]);
+function setRGBPixel(image: Image, x: number, y: number, color: RGB): void {
+  setPixel(image, x, y, [color[0], color[1], color[2], 255]);
 }
 
 /**
@@ -46,12 +46,12 @@ function createBorderedImage(
   const image = createTestImage(width, height, interiorColor);
   // Paint white border on all four edges
   for (let x = 0; x < width; x++) {
-    setPixel(image, x, 0, borderColor);
-    setPixel(image, x, height - 1, borderColor);
+    setRGBPixel(image, x, 0, borderColor);
+    setRGBPixel(image, x, height - 1, borderColor);
   }
   for (let y = 0; y < height; y++) {
-    setPixel(image, 0, y, borderColor);
-    setPixel(image, width - 1, y, borderColor);
+    setRGBPixel(image, 0, y, borderColor);
+    setRGBPixel(image, width - 1, y, borderColor);
   }
   const interiorCount = (width - 2) * (height - 2);
   return { image, interiorCount };

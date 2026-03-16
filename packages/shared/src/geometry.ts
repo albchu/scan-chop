@@ -1,4 +1,4 @@
-import { Image } from 'image-js';
+import type { Image } from './image-adapter';
 import { Vector2 } from './types';
 
 /**
@@ -31,7 +31,8 @@ export const rotatePoint = (point: Vector2, angleRad: number): Vector2 => {
  * @param degrees - Angle in degrees
  * @returns Angle in radians
  */
-export const degreesToRadians = (degrees: number): number => (degrees * Math.PI) / 180;
+export const degreesToRadians = (degrees: number): number =>
+  (degrees * Math.PI) / 180;
 
 /**
  * Normalize angle to -180 to 180 range
@@ -101,4 +102,4 @@ export const normalizeRotation = (
     width: finalWidth,
     height: finalHeight,
   };
-}; 
+};

@@ -16,7 +16,11 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { Image } from 'image-js';
+import {
+  Image,
+  createImage,
+  setPixel as adapterSetPixel,
+} from '../image-adapter';
 import type { RGB } from '../types';
 import { WHITE_THRESHOLD_DEFAULT } from '../constants';
 import { createWhiteBoundaryPredicate, calculateBrightness } from '../color';
@@ -38,17 +42,22 @@ function createTestImage(
   height: number,
   fillColor: RGB = [0, 0, 0]
 ): Image {
-  const image = new Image(width, height);
+  const image = createImage(width, height, { colorModel: 'RGBA' });
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      image.setPixelXY(x, y, [fillColor[0], fillColor[1], fillColor[2], 255]);
+      adapterSetPixel(image, x, y, [
+        fillColor[0],
+        fillColor[1],
+        fillColor[2],
+        255,
+      ]);
     }
   }
   return image;
 }
 
 function setPixel(image: Image, x: number, y: number, color: RGB): void {
-  image.setPixelXY(x, y, [color[0], color[1], color[2], 255]);
+  adapterSetPixel(image, x, y, [color[0], color[1], color[2], 255]);
 }
 
 /**

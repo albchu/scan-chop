@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Image } from 'image-js';
+import {
+  Image,
+  createImage,
+  setPixel,
+  getPixel,
+  clone,
+} from '../image-adapter';
 import {
   drawCircle,
   drawThickCircle,
@@ -21,10 +27,10 @@ vi.mock('fs/promises', () => ({
 
 /** Create a solid black RGBA test image */
 function createTestImage(width: number, height: number): Image {
-  const image = new Image(width, height);
+  const image = createImage(width, height, { colorModel: 'RGBA' });
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      image.setPixelXY(x, y, [0, 0, 0, 255]);
+      setPixel(image, x, y, [0, 0, 0, 255]);
     }
   }
   return image;
@@ -32,7 +38,7 @@ function createTestImage(width: number, height: number): Image {
 
 /** Check if a pixel has been modified from the initial black fill */
 function isPixelSet(image: Image, x: number, y: number): boolean {
-  const p = image.getPixelXY(x, y);
+  const p = getPixel(image, x, y);
   return p[0] !== 0 || p[1] !== 0 || p[2] !== 0;
 }
 
@@ -89,8 +95,8 @@ describe('drawThickCircle', () => {
     // Every pixel should match
     for (let y = 0; y < 100; y++) {
       for (let x = 0; x < 100; x++) {
-        const pThick = imageThick.getPixelXY(x, y);
-        const pSingle = imageSingle.getPixelXY(x, y);
+        const pThick = getPixel(imageThick, x, y);
+        const pSingle = getPixel(imageSingle, x, y);
         expect(pThick).toEqual(pSingle);
       }
     }
@@ -251,14 +257,14 @@ describe('highlightRegion', () => {
 
   it('does nothing on an empty region', () => {
     const image = createTestImage(50, 50);
-    const before = image.clone();
+    const before = clone(image);
 
     highlightRegion(image, [], [255, 0, 0, 255]);
 
     // Every pixel should remain unchanged
     for (let y = 0; y < 50; y++) {
       for (let x = 0; x < 50; x++) {
-        expect(image.getPixelXY(x, y)).toEqual(before.getPixelXY(x, y));
+        expect(getPixel(image, x, y)).toEqual(getPixel(before, x, y));
       }
     }
   });
@@ -270,7 +276,7 @@ describe('highlightRegion', () => {
 describe('createDebugImage', () => {
   it('clones the base image so the original is not mutated', () => {
     const base = createTestImage(50, 50);
-    const originalPixel = base.getPixelXY(25, 25).slice();
+    const originalPixel = getPixel(base, 25, 25).slice();
 
     createDebugImage(base, {
       region: [[25, 25]],
@@ -278,7 +284,7 @@ describe('createDebugImage', () => {
     });
 
     // Original should remain black at that pixel
-    expect(base.getPixelXY(25, 25).slice()).toEqual(originalPixel);
+    expect(getPixel(base, 25, 25).slice()).toEqual(originalPixel);
   });
 
   it('applies all overlay types', () => {
@@ -304,8 +310,8 @@ describe('createDebugImage', () => {
     let anyDifference = false;
     for (let y = 0; y < 100 && !anyDifference; y++) {
       for (let x = 0; x < 100 && !anyDifference; x++) {
-        const bp = base.getPixelXY(x, y);
-        const rp = result.getPixelXY(x, y);
+        const bp = getPixel(base, x, y);
+        const rp = getPixel(result, x, y);
         if (bp[0] !== rp[0] || bp[1] !== rp[1] || bp[2] !== rp[2]) {
           anyDifference = true;
         }
@@ -320,7 +326,7 @@ describe('createDebugImage', () => {
 
     for (let y = 0; y < 30; y++) {
       for (let x = 0; x < 30; x++) {
-        expect(result.getPixelXY(x, y)).toEqual(base.getPixelXY(x, y));
+        expect(getPixel(result, x, y)).toEqual(getPixel(base, x, y));
       }
     }
   });

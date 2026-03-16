@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Image } from 'image-js';
+import { resize, read, decode } from '@workspace/shared';
+import type { Image } from '@workspace/shared';
 import path from 'path';
 import fs from 'fs/promises';
 import { FrameService } from '../../services/FrameService';
@@ -39,7 +40,7 @@ describe('Save round-trip integration', () => {
   async function generateRealFrame(): Promise<FrameData> {
     const original = createPageWithRectangle(600, 400, 100, 75, 200, 150);
     const scaleFactor = 0.5;
-    const scaled = original.resize({ width: Math.round(600 * scaleFactor) });
+    const scaled = resize(original, { width: Math.round(600 * scaleFactor) });
     const seed = { x: 100, y: 75 };
     return frameService.generateFrameFromSeed(
       original,
@@ -61,25 +62,25 @@ describe('Save round-trip integration', () => {
       const stat = await fs.stat(outputPath);
       expect(stat.size).toBeGreaterThan(0);
 
-      const reloaded = await Image.load(outputPath);
+      const reloaded = await read(outputPath);
       expect(reloaded.width).toBeGreaterThan(0);
       expect(reloaded.height).toBeGreaterThan(0);
 
       // With orientation 0 the saved image dimensions should match the source
-      const sourceImage = await Image.load(frame.imageData!);
+      const sourceImage = await decode(frame.imageData!);
       expect(reloaded.width).toBe(sourceImage.width);
       expect(reloaded.height).toBe(sourceImage.height);
     });
 
     it('should swap dimensions when saving with orientation 90', async () => {
       const frame = await generateRealFrame();
-      const sourceImage = await Image.load(frame.imageData!);
+      const sourceImage = await decode(frame.imageData!);
       frame.orientation = 90;
 
       const outputPath = path.join(tmpDir, 'rotated90.png');
       await workspaceService.saveFrameToPath(frame, outputPath);
 
-      const reloaded = await Image.load(outputPath);
+      const reloaded = await read(outputPath);
       // 90-degree rotation swaps width and height
       expect(reloaded.width).toBe(sourceImage.height);
       expect(reloaded.height).toBe(sourceImage.width);
@@ -87,13 +88,13 @@ describe('Save round-trip integration', () => {
 
     it('should preserve dimensions when saving with orientation 180', async () => {
       const frame = await generateRealFrame();
-      const sourceImage = await Image.load(frame.imageData!);
+      const sourceImage = await decode(frame.imageData!);
       frame.orientation = 180;
 
       const outputPath = path.join(tmpDir, 'rotated180.png');
       await workspaceService.saveFrameToPath(frame, outputPath);
 
-      const reloaded = await Image.load(outputPath);
+      const reloaded = await read(outputPath);
       // 180-degree rotation preserves width and height
       expect(reloaded.width).toBe(sourceImage.width);
       expect(reloaded.height).toBe(sourceImage.height);
@@ -101,13 +102,13 @@ describe('Save round-trip integration', () => {
 
     it('should swap dimensions when saving with orientation 270', async () => {
       const frame = await generateRealFrame();
-      const sourceImage = await Image.load(frame.imageData!);
+      const sourceImage = await decode(frame.imageData!);
       frame.orientation = 270;
 
       const outputPath = path.join(tmpDir, 'rotated270.png');
       await workspaceService.saveFrameToPath(frame, outputPath);
 
-      const reloaded = await Image.load(outputPath);
+      const reloaded = await read(outputPath);
       // 270-degree rotation swaps width and height (same as 90)
       expect(reloaded.width).toBe(sourceImage.height);
       expect(reloaded.height).toBe(sourceImage.width);
@@ -123,7 +124,7 @@ describe('Save round-trip integration', () => {
         { x: 50, y: 300, w: 150, h: 100 },
       ]);
       const scaleFactor = 0.5;
-      const scaled = original.resize({ width: Math.round(800 * scaleFactor) });
+      const scaled = resize(original, { width: Math.round(800 * scaleFactor) });
 
       const seeds = [
         { x: Math.round(125 * scaleFactor), y: Math.round(100 * scaleFactor) },
@@ -149,7 +150,7 @@ describe('Save round-trip integration', () => {
         const stat = await fs.stat(filePath);
         expect(stat.size).toBeGreaterThan(0);
 
-        const reloaded = await Image.load(filePath);
+        const reloaded = await read(filePath);
         expect(reloaded.width).toBeGreaterThan(0);
         expect(reloaded.height).toBeGreaterThan(0);
       }

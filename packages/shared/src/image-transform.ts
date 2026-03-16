@@ -1,11 +1,17 @@
-import { Image } from 'image-js';
+import {
+  Image,
+  crop,
+  transformRotate,
+  setPixel,
+  createImage,
+} from './image-adapter';
 import { BoundingBox, ProcessingConfig } from './types';
 import { normalizeAngle, normalizeRotation } from './geometry';
-import { 
-  transformCorners, 
+import {
+  transformCorners,
   calculateAxisAlignedBounds,
   getBoundingBoxCenter,
-  translateBoundingBoxCenter 
+  translateBoundingBoxCenter,
 } from './coordinate-utils';
 
 /**
@@ -32,7 +38,7 @@ export const calculateRotatedBounds = (
 ): CropConfig => {
   const corners = transformCorners(boundingBox);
   const bounds = calculateAxisAlignedBounds(corners, imageWidth, imageHeight);
-  
+
   return {
     x: bounds.minX,
     y: bounds.minY,
@@ -47,26 +53,22 @@ export const calculateRotatedBounds = (
  * @param inset - Number of pixels to inset from each edge
  * @returns Cropped image
  */
-export const applyInsetCrop = (
-  image: Image,
-  inset: number
-): Image => {
+export const applyInsetCrop = (image: Image, inset: number): Image => {
   if (inset <= 0) {
     return image;
   }
-  
+
   const cropX = inset;
   const cropY = inset;
   const cropWidth = Math.max(1, image.width - 2 * inset);
   const cropHeight = Math.max(1, image.height - 2 * inset);
-  
+
   console.log(
     `📐 Applying ${inset}px inset: ${cropWidth}×${cropHeight} from ${image.width}×${image.height}`
   );
-  
-  return image.crop({
-    x: cropX,
-    y: cropY,
+
+  return crop(image, {
+    origin: { column: cropX, row: cropY },
     width: cropWidth,
     height: cropHeight,
   });
@@ -88,42 +90,50 @@ export const rotateAndCrop = (
 ): Image => {
   const { minRotation = 0.2, cropInset = 0 } = config;
   const normalizedRotation = normalizeAngle(rotation);
-  
+
   if (Math.abs(normalizedRotation) <= minRotation) {
     console.log(
       `🔄 Skipping rotation: ${Math.abs(normalizedRotation).toFixed(1)}° <= ${minRotation}° threshold`
     );
-    
+
     // Just crop without rotation
-    const cropped = image.crop({
-      x: Math.round(boundingBox.x),
-      y: Math.round(boundingBox.y),
+    const cropped = crop(image, {
+      origin: {
+        column: Math.round(boundingBox.x),
+        row: Math.round(boundingBox.y),
+      },
       width: Math.round(boundingBox.width),
       height: Math.round(boundingBox.height),
     });
-    
+
     return cropInset > 0 ? applyInsetCrop(cropped, cropInset) : cropped;
   }
-  
+
   console.log(`🔄 Rotating by ${-normalizedRotation.toFixed(1)}°`);
-  
+
   // Rotate the image
-  const rotated = image.rotate(-normalizedRotation);
-  
+  const rotated = transformRotate(image, -normalizedRotation);
+
   // Calculate where the bounding box ended up after rotation
   const expandX = (rotated.width - image.width) / 2;
   const expandY = (rotated.height - image.height) / 2;
-  
+
   // Calculate the center of the bounding box in the original image
   const originalCenter = getBoundingBoxCenter(boundingBox);
-  
+
   // The center should now be at this position in the rotated image
   const rotatedCenterX = originalCenter.x + expandX;
   const rotatedCenterY = originalCenter.y + expandY;
-  
+
   // Calculate final crop coordinates
-  const finalCropX = Math.max(0, Math.round(rotatedCenterX - boundingBox.width / 2));
-  const finalCropY = Math.max(0, Math.round(rotatedCenterY - boundingBox.height / 2));
+  const finalCropX = Math.max(
+    0,
+    Math.round(rotatedCenterX - boundingBox.width / 2)
+  );
+  const finalCropY = Math.max(
+    0,
+    Math.round(rotatedCenterY - boundingBox.height / 2)
+  );
   const finalCropWidth = Math.min(
     Math.round(boundingBox.width),
     rotated.width - finalCropX
@@ -132,24 +142,23 @@ export const rotateAndCrop = (
     Math.round(boundingBox.height),
     rotated.height - finalCropY
   );
-  
+
   console.log(
     `✂️ Final crop: ${finalCropWidth}×${finalCropHeight} at (${finalCropX}, ${finalCropY})`
   );
-  
+
   // Crop to the final region
-  let result = rotated.crop({
-    x: finalCropX,
-    y: finalCropY,
+  let result = crop(rotated, {
+    origin: { column: finalCropX, row: finalCropY },
     width: finalCropWidth,
     height: finalCropHeight,
   });
-  
+
   // Apply inset if specified
   if (cropInset > 0) {
     result = applyInsetCrop(result, cropInset);
   }
-  
+
   return result;
 };
 
@@ -166,14 +175,22 @@ export const extractRotatedRectangle = (
   config: ProcessingConfig = {}
 ): Image => {
   // First, crop to the axis-aligned bounding box of the rotated rectangle
-  const cropBounds = calculateRotatedBounds(boundingBox, image.width, image.height);
-  
+  const cropBounds = calculateRotatedBounds(
+    boundingBox,
+    image.width,
+    image.height
+  );
+
   console.log(
     `✂️ Initial crop: ${cropBounds.width}×${cropBounds.height} at (${cropBounds.x}, ${cropBounds.y})`
   );
-  
-  const cropped = image.crop(cropBounds);
-  
+
+  const cropped = crop(image, {
+    origin: { column: cropBounds.x, row: cropBounds.y },
+    width: cropBounds.width,
+    height: cropBounds.height,
+  });
+
   // Adjust the bounding box coordinates to the cropped image space
   const adjustedBoundingBox: BoundingBox = {
     x: boundingBox.x - cropBounds.x,
@@ -182,9 +199,14 @@ export const extractRotatedRectangle = (
     height: boundingBox.height,
     rotation: boundingBox.rotation,
   };
-  
+
   // Now rotate and crop to extract just the rectangle
-  return rotateAndCrop(cropped, boundingBox.rotation, adjustedBoundingBox, config);
+  return rotateAndCrop(
+    cropped,
+    boundingBox.rotation,
+    adjustedBoundingBox,
+    config
+  );
 };
 
 /**
@@ -200,7 +222,7 @@ export const smartCrop = (
   config: ProcessingConfig = {}
 ): Image => {
   const { minRotation = 0.2, cropInset = 8, padding = 0 } = config;
-  
+
   // Apply padding to the bounding box if specified
   let paddedBox = boundingBox;
   if (padding > 0) {
@@ -213,15 +235,15 @@ export const smartCrop = (
     };
     console.log(`📦 Applied ${padding}px padding to bounding box`);
   }
-  
+
   // Extract the rotated rectangle
   const extracted = extractRotatedRectangle(image, paddedBox, {
     ...config,
     cropInset, // This will be applied after rotation
   });
-  
+
   console.log(`📸 Final image: ${extracted.width}×${extracted.height}`);
-  
+
   return extracted;
 };
 
@@ -237,43 +259,43 @@ export const createRotatedRectangleMask = (
   height: number,
   boundingBox: BoundingBox
 ): Image => {
-  const mask = new Image(width, height, { 
-    components: 1, 
+  const mask = createImage(width, height, {
+    colorModel: 'GREY',
     bitDepth: 8,
   });
-  
+
   // Get the corners of the rotated rectangle
   const corners = transformCorners(boundingBox);
-  
+
   // Simple point-in-polygon test for each pixel
   // Using the cross product method
   const isInsidePolygon = (px: number, py: number): boolean => {
     let inside = false;
-    
+
     for (let i = 0, j = 3; i < 4; j = i++) {
       const xi = corners[i].x;
       const yi = corners[i].y;
       const xj = corners[j].x;
       const yj = corners[j].y;
-      
-      const intersect = ((yi > py) !== (yj > py)) &&
-        (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
-      
+
+      const intersect =
+        yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi;
+
       if (intersect) inside = !inside;
     }
-    
+
     return inside;
   };
-  
+
   // Fill the mask
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (isInsidePolygon(x, y)) {
-        mask.setPixelXY(x, y, [255]);
+        setPixel(mask, x, y, [255]);
       }
     }
   }
-  
+
   return mask;
 };
 
@@ -296,18 +318,20 @@ export const batchTransform = async (
   batchConfig: BatchTransformConfig
 ): Promise<Image[]> => {
   const { images, boundingBoxes, config = {}, parallel = true } = batchConfig;
-  
+
   if (images.length !== boundingBoxes.length) {
     throw new Error('Number of images must match number of bounding boxes');
   }
-  
-  console.log(`🔄 Batch processing ${images.length} images (${parallel ? 'parallel' : 'sequential'})`);
-  
+
+  console.log(
+    `🔄 Batch processing ${images.length} images (${parallel ? 'parallel' : 'sequential'})`
+  );
+
   const processOne = (index: number): Image => {
     console.log(`  📸 Processing image ${index + 1}/${images.length}`);
     return smartCrop(images[index], boundingBoxes[index], config);
   };
-  
+
   if (parallel) {
     // Process in parallel
     return Promise.all(
@@ -321,4 +345,4 @@ export const batchTransform = async (
     }
     return results;
   }
-}; 
+};

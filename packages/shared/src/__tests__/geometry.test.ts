@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Image } from 'image-js';
+import { Image } from '../image-adapter';
 import {
   degreesToRadians,
   isInBounds,
@@ -15,7 +15,7 @@ vi.spyOn(console, 'log').mockImplementation(() => {});
 describe('isInBounds', () => {
   it('should return true for points inside image', () => {
     const image = { width: 100, height: 100 } as Image;
-    
+
     expect(isInBounds(image, 0, 0)).toBe(true);
     expect(isInBounds(image, 50, 50)).toBe(true);
     expect(isInBounds(image, 99, 99)).toBe(true);
@@ -23,7 +23,7 @@ describe('isInBounds', () => {
 
   it('should return false for points outside image', () => {
     const image = { width: 100, height: 100 } as Image;
-    
+
     expect(isInBounds(image, -1, 0)).toBe(false);
     expect(isInBounds(image, 0, -1)).toBe(false);
     expect(isInBounds(image, 100, 0)).toBe(false);
@@ -34,7 +34,7 @@ describe('isInBounds', () => {
 
   it('should handle edge cases correctly', () => {
     const image = { width: 1, height: 1 } as Image;
-    
+
     expect(isInBounds(image, 0, 0)).toBe(true);
     expect(isInBounds(image, 1, 0)).toBe(false);
     expect(isInBounds(image, 0, 1)).toBe(false);
@@ -42,7 +42,7 @@ describe('isInBounds', () => {
 
   it('should work with rectangular images', () => {
     const image = { width: 200, height: 100 } as Image;
-    
+
     expect(isInBounds(image, 150, 50)).toBe(true);
     expect(isInBounds(image, 199, 99)).toBe(true);
     expect(isInBounds(image, 200, 50)).toBe(false);
@@ -54,7 +54,7 @@ describe('rotatePoint', () => {
   it('should not change point when rotating by 0 radians', () => {
     const point: Vector2 = { x: 10, y: 5 };
     const rotated = rotatePoint(point, 0);
-    
+
     expect(rotated.x).toBeCloseTo(10);
     expect(rotated.y).toBeCloseTo(5);
   });
@@ -62,7 +62,7 @@ describe('rotatePoint', () => {
   it('should rotate point 90 degrees counterclockwise', () => {
     const point: Vector2 = { x: 10, y: 0 };
     const rotated = rotatePoint(point, Math.PI / 2);
-    
+
     expect(rotated.x).toBeCloseTo(0);
     expect(rotated.y).toBeCloseTo(10);
   });
@@ -70,7 +70,7 @@ describe('rotatePoint', () => {
   it('should rotate point 180 degrees', () => {
     const point: Vector2 = { x: 10, y: 5 };
     const rotated = rotatePoint(point, Math.PI);
-    
+
     expect(rotated.x).toBeCloseTo(-10);
     expect(rotated.y).toBeCloseTo(-5);
   });
@@ -78,7 +78,7 @@ describe('rotatePoint', () => {
   it('should rotate point -90 degrees (90 clockwise)', () => {
     const point: Vector2 = { x: 0, y: 10 };
     const rotated = rotatePoint(point, -Math.PI / 2);
-    
+
     expect(rotated.x).toBeCloseTo(10);
     expect(rotated.y).toBeCloseTo(0);
   });
@@ -86,7 +86,7 @@ describe('rotatePoint', () => {
   it('should handle rotation of origin', () => {
     const point: Vector2 = { x: 0, y: 0 };
     const rotated = rotatePoint(point, Math.PI / 4);
-    
+
     expect(rotated.x).toBeCloseTo(0);
     expect(rotated.y).toBeCloseTo(0);
   });
@@ -94,8 +94,8 @@ describe('rotatePoint', () => {
   it('should rotate point 45 degrees', () => {
     const point: Vector2 = { x: 10, y: 0 };
     const rotated = rotatePoint(point, Math.PI / 4);
-    
-    const expected = 10 * Math.sqrt(2) / 2;
+
+    const expected = (10 * Math.sqrt(2)) / 2;
     expect(rotated.x).toBeCloseTo(expected);
     expect(rotated.y).toBeCloseTo(expected);
   });
@@ -103,7 +103,7 @@ describe('rotatePoint', () => {
   it('should handle full rotation (360 degrees)', () => {
     const point: Vector2 = { x: 5, y: 3 };
     const rotated = rotatePoint(point, 2 * Math.PI);
-    
+
     expect(rotated.x).toBeCloseTo(5);
     expect(rotated.y).toBeCloseTo(3);
   });
@@ -261,10 +261,14 @@ describe('normalizeRotation', () => {
   it('should log normalization steps', () => {
     const logSpy = vi.spyOn(console, 'log');
     logSpy.mockClear();
-    
+
     normalizeRotation(170, 100, 50);
-    
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('input rotation=170.00°'));
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('angle near ±180°'));
+
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('input rotation=170.00°')
+    );
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('angle near ±180°')
+    );
   });
-}); 
+});

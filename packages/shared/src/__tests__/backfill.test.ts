@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Image } from 'image-js';
+import { Image, createImage, setPixel } from '../image-adapter';
 import { findMinimalBoundingRectangle } from '../bounding-rectangle';
 import {
   computePCAOrientation,
@@ -20,10 +20,10 @@ function createTestImage(
   height: number,
   fillColor: [number, number, number] = [0, 0, 0]
 ): Image {
-  const image = new Image(width, height);
+  const image = createImage(width, height, { colorModel: 'RGBA' });
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      image.setPixelXY(x, y, [fillColor[0], fillColor[1], fillColor[2], 255]);
+      setPixel(image, x, y, [fillColor[0], fillColor[1], fillColor[2], 255]);
     }
   }
   return image;
@@ -197,10 +197,10 @@ describe('floodFill backfill', () => {
     const white: [number, number, number] = [255, 255, 255];
 
     // Set cardinal neighbours of center to white
-    image.setPixelXY(1, 0, [white[0], white[1], white[2], 255]); // top
-    image.setPixelXY(0, 1, [white[0], white[1], white[2], 255]); // left
-    image.setPixelXY(2, 1, [white[0], white[1], white[2], 255]); // right
-    image.setPixelXY(1, 2, [white[0], white[1], white[2], 255]); // bottom
+    setPixel(image, 1, 0, [white[0], white[1], white[2], 255]); // top
+    setPixel(image, 0, 1, [white[0], white[1], white[2], 255]); // left
+    setPixel(image, 2, 1, [white[0], white[1], white[2], 255]); // right
+    setPixel(image, 1, 2, [white[0], white[1], white[2], 255]); // bottom
 
     const predicate = createWhiteBoundaryPredicate();
     // Seed from top-left corner (0,0) which is dark

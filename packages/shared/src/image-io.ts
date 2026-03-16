@@ -1,4 +1,4 @@
-import { Image } from 'image-js';
+import { Image, read, write, resize } from './image-adapter';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -21,9 +21,9 @@ export const loadAndPrepareImage = async (
   imagePath: string,
   downsampleFactor: number = 1.0
 ): Promise<PreparedImage> => {
-  const original = await Image.load(imagePath);
+  const original = await read(imagePath);
   console.log(`📐 Loaded image: ${original.width}×${original.height}`);
-  
+
   if (downsampleFactor === 1.0) {
     return {
       original,
@@ -31,16 +31,16 @@ export const loadAndPrepareImage = async (
       scaleFactor: 1.0,
     };
   }
-  
-  const scaled = original.resize({
+
+  const scaled = resize(original, {
     width: Math.round(original.width * downsampleFactor),
     height: Math.round(original.height * downsampleFactor),
   });
-  
+
   console.log(
     `📏 Scaled image: ${scaled.width}×${scaled.height} (factor: ${downsampleFactor})`
   );
-  
+
   return {
     original,
     scaled,
@@ -64,7 +64,7 @@ export const saveProcessedImage = async (
 ): Promise<void> => {
   // Note: image-js save method doesn't accept options in the same way
   // For now, we'll save without options
-  await image.save(outputPath);
+  await write(outputPath, image);
   console.log(`💾 Saved image: ${path.basename(outputPath)}`);
 };
 
@@ -87,16 +87,16 @@ export const saveDebugArtifacts = async (
 ): Promise<void> => {
   // Ensure output directory exists
   await fs.mkdir(outputDir, { recursive: true });
-  
+
   // Save debug images
   if (artifacts.debugImages) {
     for (const { image, filename } of artifacts.debugImages) {
       const fullPath = path.join(outputDir, filename);
-      await image.save(fullPath);
+      await write(fullPath, image);
       console.log(`🐛 Saved debug image: ${filename}`);
     }
   }
-  
+
   // Save metadata if provided
   if (artifacts.metadata) {
     const metadataPath = path.join(outputDir, 'debug-metadata.json');
@@ -119,11 +119,11 @@ export const createOutputDirectories = async (
   subdirs: string[] = []
 ): Promise<void> => {
   await fs.mkdir(baseDir, { recursive: true });
-  
+
   for (const subdir of subdirs) {
     const fullPath = path.join(baseDir, subdir);
     await fs.mkdir(fullPath, { recursive: true });
   }
-  
+
   console.log(`📁 Created output directory structure at: ${baseDir}`);
-}; 
+};

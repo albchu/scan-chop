@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Image } from 'image-js';
+import { resize, decode } from '@workspace/shared';
+import type { Image } from '@workspace/shared';
 import { FrameService } from '../../services/FrameService';
 import {
   createPageWithRectangle,
@@ -25,7 +26,7 @@ describe('FrameService integration (real processing pipeline)', () => {
       // 600x400 white page with a 200x150 dark rect at (100, 75)
       const original = createPageWithRectangle(600, 400, 100, 75, 200, 150);
       const scaleFactor = 0.5;
-      const scaled = original.resize({ width: Math.round(600 * scaleFactor) });
+      const scaled = resize(original, { width: Math.round(600 * scaleFactor) });
 
       // Seed in the center of the rectangle in scaled coordinates
       const seed = {
@@ -58,7 +59,7 @@ describe('FrameService integration (real processing pipeline)', () => {
       // 800x600 page with a 150x100 rect at (500, 350)
       const original = createPageWithRectangle(800, 600, 500, 350, 150, 100);
       const scaleFactor = 0.3;
-      const scaled = original.resize({ width: Math.round(800 * scaleFactor) });
+      const scaled = resize(original, { width: Math.round(800 * scaleFactor) });
 
       // Seed in center of rect in scaled coords
       const seed = {
@@ -88,7 +89,7 @@ describe('FrameService integration (real processing pipeline)', () => {
     it('should increment frame counter across detections', async () => {
       const original = createPageWithRectangle(600, 400, 100, 75, 200, 150);
       const scaleFactor = 0.5;
-      const scaled = original.resize({ width: Math.round(600 * scaleFactor) });
+      const scaled = resize(original, { width: Math.round(600 * scaleFactor) });
       const seed = { x: 100, y: 75 };
 
       const frame1 = await service.generateFrameFromSeed(
@@ -112,10 +113,10 @@ describe('FrameService integration (real processing pipeline)', () => {
   });
 
   describe('image quality and encoding', () => {
-    it('should produce imageData that round-trips through Image.load()', async () => {
+    it('should produce imageData that round-trips through decode()', async () => {
       const original = createPageWithRectangle(600, 400, 100, 75, 200, 150);
       const scaleFactor = 0.5;
-      const scaled = original.resize({ width: Math.round(600 * scaleFactor) });
+      const scaled = resize(original, { width: Math.round(600 * scaleFactor) });
       const seed = { x: 100, y: 75 };
 
       const frame = await service.generateFrameFromSeed(
@@ -129,7 +130,7 @@ describe('FrameService integration (real processing pipeline)', () => {
       expect(frame.imageData).toBeDefined();
 
       // Verify the base64 can be decoded back into a valid image
-      const reloaded = await Image.load(frame.imageData!);
+      const reloaded = await decode(frame.imageData!);
       expect(reloaded.width).toBeGreaterThan(0);
       expect(reloaded.height).toBeGreaterThan(0);
     });
@@ -138,7 +139,7 @@ describe('FrameService integration (real processing pipeline)', () => {
       // 800x600 page with 300x200 rect (aspect ratio 1.5)
       const original = createPageWithRectangle(800, 600, 100, 100, 300, 200);
       const scaleFactor = 0.5;
-      const scaled = original.resize({ width: Math.round(800 * scaleFactor) });
+      const scaled = resize(original, { width: Math.round(800 * scaleFactor) });
       const seed = {
         x: Math.round(250 * scaleFactor),
         y: Math.round(200 * scaleFactor),
@@ -152,7 +153,7 @@ describe('FrameService integration (real processing pipeline)', () => {
         '/test/scan.jpg'
       );
 
-      const reloaded = await Image.load(frame.imageData!);
+      const reloaded = await decode(frame.imageData!);
       const actualRatio = reloaded.width / reloaded.height;
       const expectedRatio = 300 / 200; // 1.5
 
@@ -167,7 +168,7 @@ describe('FrameService integration (real processing pipeline)', () => {
       // All-white page with no rectangles
       const original = createWhitePage(400, 300);
       const scaleFactor = 0.5;
-      const scaled = original.resize({ width: Math.round(400 * scaleFactor) });
+      const scaled = resize(original, { width: Math.round(400 * scaleFactor) });
       const seed = { x: 100, y: 75 };
 
       await expect(
@@ -184,7 +185,7 @@ describe('FrameService integration (real processing pipeline)', () => {
     it('should throw when seed is out of image bounds', async () => {
       const original = createPageWithRectangle(600, 400, 100, 75, 200, 150);
       const scaleFactor = 0.5;
-      const scaled = original.resize({ width: Math.round(600 * scaleFactor) });
+      const scaled = resize(original, { width: Math.round(600 * scaleFactor) });
 
       await expect(
         service.generateFrameFromSeed(
@@ -201,7 +202,7 @@ describe('FrameService integration (real processing pipeline)', () => {
       // 400x300 page with a tiny 8x8 rectangle (likely below default minArea)
       const original = createPageWithRectangle(400, 300, 100, 100, 8, 8);
       const scaleFactor = 0.5;
-      const scaled = original.resize({ width: Math.round(400 * scaleFactor) });
+      const scaled = resize(original, { width: Math.round(400 * scaleFactor) });
       const seed = {
         x: Math.round(104 * scaleFactor),
         y: Math.round(104 * scaleFactor),
@@ -234,7 +235,7 @@ describe('FrameService integration (real processing pipeline)', () => {
         { x: 500, y: 350, w: 150, h: 100 },
       ]);
       const scaleFactor = 0.5;
-      const scaled = original.resize({ width: Math.round(800 * scaleFactor) });
+      const scaled = resize(original, { width: Math.round(800 * scaleFactor) });
 
       // Seed in center of first rectangle (scaled coords)
       const seed1 = {

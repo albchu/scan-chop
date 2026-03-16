@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Image } from 'image-js';
+import { Image, createImage, setPixel, getPixel } from '../image-adapter';
 import {
   calculateRotatedBounds,
   applyInsetCrop,
@@ -19,10 +19,10 @@ vi.spyOn(console, 'log').mockImplementation(() => {});
  * so we can verify crop operations produce the expected sub-region.
  */
 function createTestImage(width: number, height: number): Image {
-  const image = new Image(width, height);
+  const image = createImage(width, height, { colorModel: 'RGBA' });
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      image.setPixelXY(x, y, [x % 256, y % 256, (x + y) % 256, 255]);
+      setPixel(image, x, y, [x % 256, y % 256, (x + y) % 256, 255]);
     }
   }
   return image;
@@ -414,15 +414,15 @@ describe('createRotatedRectangleMask', () => {
     expect(mask.height).toBe(100);
 
     // Center of the rectangle should be inside
-    expect(mask.getPixelXY(35, 25)[0]).toBe(255);
+    expect(getPixel(mask, 35, 25)[0]).toBe(255);
     // Just inside top-left region
-    expect(mask.getPixelXY(15, 15)[0]).toBe(255);
+    expect(getPixel(mask, 15, 15)[0]).toBe(255);
 
     // Outside the rectangle
-    expect(mask.getPixelXY(0, 0)[0]).toBe(0);
-    expect(mask.getPixelXY(99, 99)[0]).toBe(0);
+    expect(getPixel(mask, 0, 0)[0]).toBe(0);
+    expect(getPixel(mask, 99, 99)[0]).toBe(0);
     // Below the rectangle
-    expect(mask.getPixelXY(35, 50)[0]).toBe(0);
+    expect(getPixel(mask, 35, 50)[0]).toBe(0);
   });
 
   it('should have center pixel inside for a 45-degree rotated rectangle', () => {
@@ -445,11 +445,11 @@ describe('createRotatedRectangleMask', () => {
     const cy = Math.round(
       bbox.y + (bbox.width / 2) * sin45 + (bbox.height / 2) * cos45
     );
-    expect(mask.getPixelXY(cx, cy)[0]).toBe(255);
+    expect(getPixel(mask, cx, cy)[0]).toBe(255);
 
     // A point far from the rectangle should be outside
-    expect(mask.getPixelXY(0, 0)[0]).toBe(0);
-    expect(mask.getPixelXY(149, 149)[0]).toBe(0);
+    expect(getPixel(mask, 0, 0)[0]).toBe(0);
+    expect(getPixel(mask, 149, 149)[0]).toBe(0);
   });
 
   it('should produce a mask matching the requested dimensions', () => {
@@ -475,11 +475,11 @@ describe('createRotatedRectangleMask', () => {
     // Build an expected map: pixels inside [1..4)×[1..4) should be 255
     // The ray-casting algorithm considers boundary pixels; check interior with certainty
     // Center of the box at (2,2) must be inside
-    expect(mask.getPixelXY(2, 2)[0]).toBe(255);
+    expect(getPixel(mask, 2, 2)[0]).toBe(255);
 
     // Corners of the image (0,0) and (4,4) are outside
-    expect(mask.getPixelXY(0, 0)[0]).toBe(0);
-    expect(mask.getPixelXY(4, 4)[0]).toBe(0);
+    expect(getPixel(mask, 0, 0)[0]).toBe(0);
+    expect(getPixel(mask, 4, 4)[0]).toBe(0);
   });
 });
 

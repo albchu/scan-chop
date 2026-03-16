@@ -1,7 +1,18 @@
-import { FrameData, Vector2, ProcessingConfig, BoundingBox, generatePageId } from '@workspace/shared';
-import { findBoundingBoxFromSeed, scaleBoundingBox, smartCrop } from '@workspace/shared';
+import {
+  FrameData,
+  Vector2,
+  ProcessingConfig,
+  BoundingBox,
+  generatePageId,
+} from '@workspace/shared';
+import {
+  findBoundingBoxFromSeed,
+  scaleBoundingBox,
+  smartCrop,
+} from '@workspace/shared';
 import { saveFrameDebugImage } from '@workspace/shared';
-import type { Image } from 'image-js';
+import type { Image } from '@workspace/shared';
+import { encodeDataURL } from '@workspace/shared';
 
 // Internal metadata for regenerating frame images
 interface FrameMetadata {
@@ -32,49 +43,57 @@ export class FrameService {
   }
 
   async generateFrameFromSeed(
-    original: Image,        // Full resolution image for final cropping
-    scaled: Image,          // Scaled image for bounding box detection
-    scaleFactor: number,    // Scale factor (scaled width / original width)
+    original: Image, // Full resolution image for final cropping
+    scaled: Image, // Scaled image for bounding box detection
+    scaleFactor: number, // Scale factor (scaled width / original width)
     seed: Vector2,
-    imagePath: string,      // Path to the original image
+    imagePath: string, // Path to the original image
     config?: ProcessingConfig
   ): Promise<FrameData> {
     // Find bounding box on the scaled image for performance
-    const { boundingBox: scaledBoundingBox } = findBoundingBoxFromSeed(scaled, seed, {
-      ...config,
-      downsampleFactor: scaleFactor
-    });
-    
+    const { boundingBox: scaledBoundingBox } = findBoundingBoxFromSeed(
+      scaled,
+      seed,
+      {
+        ...config,
+        downsampleFactor: scaleFactor,
+      }
+    );
+
     // Scale the bounding box back to original image dimensions
     const originalBoundingBox = scaleBoundingBox(
-      scaledBoundingBox, 
-      1 / scaleFactor  // Inverse of scale factor to go from scaled -> original
+      scaledBoundingBox,
+      1 / scaleFactor // Inverse of scale factor to go from scaled -> original
     );
-    
+
     console.log(
       `[FrameService] Bounding box - Scaled: ${scaledBoundingBox.width.toFixed(0)}×${scaledBoundingBox.height.toFixed(0)}, ` +
-      `Original: ${originalBoundingBox.width.toFixed(0)}×${originalBoundingBox.height.toFixed(0)}`
+        `Original: ${originalBoundingBox.width.toFixed(0)}×${originalBoundingBox.height.toFixed(0)}`
     );
-    
+
     // Perform the smart crop on the original full-resolution image
     // This gives us the best quality output
     const croppedImage = smartCrop(original, originalBoundingBox, config);
-    
+
     // Generate base64 data URL for the cropped image
     let imageData: string | undefined;
     try {
-      imageData = croppedImage.toDataURL();
-      console.log(`[FrameService] ImageData generated successfully, length: ${imageData.length}`);
+      imageData = encodeDataURL(croppedImage);
+      console.log(
+        `[FrameService] ImageData generated successfully, length: ${imageData.length}`
+      );
     } catch (error) {
       console.error(`[FrameService] Failed to generate imageData:`, error);
       imageData = undefined;
     }
-    
-    console.log(`[FrameService] Cropped image: ${croppedImage.width}×${croppedImage.height}`);
-    
+
+    console.log(
+      `[FrameService] Cropped image: ${croppedImage.width}×${croppedImage.height}`
+    );
+
     // Generate pageId from imagePath
     const pageId = generatePageId(imagePath);
-    
+
     // Create FrameData with display coordinates (scaled bounding box)
     // The UI works in display space, not original image space
     const frameData: FrameData = {
@@ -91,63 +110,75 @@ export class FrameService {
       pageId, // Include pageId
       imagePath, // Include source image path for navigation
     };
-    
-    console.log(`[FrameService] FrameData includes imageData: ${!!frameData.imageData}`);
-    console.log(`[FrameService] FrameData includes pageId: ${frameData.pageId}`);
-    
+
+    console.log(
+      `[FrameService] FrameData includes imageData: ${!!frameData.imageData}`
+    );
+    console.log(
+      `[FrameService] FrameData includes pageId: ${frameData.pageId}`
+    );
+
     // Save debug image if DEBUG environment variable is set
     if (process.env.DEBUG === 'true') {
       console.log('[FrameService] DEBUG mode enabled - saving debug image');
       await this.saveDebugImage(scaled, scaledBoundingBox, seed, frameData.id);
     }
-    
+
     // Store metadata for regeneration
     const metadata: FrameMetadata = {
       imagePath,
       pageId,
-      scaleFactor
+      scaleFactor,
     };
-    
+
     // TODO: Future persistence - save frame to SQLite with pageId
     // await db.frames.insert({ ...frameData, pageId });
-    
+
     // Increment counter for next frame
     this.frameCounter++;
-    
+
     // Persist frame and metadata
     this.frames.set(frameData.id, frameData);
     this.frameMetadata.set(frameData.id, metadata);
-    
-    console.log(`[FrameService] Generated and persisted frame: ${frameData.id}`);
+
+    console.log(
+      `[FrameService] Generated and persisted frame: ${frameData.id}`
+    );
     return frameData;
   }
 
   async updateFrame(
-    id: string, 
+    id: string,
     updates: Partial<FrameData>,
-    original?: Image,      // Optional: provide for regenerating imageData
+    original?: Image, // Optional: provide for regenerating imageData
     config?: ProcessingConfig
   ): Promise<FrameData | undefined> {
     const frame = this.frames.get(id);
     const metadata = this.frameMetadata.get(id);
-    
+
     if (!frame) {
       return undefined;
     }
-    
+
     const updatedFrame = { ...frame, ...updates };
-    
-    console.log(`[FrameService] Updating frame ${id}, original has imageData: ${!!frame.imageData}`);
-    console.log(`[FrameService] Updated frame will have imageData: ${!!updatedFrame.imageData}`);
-    
+
+    console.log(
+      `[FrameService] Updating frame ${id}, original has imageData: ${!!frame.imageData}`
+    );
+    console.log(
+      `[FrameService] Updated frame will have imageData: ${!!updatedFrame.imageData}`
+    );
+
     // If coordinates changed and we have the original image, regenerate the cropped image
-    if (original && metadata && (
-      updates.x !== undefined || 
-      updates.y !== undefined || 
-      updates.width !== undefined || 
-      updates.height !== undefined || 
-      updates.rotation !== undefined
-    )) {
+    if (
+      original &&
+      metadata &&
+      (updates.x !== undefined ||
+        updates.y !== undefined ||
+        updates.width !== undefined ||
+        updates.height !== undefined ||
+        updates.rotation !== undefined)
+    ) {
       // Scale the bounding box back to original image dimensions
       const originalBoundingBox = scaleBoundingBox(
         {
@@ -155,23 +186,23 @@ export class FrameService {
           y: updatedFrame.y,
           width: updatedFrame.width,
           height: updatedFrame.height,
-          rotation: updatedFrame.rotation
-        }, 
+          rotation: updatedFrame.rotation,
+        },
         1 / metadata.scaleFactor
       );
-      
+
       // Generate new cropped image
       const croppedImage = smartCrop(original, originalBoundingBox, config);
-      updatedFrame.imageData = croppedImage.toDataURL();
-      
+      updatedFrame.imageData = encodeDataURL(croppedImage);
+
       console.log(`[FrameService] Regenerated cropped image for frame: ${id}`);
     }
-    
+
     this.frames.set(id, updatedFrame);
-    
+
     // TODO: Future persistence - update frame in SQLite
     // await db.frames.update(id, updatedFrame);
-    
+
     console.log(`[FrameService] Updated frame: ${id}`);
     return updatedFrame;
   }
@@ -204,4 +235,4 @@ export class FrameService {
     // Use the encapsulated debug visualization function
     await saveFrameDebugImage(image, boundingBox, seed, frameId);
   }
-} 
+}

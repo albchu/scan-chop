@@ -9,6 +9,7 @@ vi.mock('@workspace/shared', () => ({
   smartCrop: vi.fn(),
   saveFrameDebugImage: vi.fn(),
   generatePageId: vi.fn(),
+  encodeDataURL: vi.fn(),
 }));
 
 import {
@@ -17,6 +18,7 @@ import {
   smartCrop,
   saveFrameDebugImage,
   generatePageId,
+  encodeDataURL,
 } from '@workspace/shared';
 
 const mockFindBoundingBoxFromSeed = findBoundingBoxFromSeed as ReturnType<
@@ -26,6 +28,7 @@ const mockScaleBoundingBox = scaleBoundingBox as ReturnType<typeof vi.fn>;
 const mockSmartCrop = smartCrop as ReturnType<typeof vi.fn>;
 const mockSaveFrameDebugImage = saveFrameDebugImage as ReturnType<typeof vi.fn>;
 const mockGeneratePageId = generatePageId as ReturnType<typeof vi.fn>;
+const mockEncodeDataURL = encodeDataURL as ReturnType<typeof vi.fn>;
 
 function createMockImage(width = 800, height = 600) {
   return {
@@ -77,6 +80,10 @@ describe('FrameService', () => {
     mockSmartCrop.mockReturnValue(croppedImage);
 
     mockSaveFrameDebugImage.mockResolvedValue(undefined);
+
+    mockEncodeDataURL.mockImplementation(
+      (img: any) => `data:image/png;base64,mock_${img.width}x${img.height}`
+    );
 
     // Ensure DEBUG is not set by default
     delete process.env.DEBUG;
@@ -195,14 +202,14 @@ describe('FrameService', () => {
       expect(smartCropCalls[0][0]).toBe(original);
     });
 
-    it('should still create frame with imageData undefined when toDataURL throws', async () => {
+    it('should still create frame with imageData undefined when encodeDataURL throws', async () => {
       const original = createMockImage();
       const scaled = createMockImage();
       const croppedImage = createMockImage();
-      croppedImage.toDataURL.mockImplementation(() => {
+      mockSmartCrop.mockReturnValue(croppedImage);
+      mockEncodeDataURL.mockImplementation(() => {
         throw new Error('Canvas rendering failed');
       });
-      mockSmartCrop.mockReturnValue(croppedImage);
 
       const frame = await service.generateFrameFromSeed(
         original as any,

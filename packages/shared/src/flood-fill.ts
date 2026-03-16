@@ -1,4 +1,4 @@
-import { Image } from 'image-js';
+import { Image, getPixel } from './image-adapter';
 import { Vector2, RGB } from './types';
 import { ColorPredicate } from './color';
 import { isInBounds } from './geometry';
@@ -45,9 +45,7 @@ export const floodFill = (
     throw new Error('Seed point out of image bounds');
   }
 
-  const seedColor = image
-    .getPixelXY(seedX, seedY)
-    .slice(0, 3) as unknown as RGB;
+  const seedColor = getPixel(image, seedX, seedY).slice(0, 3) as unknown as RGB;
   const seedBrightness = (seedColor[0] + seedColor[1] + seedColor[2]) / 3;
 
   console.log(
@@ -96,7 +94,7 @@ export const floodFill = (
     visited[idx] = 1;
     pixelsChecked++;
 
-    const currentColor = image.getPixelXY(x, y).slice(0, 3) as unknown as RGB;
+    const currentColor = getPixel(image, x, y).slice(0, 3) as unknown as RGB;
     if (!predicate(currentColor, seedColor)) continue;
 
     // Store points in original image coordinates with floating-point precision
@@ -122,4 +120,4 @@ export const floodFill = (
   }
 
   return region;
-}; 
+};

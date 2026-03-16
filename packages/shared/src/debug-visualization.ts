@@ -1,4 +1,11 @@
-import { Image } from 'image-js';
+import {
+  Image,
+  getPixel,
+  setPixel,
+  clone,
+  write,
+  createImage,
+} from './image-adapter';
 import { BoundingBox, Vector2 } from './types';
 import { isInBounds, degreesToRadians } from './geometry';
 import { transformCorners } from './coordinate-utils';
@@ -37,7 +44,7 @@ export const drawCircle = (
 
     for (const [px, py] of points) {
       if (isInBounds(image, px, py)) {
-        image.setPixelXY(px, py, color);
+        setPixel(image, px, py, color);
       }
     }
 
@@ -85,14 +92,14 @@ export const drawLine = (
   color: number[]
 ): void => {
   const steps = Math.max(Math.abs(p2.x - p1.x), Math.abs(p2.y - p1.y));
-  
+
   for (let i = 0; i <= steps; i++) {
     const t = steps === 0 ? 0 : i / steps;
     const x = Math.round(p1.x + (p2.x - p1.x) * t);
     const y = Math.round(p1.y + (p2.y - p1.y) * t);
-    
+
     if (isInBounds(image, x, y)) {
-      image.setPixelXY(x, y, color);
+      setPixel(image, x, y, color);
     }
   }
 };
@@ -111,21 +118,15 @@ export const drawRectangle = (
   const angleRad = degreesToRadians(boundingBox.rotation);
   const cos = Math.cos(angleRad);
   const sin = Math.sin(angleRad);
-  
+
   const corners = [
     { x: 0, y: 0 },
     { x: boundingBox.width, y: 0 },
     { x: boundingBox.width, y: boundingBox.height },
     { x: 0, y: boundingBox.height },
   ].map((corner) => ({
-    x:
-      boundingBox.x +
-      corner.x * cos -
-      corner.y * sin,
-    y:
-      boundingBox.y +
-      corner.x * sin +
-      corner.y * cos,
+    x: boundingBox.x + corner.x * cos - corner.y * sin,
+    y: boundingBox.y + corner.x * sin + corner.y * cos,
   }));
 
   // Draw lines between consecutive corners
@@ -152,7 +153,7 @@ export const drawSquareMarker = (
       const px = center.x + dx;
       const py = center.y + dy;
       if (isInBounds(image, px, py)) {
-        image.setPixelXY(px, py, color);
+        setPixel(image, px, py, color);
       }
     }
   }
@@ -174,25 +175,25 @@ export const drawCrosshair = (
   thickness: number = 1
 ): void => {
   const halfThickness = Math.floor(thickness / 2);
-  
+
   // Draw horizontal line
   for (let dx = -size; dx <= size; dx++) {
     for (let dy = -halfThickness; dy <= halfThickness; dy++) {
       const x = Math.round(center.x) + dx;
       const y = Math.round(center.y) + dy;
       if (isInBounds(image, x, y)) {
-        image.setPixelXY(x, y, color);
+        setPixel(image, x, y, color);
       }
     }
   }
-  
+
   // Draw vertical line
   for (let dy = -size; dy <= size; dy++) {
     for (let dx = -halfThickness; dx <= halfThickness; dx++) {
       const x = Math.round(center.x) + dx;
       const y = Math.round(center.y) + dy;
       if (isInBounds(image, x, y)) {
-        image.setPixelXY(x, y, color);
+        setPixel(image, x, y, color);
       }
     }
   }
@@ -211,7 +212,7 @@ export const highlightRegion = (
 ): void => {
   for (const [x, y] of points) {
     if (isInBounds(image, x, y)) {
-      image.setPixelXY(x, y, color);
+      setPixel(image, x, y, color);
     }
   }
 };
@@ -237,18 +238,18 @@ export const createDebugImage = (
   baseImage: Image,
   options: DebugImageOptions
 ): Image => {
-  const debugImage = baseImage.clone();
-  
+  const debugImage = clone(baseImage);
+
   // Draw flood fill region
   if (options.region && options.regionColor) {
     highlightRegion(debugImage, options.region, options.regionColor);
   }
-  
+
   // Draw bounding box
   if (options.boundingBox && options.boundingBoxColor) {
     drawRectangle(debugImage, options.boundingBox, options.boundingBoxColor);
   }
-  
+
   // Draw seed point with circle
   if (options.seed) {
     // Draw circle around seed
@@ -262,7 +263,7 @@ export const createDebugImage = (
         circleColor
       );
     }
-    
+
     // Draw seed point marker on top
     drawSquareMarker(
       debugImage,
@@ -271,19 +272,14 @@ export const createDebugImage = (
       options.seedColor || [0, 255, 0, 255]
     );
   }
-  
+
   // Draw additional markers
   if (options.markers) {
     for (const marker of options.markers) {
-      drawSquareMarker(
-        debugImage,
-        marker.point,
-        marker.size,
-        marker.color
-      );
+      drawSquareMarker(debugImage, marker.point, marker.size, marker.color);
     }
   }
-  
+
   return debugImage;
 };
 
@@ -302,47 +298,47 @@ export const createCompositeDebugImage = (
   if (images.length === 0) {
     throw new Error('No images provided for composite');
   }
-  
+
   // Calculate dimensions
   const isHorizontal = layout === 'horizontal';
   const totalGap = gap * (images.length - 1);
-  
+
   let width: number;
   let height: number;
-  
+
   if (isHorizontal) {
     width = images.reduce((sum, img) => sum + img.width, 0) + totalGap;
-    height = Math.max(...images.map(img => img.height));
+    height = Math.max(...images.map((img) => img.height));
   } else {
-    width = Math.max(...images.map(img => img.width));
+    width = Math.max(...images.map((img) => img.width));
     height = images.reduce((sum, img) => sum + img.height, 0) + totalGap;
   }
-  
+
   // Create composite image
-  const composite = new Image(width, height);
-  
+  const composite = createImage(width, height);
+
   // Copy images manually since paste method may not be available
   let offset = 0;
   for (const img of images) {
     const xOffset = isHorizontal ? offset : 0;
     const yOffset = isHorizontal ? 0 : offset;
-    
+
     // Copy pixels from source image to composite
     for (let y = 0; y < img.height; y++) {
       for (let x = 0; x < img.width; x++) {
         const targetX = x + xOffset;
         const targetY = y + yOffset;
-        
+
         if (targetX < composite.width && targetY < composite.height) {
-          const pixel = img.getPixelXY(x, y);
-          composite.setPixelXY(targetX, targetY, pixel);
+          const pixel = getPixel(img, x, y);
+          setPixel(composite, targetX, targetY, pixel);
         }
       }
     }
-    
+
     offset += isHorizontal ? img.width + gap : img.height + gap;
   }
-  
+
   return composite;
 };
 
@@ -365,55 +361,65 @@ export const saveFrameDebugImage = async (
     // Get the correctly calculated corners using the shared utility
     // Returns corners in order: [top-left, top-right, bottom-right, bottom-left]
     const rotatedCorners = transformCorners(boundingBox);
-    
+
     // Convert to greyscale first for better visibility of colored overlays
-    const greyscaleImage = image.clone();
+    const greyscaleImage = clone(image);
     for (let y = 0; y < greyscaleImage.height; y++) {
       for (let x = 0; x < greyscaleImage.width; x++) {
-        const pixel = greyscaleImage.getPixelXY(x, y);
-        const grey = Math.round(0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]);
-        greyscaleImage.setPixelXY(x, y, [grey, grey, grey, pixel[3] || 255]);
+        const pixel = getPixel(greyscaleImage, x, y);
+        const grey = Math.round(
+          0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]
+        );
+        setPixel(greyscaleImage, x, y, [grey, grey, grey, pixel[3] || 255]);
       }
     }
-    
+
     // Now draw all colored overlays on the greyscale image
-    
+
     // Draw red crosshairs at each corner
     const crosshairColor = [255, 0, 0, 255]; // Red
     const crosshairSize = 20;
     const crosshairThickness = 2;
-    
+
     rotatedCorners.forEach((corner) => {
-      drawCrosshair(greyscaleImage, corner, crosshairSize, crosshairColor, crosshairThickness);
+      drawCrosshair(
+        greyscaleImage,
+        corner,
+        crosshairSize,
+        crosshairColor,
+        crosshairThickness
+      );
     });
-    
+
     // Draw green crosshair at seed point
     const seedColor = [0, 255, 0, 255]; // Green
     drawCrosshair(greyscaleImage, seed, 15, seedColor, 2);
-    
+
     // Use createDebugImage to add the bounding box and additional seed markers
     const finalDebugImage = createDebugImage(greyscaleImage, {
       boundingBox,
       boundingBoxColor: [0, 0, 255, 255], // Blue
       seed,
       seedColor: [0, 255, 0, 255], // Green seed center dot
-      seedRadius: { inner: 3, outer: 5 } // Small circle around seed
+      seedRadius: { inner: 3, outer: 5 }, // Small circle around seed
     });
-    
+
     // Create debug directory if it doesn't exist
     const fullDebugDir = path.join(process.cwd(), debugDir);
     await fs.mkdir(fullDebugDir, { recursive: true });
-    
+
     // Generate filename with timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')
+      .substring(0, 19);
     const filename = `frame-debug-${frameId}-${timestamp}.png`;
     const filepath = path.join(fullDebugDir, filename);
-    
+
     // Save the image
-    await finalDebugImage.save(filepath);
+    await write(filepath, finalDebugImage);
     console.log(`[Debug] Frame debug image saved: ${filepath}`);
-    
   } catch (error) {
     console.error('[Debug] Failed to save frame debug image:', error);
   }
-}; 
+};

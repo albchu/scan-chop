@@ -4,17 +4,22 @@ import type {
   Vector2,
   FrameData,
   ProcessingConfig,
+  Image,
 } from '@workspace/shared';
 import {
   WHITE_THRESHOLD_DEFAULT,
   MAX_SCALED_DIMENSION,
+  read,
+  decode,
+  encode,
+  encodeDataURL,
+  rotateRightAngle,
+  resize,
 } from '@workspace/shared';
 import { DirectoryCacheManager } from './DirectoryCacheManager';
 import { DirectoryScanner } from './DirectoryScanner';
 import { DirectoryPreloader } from './DirectoryPreloader';
 import { FrameService } from './FrameService';
-import type { Image } from 'image-js';
-import { Image as ImageJS } from 'image-js';
 import fs from 'fs/promises';
 import path from 'path';
 import { isImageFile } from '../utils/isImageFile';
@@ -213,19 +218,19 @@ export class WorkspaceService {
     }
 
     // Decode base64 data URL to image
-    const image = await ImageJS.load(frameData.imageData);
+    const image = await decode(frameData.imageData);
 
     // Apply orientation rotation if needed
     let rotatedImage: Image = image;
     if (frameData.orientation !== 0) {
-      rotatedImage = image.rotate(frameData.orientation);
+      rotatedImage = rotateRightAngle(image, frameData.orientation);
       console.log(
         `[WorkspaceService] Rotated image by ${frameData.orientation} degrees`
       );
     }
 
     // Convert to PNG buffer and save
-    const buffer = Buffer.from(rotatedImage.toBuffer({ format: 'png' }));
+    const buffer = Buffer.from(encode(rotatedImage, { format: 'png' }));
     await fs.writeFile(outputPath, buffer);
 
     console.log(`[WorkspaceService] Saved frame to: ${outputPath}`);
@@ -275,7 +280,7 @@ export class WorkspaceService {
     const imageToReturn = cacheEntry.scaledImage || cacheEntry.fullImage;
 
     // Convert to base64 data URL
-    const base64 = imageToReturn.toDataURL();
+    const base64 = encodeDataURL(imageToReturn);
 
     console.log(
       `[WorkspaceService] ${wasCached ? 'Serving cached' : 'Loaded and serving new'} image:`,
@@ -381,7 +386,7 @@ export class WorkspaceService {
       `[WorkspaceService] Scaling image from ${width}x${height} to ${newWidth}x${newHeight} (factor: ${scaleFactor.toFixed(4)})`
     );
 
-    const scaledImage = fullImage.resize({ width: newWidth });
+    const scaledImage = resize(fullImage, { width: newWidth });
     return { scaledImage, scaleFactor };
   }
 
@@ -402,7 +407,7 @@ export class WorkspaceService {
 
     // Load the full image
     console.log('[WorkspaceService] Loading full-size image:', imagePath);
-    const fullImage = await ImageJS.load(imagePath);
+    const fullImage = await read(imagePath);
 
     // Create scaled version if needed
     let scaledImage: Image | undefined;

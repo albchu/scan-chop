@@ -1,41 +1,40 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import type { Image } from '../image-adapter';
 
 // vi.hoisted runs before vi.mock factories, so these are available in both
-const { mockResize, mockSave, mockImage, mockScaledImage } = vi.hoisted(() => {
-  const mockResize = vi.fn();
-  const mockSave = vi.fn().mockResolvedValue(undefined);
-  const mockImage = {
-    width: 1000,
-    height: 800,
-    resize: mockResize,
-    save: mockSave,
-  };
-  const mockScaledImage = {
-    width: 500,
-    height: 400,
-    resize: mockResize,
-    save: mockSave,
-  };
-  mockResize.mockReturnValue(mockScaledImage);
-  return { mockResize, mockSave, mockImage, mockScaledImage };
-});
+const { mockRead, mockWrite, mockResize, mockImage, mockScaledImage } =
+  vi.hoisted(() => {
+    const mockRead = vi.fn();
+    const mockWrite = vi.fn().mockResolvedValue(undefined);
+    const mockResize = vi.fn();
+    const mockImage = {
+      width: 1000,
+      height: 800,
+    };
+    const mockScaledImage = {
+      width: 500,
+      height: 400,
+    };
+    mockRead.mockResolvedValue(mockImage);
+    mockResize.mockReturnValue(mockScaledImage);
+    return { mockRead, mockWrite, mockResize, mockImage, mockScaledImage };
+  });
 
 vi.mock('fs/promises', () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   writeFile: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('image-js', () => ({
-  Image: {
-    load: vi.fn().mockResolvedValue(mockImage),
-  },
+vi.mock('../image-adapter', () => ({
+  read: mockRead,
+  write: mockWrite,
+  resize: mockResize,
 }));
 
 // Suppress console.log noise from the module under test
 vi.spyOn(console, 'log').mockImplementation(() => {});
 
 import * as fs from 'fs/promises';
-import { Image } from 'image-js';
 import {
   loadAndPrepareImage,
   saveProcessedImage,
@@ -46,9 +45,9 @@ import {
 beforeEach(() => {
   vi.clearAllMocks();
   // Re-apply default mock return values after clearing
+  mockRead.mockResolvedValue(mockImage);
+  mockWrite.mockResolvedValue(undefined);
   mockResize.mockReturnValue(mockScaledImage);
-  mockSave.mockResolvedValue(undefined);
-  (Image.load as ReturnType<typeof vi.fn>).mockResolvedValue(mockImage);
   (fs.mkdir as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
   (fs.writeFile as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
 });
@@ -65,7 +64,10 @@ describe('loadAndPrepareImage', () => {
   it('should downsample when factor is 0.5', async () => {
     const result = await loadAndPrepareImage('/img/photo.png', 0.5);
 
-    expect(mockResize).toHaveBeenCalledWith({ width: 500, height: 400 });
+    expect(mockResize).toHaveBeenCalledWith(mockImage, {
+      width: 500,
+      height: 400,
+    });
     expect(result.scaleFactor).toBe(0.5);
     expect(result.original).toBe(mockImage);
     expect(result.scaled).toBe(mockScaledImage);
@@ -88,13 +90,13 @@ describe('loadAndPrepareImage', () => {
 });
 
 describe('saveProcessedImage', () => {
-  it('should call image.save with the correct output path', async () => {
+  it('should call write with the correct output path and image', async () => {
     await saveProcessedImage(
       mockImage as unknown as Image,
       '/output/result.png'
     );
 
-    expect(mockSave).toHaveBeenCalledWith('/output/result.png');
+    expect(mockWrite).toHaveBeenCalledWith('/output/result.png', mockImage);
   });
 
   it('should accept an options parameter without error', async () => {
@@ -144,16 +146,16 @@ describe('createOutputDirectories', () => {
 
 describe('saveDebugArtifacts', () => {
   it('should save each debug image to the output directory', async () => {
-    const mockImgSave1 = vi.fn().mockResolvedValue(undefined);
-    const mockImgSave2 = vi.fn().mockResolvedValue(undefined);
+    const mockImg1 = { width: 100, height: 100 };
+    const mockImg2 = { width: 200, height: 200 };
     const artifacts = {
       debugImages: [
         {
-          image: { save: mockImgSave1 } as unknown as Image,
+          image: mockImg1 as unknown as Image,
           filename: 'regions.png',
         },
         {
-          image: { save: mockImgSave2 } as unknown as Image,
+          image: mockImg2 as unknown as Image,
           filename: 'edges.png',
         },
       ],
@@ -162,8 +164,8 @@ describe('saveDebugArtifacts', () => {
     await saveDebugArtifacts(artifacts, '/debug/out');
 
     expect(fs.mkdir).toHaveBeenCalledWith('/debug/out', { recursive: true });
-    expect(mockImgSave1).toHaveBeenCalledWith('/debug/out/regions.png');
-    expect(mockImgSave2).toHaveBeenCalledWith('/debug/out/edges.png');
+    expect(mockWrite).toHaveBeenCalledWith('/debug/out/regions.png', mockImg1);
+    expect(mockWrite).toHaveBeenCalledWith('/debug/out/edges.png', mockImg2);
   });
 
   it('should write metadata JSON when metadata is present', async () => {

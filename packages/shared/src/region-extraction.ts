@@ -1,4 +1,4 @@
-import { Image } from 'image-js';
+import type { Image } from './image-adapter';
 import { Vector2, ProcessingConfig } from './types';
 import { WHITE_THRESHOLD_DEFAULT } from './constants';
 import { ColorPredicate, createWhiteBoundaryPredicate } from './color';
