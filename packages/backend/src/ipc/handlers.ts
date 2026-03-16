@@ -5,7 +5,7 @@ import type {
   Vector2,
   FrameData,
   ProcessingConfig,
-} from '@workspace/shared';
+} from '@workspace/shared/node';
 import fs from 'fs/promises';
 import path from 'path';
 

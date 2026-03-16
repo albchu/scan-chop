@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { resize, decode } from '@workspace/shared';
-import type { Image } from '@workspace/shared';
+import { resize, decode } from '@workspace/shared/node';
+import type { Image } from '@workspace/shared/node';
 import { FrameService } from '../../services/FrameService.js';
 import {
   createPageWithRectangle,

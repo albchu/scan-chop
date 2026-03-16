@@ -4,15 +4,15 @@ import {
   ProcessingConfig,
   BoundingBox,
   generatePageId,
-} from '@workspace/shared';
+} from '@workspace/shared/node';
 import {
   findBoundingBoxFromSeed,
   scaleBoundingBox,
   smartCrop,
-} from '@workspace/shared';
-import { saveFrameDebugImage } from '@workspace/shared';
-import type { Image } from '@workspace/shared';
-import { encodeDataURL } from '@workspace/shared';
+} from '@workspace/shared/node';
+import { saveFrameDebugImage } from '@workspace/shared/node';
+import type { Image } from '@workspace/shared/node';
+import { encodeDataURL } from '@workspace/shared/node';
 
 // Internal metadata for regenerating frame images
 interface FrameMetadata {

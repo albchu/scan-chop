@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DirectoryScanner } from '../services/DirectoryScanner.js';
-import type { DirectoryNode } from '@workspace/shared';
+import type { DirectoryNode } from '@workspace/shared/node';
 
 vi.mock('fs/promises', () => ({
   default: {

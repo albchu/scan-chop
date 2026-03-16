@@ -1,4 +1,4 @@
-import type { DirectoryNode, LoadDirectoryOptions } from '@workspace/shared';
+import type { DirectoryNode, LoadDirectoryOptions } from '@workspace/shared/node';
 
 export interface PreloadCallback {
   (path: string, options: LoadDirectoryOptions): Promise<DirectoryNode>;

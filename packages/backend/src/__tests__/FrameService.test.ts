@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FrameService } from '../services/FrameService.js';
-import type { BoundingBox, Vector2, ProcessingConfig } from '@workspace/shared';
+import type { BoundingBox, Vector2, ProcessingConfig } from '@workspace/shared/node';
 
 // Mock all @workspace/shared processing functions
 vi.mock('@workspace/shared', () => ({
@@ -19,7 +19,7 @@ import {
   saveFrameDebugImage,
   generatePageId,
   encodeDataURL,
-} from '@workspace/shared';
+} from '@workspace/shared/node';
 
 const mockFindBoundingBoxFromSeed = findBoundingBoxFromSeed as ReturnType<
   typeof vi.fn

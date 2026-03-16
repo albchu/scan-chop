@@ -10,7 +10,7 @@ import {
 import { WorkspaceService } from '../services/WorkspaceService.js';
 import fs from 'fs/promises';
 import path from 'path';
-import type { DirectoryNode } from '@workspace/shared';
+import type { DirectoryNode } from '@workspace/shared/node';
 import {
   read,
   decode,
@@ -18,7 +18,7 @@ import {
   encode,
   rotateRightAngle,
   resize,
-} from '@workspace/shared';
+} from '@workspace/shared/node';
 
 // Mock modules
 vi.mock('fs/promises');

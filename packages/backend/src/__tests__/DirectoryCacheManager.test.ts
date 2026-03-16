@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DirectoryCacheManager } from '../services/DirectoryCacheManager.js';
-import type { DirectoryNode } from '@workspace/shared';
+import type { DirectoryNode } from '@workspace/shared/node';
 
 describe('DirectoryCacheManager', () => {
   let cacheManager: DirectoryCacheManager;

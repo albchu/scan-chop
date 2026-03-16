@@ -5,7 +5,7 @@ import type {
   FrameData,
   ProcessingConfig,
   Image,
-} from '@workspace/shared';
+} from '@workspace/shared/node';
 import {
   WHITE_THRESHOLD_DEFAULT,
   MAX_SCALED_DIMENSION,
@@ -15,7 +15,7 @@ import {
   encodeDataURL,
   rotateRightAngle,
   resize,
-} from '@workspace/shared';
+} from '@workspace/shared/node';
 import { DirectoryCacheManager } from './DirectoryCacheManager.js';
 import { DirectoryScanner } from './DirectoryScanner.js';
 import { DirectoryPreloader } from './DirectoryPreloader.js';

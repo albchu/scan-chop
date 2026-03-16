@@ -1,4 +1,4 @@
-import type { DirectoryNode } from '@workspace/shared';
+import type { DirectoryNode } from '@workspace/shared/node';
 
 interface CacheEntry {
   node: DirectoryNode;

@@ -4,32 +4,55 @@
  *
  * Phase 3: Now delegates to image-js v1 via the 'image-js-v1' package alias.
  * The alias will be replaced with the real 'image-js' package name in Phase 4.
+ *
+ * Note: v1's read() and write() use process.getBuiltinModule() to detect Node.js,
+ * which requires Node.js 22.3+. Electron 28 bundles Node.js 18.x, so we implement
+ * read/write directly using fs + decode/encode to bypass that check.
  */
 import {
   Image,
-  read as v1Read,
-  write as v1Write,
   encode as v1Encode,
   decode as v1Decode,
   encodeDataURL as v1EncodeDataURL,
 } from 'image-js-v1';
+import { readFile, writeFile } from 'fs/promises';
+import { extname } from 'path';
 
 // Re-export the Image class for type and value usage
 export { Image };
 export type { Image as ImageType };
 
 // ---------------------------------------------------------------------------
-// I/O: standalone functions matching v1 signatures
+// I/O: implemented directly with fs to avoid v1's getBuiltinModule() check
 // ---------------------------------------------------------------------------
 
-/** Load an image from a file path */
-export async function read(path: string): Promise<Image> {
-  return v1Read(path);
+/**
+ * Load an image from a file path.
+ *
+ * WORKAROUND: Uses fs.readFile + v1Decode instead of v1's read() because v1
+ * detects Node.js via process.getBuiltinModule (requires Node.js 22.3+).
+ * Electron 28 bundles Node.js 18.x which lacks that API, so v1's read()
+ * throws "read is only implemented for Node.js". Once the project upgrades
+ * to Electron 38+ (Node.js 22+), this can be replaced with v1's read().
+ */
+export async function read(filePath: string): Promise<Image> {
+  const data = await readFile(filePath);
+  return v1Decode(data);
 }
 
-/** Write an image to a file path */
-export async function write(path: string, image: Image): Promise<void> {
-  await v1Write(path, image);
+/**
+ * Write an image to a file path (format inferred from extension).
+ *
+ * WORKAROUND: Same getBuiltinModule issue as read() above — uses
+ * v1Encode + fs.writeFile instead of v1's write(). Can be replaced with
+ * v1's write() once the project upgrades to Electron 38+ (Node.js 22+).
+ */
+export async function write(filePath: string, image: Image): Promise<void> {
+  const ext = extname(filePath).slice(1).toLowerCase();
+  const format =
+    ext === 'jpg' || ext === 'jpeg' ? 'jpeg' : ext === 'bmp' ? 'bmp' : 'png';
+  const data = v1Encode(image, { format });
+  await writeFile(filePath, data);
 }
 
 /** Encode an image to a buffer (synchronous) */
@@ -141,12 +164,14 @@ export function rotateRightAngle(
  * - Angle convention is opposite to v0: negated to preserve caller expectations.
  * - Canvas expansion requires { fullImage: true } (v0 expanded by default).
  * - Background fill defaults to opaque black in v1; set to transparent to match v0.
+ * - borderValue length must match the image's channel count (v1 validates this).
  */
 export function transformRotate(image: Image, angle: number): Image {
+  const borderValue = new Array(image.channels).fill(0);
   return image.transformRotate(-angle, {
     fullImage: true,
     borderType: 'constant',
-    borderValue: [0, 0, 0, 0],
+    borderValue,
   });
 }
 

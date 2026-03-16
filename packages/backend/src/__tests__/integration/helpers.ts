@@ -1,5 +1,5 @@
-import { createImage, setPixel } from '@workspace/shared';
-import type { Image, RGB } from '@workspace/shared';
+import { createImage, setPixel } from '@workspace/shared/node';
+import type { Image, RGB } from '@workspace/shared/node';
 import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';

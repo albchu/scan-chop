@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { isImageFile } from '../utils/isImageFile.js';
-import type { DirectoryNode } from '@workspace/shared';
+import type { DirectoryNode } from '@workspace/shared/node';
 
 export class DirectoryScanner {
   async scanDirectory(
