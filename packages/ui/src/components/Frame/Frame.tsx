@@ -17,8 +17,19 @@ import {
   RENDER_DIRECTIONS,
 } from './frameUtils';
 import { workspaceApi } from '../../api/workspace';
-import { debounce } from 'lodash';
 import styles from './Frame.module.css';
+
+// Inline debounce to avoid bundling the entire lodash library (~5 MB)
+function debounce<T extends (...args: Parameters<T>) => void>(
+  fn: T,
+  delayMs: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delayMs);
+  };
+}
 
 interface FrameProps {
   frame: FrameData;
@@ -67,20 +78,27 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
 
   // Debounced backend sync
   const syncToBackend = useMemo(
-    () => debounce(async (frameId: string, updates: Partial<FrameData>) => {
-      try {
-        console.log(`[Frame] Syncing to backend, updates:`, updates);
-        // Backend now expects display coordinates, no scaling needed
-        const updatedFrame = await workspaceApi.updateFrame(frameId, updates);
-        console.log(`[Frame] Backend returned updated frame, has imageData:`, !!updatedFrame.imageData);
-        
-        // Update local state with the full frame data from backend
-        updateFrame(frameId, updatedFrame);
-      } catch (error) {
-        console.error(`[Frame] Failed to sync frame ${frameId} to backend:`, error);
-      }
-    }, 500),
-    [updateFrame]  // Add updateFrame dependency
+    () =>
+      debounce(async (frameId: string, updates: Partial<FrameData>) => {
+        try {
+          console.log(`[Frame] Syncing to backend, updates:`, updates);
+          // Backend now expects display coordinates, no scaling needed
+          const updatedFrame = await workspaceApi.updateFrame(frameId, updates);
+          console.log(
+            `[Frame] Backend returned updated frame, has imageData:`,
+            !!updatedFrame.imageData
+          );
+
+          // Update local state with the full frame data from backend
+          updateFrame(frameId, updatedFrame);
+        } catch (error) {
+          console.error(
+            `[Frame] Failed to sync frame ${frameId} to backend:`,
+            error
+          );
+        }
+      }, 500),
+    [updateFrame] // Add updateFrame dependency
   );
 
   const handleDragStart = useCallback(({ target }: OnDragStart) => {
@@ -95,10 +113,10 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
         target.style.transform = transform;
         const [x, y] = translate;
         setTransform(transform);
-        
+
         // Update local state immediately
         updateFrame(id, { x, y, width, height });
-        
+
         // Sync to backend (debounced)
         syncToBackend(id, { x, y, width, height });
       }
@@ -122,10 +140,10 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
 
         setSize({ width, height });
         setTransform(drag.transform);
-        
+
         // Update local state immediately
         updateFrame(id, { x, y, width, height });
-        
+
         // Sync to backend (debounced)
         syncToBackend(id, { x, y, width, height });
       }
@@ -141,10 +159,10 @@ export const Frame: React.FC<FrameProps> = ({ frame, updateFrame }) => {
         setTransform(transform);
         if (rotation !== undefined) {
           setRotation(rotation);
-          
+
           // Update local state immediately
           updateFrame(id, { rotation });
-          
+
           // Sync to backend (debounced)
           syncToBackend(id, { rotation });
         }
