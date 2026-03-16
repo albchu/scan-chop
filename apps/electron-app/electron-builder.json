@@ -8,50 +8,10 @@
   },
   "files": [
     "dist/**/*",
-    "node_modules/**/*",
     "package.json",
-    "!**/node_modules/**/{test,__tests__,tests,coverage,debug-output}/**",
-    "!**/node_modules/**/*.{ts,tsx,map}",
-    "!**/node_modules/**/{tsconfig*.json,vitest.config.*,.turbo}",
-    "!**/node_modules/@workspace/**/src/**",
-    "!**/*.d.ts.map",
-
-    "!**/node_modules/@tabler/**",
-    "!**/node_modules/react-moveable/**",
-    "!**/node_modules/gesto/**",
-    "!**/node_modules/selecto/**",
-    "!**/node_modules/react-selecto/**",
-    "!**/node_modules/@scena/**",
-    "!**/node_modules/@daybrush/**",
-    "!**/node_modules/@egjs/**",
-    "!**/node_modules/@cfcs/**",
-    "!**/node_modules/css-styled/**",
-    "!**/node_modules/css-to-mat/**",
-    "!**/node_modules/framework-utils/**",
-    "!**/node_modules/keycon/**",
-    "!**/node_modules/keycode/**",
-    "!**/node_modules/overlap-area/**",
-    "!**/node_modules/parenthesis/**",
-    "!**/node_modules/string-split-by/**",
-    "!**/node_modules/colord/**",
-    "!**/node_modules/sonner/**",
-    "!**/node_modules/zustand/**",
-    "!**/node_modules/immer/**",
-    "!**/node_modules/react/**",
-    "!**/node_modules/react-dom/**",
-    "!**/node_modules/lodash/**",
-
-    "!**/node_modules/skia-canvas/**",
-
-    "!**/node_modules/image-js/dist/image-js.esm.js",
-    "!**/node_modules/image-js/dist/image-js.umd.js",
-    "!**/node_modules/image-js/dist/image-js.umd.min.js",
-
-    "!**/node_modules/@workspace/ui/dist/**",
-    "!**/node_modules/@workspace/**/tsconfig.tsbuildinfo",
-    "!**/node_modules/@workspace/backend/test-input.png",
-    "!**/node_modules/@workspace/shared/dist/cjs/debug-*.js",
-    "!**/node_modules/@workspace/shared/dist/esm/debug-*.js"
+    "!dist/**/*.d.ts",
+    "!dist/**/*.d.ts.map",
+    "!dist/**/*.tsbuildinfo"
   ],
   "extraMetadata": {
     "main": "dist/main.js"
@@ -62,7 +22,7 @@
     "gatekeeperAssess": false,
     "entitlements": "build-resources/entitlements.mac.plist",
     "entitlementsInherit": "build-resources/entitlements.mac.plist",
-    "notarize": true,
+    "notarize": false,
     "target": [
       {
         "target": "dmg",

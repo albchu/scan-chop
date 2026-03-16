@@ -39,7 +39,6 @@ import {
   loadAndPrepareImage,
   saveProcessedImage,
   createOutputDirectories,
-  saveDebugArtifacts,
 } from '../image-io.js';
 
 beforeEach(() => {
@@ -141,55 +140,5 @@ describe('createOutputDirectories', () => {
 
     expect(fs.mkdir).toHaveBeenCalledTimes(1);
     expect(fs.mkdir).toHaveBeenCalledWith('/output/base', { recursive: true });
-  });
-});
-
-describe('saveDebugArtifacts', () => {
-  it('should save each debug image to the output directory', async () => {
-    const mockImg1 = { width: 100, height: 100 };
-    const mockImg2 = { width: 200, height: 200 };
-    const artifacts = {
-      debugImages: [
-        {
-          image: mockImg1 as unknown as Image,
-          filename: 'regions.png',
-        },
-        {
-          image: mockImg2 as unknown as Image,
-          filename: 'edges.png',
-        },
-      ],
-    };
-
-    await saveDebugArtifacts(artifacts, '/debug/out');
-
-    expect(fs.mkdir).toHaveBeenCalledWith('/debug/out', { recursive: true });
-    expect(mockWrite).toHaveBeenCalledWith('/debug/out/regions.png', mockImg1);
-    expect(mockWrite).toHaveBeenCalledWith('/debug/out/edges.png', mockImg2);
-  });
-
-  it('should write metadata JSON when metadata is present', async () => {
-    const artifacts = {
-      debugImages: [],
-      metadata: { seedX: 100, seedY: 200, threshold: 230 },
-    };
-
-    await saveDebugArtifacts(artifacts, '/debug/out');
-
-    expect(fs.writeFile).toHaveBeenCalledWith(
-      '/debug/out/debug-metadata.json',
-      JSON.stringify({ seedX: 100, seedY: 200, threshold: 230 }, null, 2),
-      'utf-8'
-    );
-  });
-
-  it('should not write metadata when metadata is absent', async () => {
-    const artifacts = {
-      debugImages: [],
-    };
-
-    await saveDebugArtifacts(artifacts, '/debug/out');
-
-    expect(fs.writeFile).not.toHaveBeenCalled();
   });
 });

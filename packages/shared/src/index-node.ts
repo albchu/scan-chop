@@ -16,7 +16,6 @@ export * from './index.js';
 export * from './image-adapter.js';
 export * from './flood-fill.js';
 export * from './image-io.js';
-export * from './debug-visualization.js';
 export * from './region-extraction.js';
 export * from './image-transform.js';
 export * from './image-processing.js';

@@ -69,47 +69,6 @@ export const saveProcessedImage = async (
 };
 
 /**
- * Debug artifacts that can be saved
- */
-export interface DebugArtifacts {
-  debugImages?: Array<{ image: Image; filename: string }>;
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Save debug artifacts to a directory
- * @param artifacts - Debug artifacts to save
- * @param outputDir - Directory to save to
- */
-export const saveDebugArtifacts = async (
-  artifacts: DebugArtifacts,
-  outputDir: string
-): Promise<void> => {
-  // Ensure output directory exists
-  await fs.mkdir(outputDir, { recursive: true });
-
-  // Save debug images
-  if (artifacts.debugImages) {
-    for (const { image, filename } of artifacts.debugImages) {
-      const fullPath = path.join(outputDir, filename);
-      await write(fullPath, image);
-      console.log(`🐛 Saved debug image: ${filename}`);
-    }
-  }
-
-  // Save metadata if provided
-  if (artifacts.metadata) {
-    const metadataPath = path.join(outputDir, 'debug-metadata.json');
-    await fs.writeFile(
-      metadataPath,
-      JSON.stringify(artifacts.metadata, null, 2),
-      'utf-8'
-    );
-    console.log(`📊 Saved debug metadata: debug-metadata.json`);
-  }
-};
-
-/**
  * Create output directory structure for processing results
  * @param baseDir - Base output directory
  * @param subdirs - Subdirectories to create

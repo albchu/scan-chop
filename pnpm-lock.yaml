@@ -34,22 +34,6 @@ importers:
         version: 8.57.0(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)
 
   apps/electron-app:
-    dependencies:
-      '@workspace/backend':
-        specifier: workspace:*
-        version: link:../../packages/backend
-      '@workspace/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      '@workspace/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      react:
-        specifier: ^19.0.0
-        version: 19.2.4
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.2.4(react@19.2.4)
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -63,6 +47,15 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.1
         version: 6.0.1(vite@8.0.0(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
+      '@workspace/backend':
+        specifier: workspace:*
+        version: link:../../packages/backend
+      '@workspace/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@workspace/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       concurrently:
         specifier: ^9.2.1
         version: 9.2.1
@@ -75,6 +68,12 @@ importers:
       eslint:
         specifier: ^10.0.3
         version: 10.0.3(jiti@2.6.1)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

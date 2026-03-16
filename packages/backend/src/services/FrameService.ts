@@ -10,7 +10,6 @@ import {
   scaleBoundingBox,
   smartCrop,
 } from '@workspace/shared/node';
-import { saveFrameDebugImage } from '@workspace/shared/node';
 import type { Image } from '@workspace/shared/node';
 import { encodeDataURL } from '@workspace/shared/node';
 
@@ -118,12 +117,6 @@ export class FrameService {
       `[FrameService] FrameData includes pageId: ${frameData.pageId}`
     );
 
-    // Save debug image if DEBUG environment variable is set
-    if (process.env.DEBUG === 'true') {
-      console.log('[FrameService] DEBUG mode enabled - saving debug image');
-      await this.saveDebugImage(scaled, scaledBoundingBox, seed, frameData.id);
-    }
-
     // Store metadata for regeneration
     const metadata: FrameMetadata = {
       imagePath,
@@ -221,18 +214,5 @@ export class FrameService {
     this.frameMetadata.clear();
     this.frameCounter = 1;
     console.log('[FrameService] Cleared all frames');
-  }
-
-  /**
-   * Save debug image with crosshairs at frame corners
-   */
-  private async saveDebugImage(
-    image: Image,
-    boundingBox: BoundingBox,
-    seed: Vector2,
-    frameId: string
-  ): Promise<void> {
-    // Use the encapsulated debug visualization function
-    await saveFrameDebugImage(image, boundingBox, seed, frameId);
   }
 }

@@ -5,21 +5,10 @@ import {
   loadAndPrepareImage,
   saveProcessedImage,
   createOutputDirectories,
-  DebugArtifacts,
-  saveDebugArtifacts,
 } from './image-io.js';
-import {
-  extractRegionWithWhiteBoundary,
-  scaleRegionCoordinates,
-  scaleRegionCoordinatesFloat,
-} from './region-extraction.js';
+import { extractRegionWithWhiteBoundary } from './region-extraction.js';
 import { smartCrop } from './image-transform.js';
-import { createDebugImage } from './debug-visualization.js';
-import {
-  scaleCoordinates,
-  scaleBoundingBox,
-  scaleCoordinatesFloat,
-} from './coordinate-utils.js';
+import { scaleCoordinates, scaleBoundingBox } from './coordinate-utils.js';
 
 /**
  * Result of processing a single image with seed points
@@ -37,7 +26,6 @@ export interface ProcessedImage {
  */
 export interface ImageProcessingResult {
   processedImages: ProcessedImage[];
-  debugArtifacts?: DebugArtifacts;
   metadata: {
     originalDimensions: { width: number; height: number };
     scaleFactor: number;
@@ -136,7 +124,7 @@ export const processImageWithSeeds = async (
   config: ProcessingConfig = {}
 ): Promise<ImageProcessingResult> => {
   const startTime = Date.now();
-  const { downsampleFactor = 0.75, generateDebugImages = false } = config; // Better default
+  const { downsampleFactor = 0.75 } = config;
 
   // Load and prepare images
   const { original, scaled, scaleFactor } = await loadAndPrepareImage(
@@ -145,7 +133,6 @@ export const processImageWithSeeds = async (
   );
 
   const processedImages: ProcessedImage[] = [];
-  const debugImages: Array<{ image: Image; filename: string }> = [];
 
   // Process each seed point
   for (let index = 0; index < seeds.length; index++) {
@@ -167,32 +154,6 @@ export const processImageWithSeeds = async (
       );
       result.index = index;
       processedImages.push(result);
-
-      // Generate debug image if requested
-      if (generateDebugImages) {
-        // Scale region for visualization on downsampled image with floating-point precision
-        const scaledRegion = scaleRegionCoordinates(result.region, scaleFactor);
-        const scaledBoundingBox = scaleBoundingBox(
-          result.boundingBox,
-          scaleFactor
-        );
-        const scaledSeedFloat = scaleCoordinatesFloat(seed, scaleFactor);
-
-        const debugImage = createDebugImage(scaled, {
-          region: scaledRegion,
-          regionColor: [255, 0, 0, 255], // Red for flood fill region
-          seed: scaledSeedFloat,
-          seedColor: [0, 255, 0, 255], // Green for seed point
-          seedRadius: { inner: 15, outer: 20 }, // Blue circle around seed
-          boundingBox: scaledBoundingBox,
-          boundingBoxColor: [0, 0, 255, 255], // Blue for bounding box
-        });
-
-        debugImages.push({
-          image: debugImage,
-          filename: `debug_seed_${index}.png`,
-        });
-      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -206,22 +167,8 @@ export const processImageWithSeeds = async (
     `\n✅ Processed ${processedImages.length}/${seeds.length} seeds in ${processingTime}ms`
   );
 
-  // Prepare debug artifacts if any
-  const debugArtifacts: DebugArtifacts | undefined =
-    debugImages.length > 0
-      ? {
-          debugImages,
-          metadata: {
-            seedCount: seeds.length,
-            successCount: processedImages.length,
-            config,
-          },
-        }
-      : undefined;
-
   return {
     processedImages,
-    debugArtifacts,
     metadata: {
       originalDimensions: {
         width: original.width,
@@ -245,18 +192,13 @@ export const saveProcessingResults = async (
   basename: string
 ): Promise<void> => {
   // Create output directories
-  await createOutputDirectories(outputDir, ['images', 'debug']);
+  await createOutputDirectories(outputDir, ['images']);
 
   // Save processed images
   for (const processed of results.processedImages) {
     const filename = `${basename}_${processed.index}.png`;
     const outputPath = `${outputDir}/images/${filename}`;
     await saveProcessedImage(processed.image, outputPath);
-  }
-
-  // Save debug artifacts if any
-  if (results.debugArtifacts) {
-    await saveDebugArtifacts(results.debugArtifacts, `${outputDir}/debug`);
   }
 
   // Save processing metadata

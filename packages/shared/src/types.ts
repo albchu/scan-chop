@@ -39,7 +39,6 @@ export interface ProcessingConfig {
   angleRefineWindow?: number; // Search window for angle refinement (in degrees)
   angleRefineIterations?: number; // Number of iterations for angle refinement
   usePca?: boolean; // Use PCA for orientation estimation
-  generateDebugImages?: boolean; // Generate debug visualization images
 }
 
 export interface PageData {

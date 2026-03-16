@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FrameService } from '../services/FrameService.js';
-import type { BoundingBox, Vector2, ProcessingConfig } from '@workspace/shared/node';
+import type {
+  BoundingBox,
+  Vector2,
+  ProcessingConfig,
+} from '@workspace/shared/node';
 
 // Mock all @workspace/shared processing functions
 vi.mock('@workspace/shared', () => ({
   findBoundingBoxFromSeed: vi.fn(),
   scaleBoundingBox: vi.fn(),
   smartCrop: vi.fn(),
-  saveFrameDebugImage: vi.fn(),
   generatePageId: vi.fn(),
   encodeDataURL: vi.fn(),
 }));
@@ -16,7 +19,6 @@ import {
   findBoundingBoxFromSeed,
   scaleBoundingBox,
   smartCrop,
-  saveFrameDebugImage,
   generatePageId,
   encodeDataURL,
 } from '@workspace/shared/node';
@@ -26,7 +28,6 @@ const mockFindBoundingBoxFromSeed = findBoundingBoxFromSeed as ReturnType<
 >;
 const mockScaleBoundingBox = scaleBoundingBox as ReturnType<typeof vi.fn>;
 const mockSmartCrop = smartCrop as ReturnType<typeof vi.fn>;
-const mockSaveFrameDebugImage = saveFrameDebugImage as ReturnType<typeof vi.fn>;
 const mockGeneratePageId = generatePageId as ReturnType<typeof vi.fn>;
 const mockEncodeDataURL = encodeDataURL as ReturnType<typeof vi.fn>;
 
@@ -79,14 +80,9 @@ describe('FrameService', () => {
     const croppedImage = createMockImage(667, 500);
     mockSmartCrop.mockReturnValue(croppedImage);
 
-    mockSaveFrameDebugImage.mockResolvedValue(undefined);
-
     mockEncodeDataURL.mockImplementation(
       (img: any) => `data:image/png;base64,mock_${img.width}x${img.height}`
     );
-
-    // Ensure DEBUG is not set by default
-    delete process.env.DEBUG;
   });
 
   describe('generateFrameFromSeed', () => {
@@ -224,32 +220,6 @@ describe('FrameService', () => {
       expect(frame.id).toBe(`${defaultPageId}-frame-1`);
       // Frame should still be persisted in the internal map
       expect(service.getFrame(frame.id)).toBeDefined();
-    });
-
-    it('should save debug image when DEBUG=true and skip otherwise', async () => {
-      const original = createMockImage();
-      const scaled = createMockImage();
-
-      process.env.DEBUG = 'true';
-      await service.generateFrameFromSeed(
-        original as any,
-        scaled as any,
-        0.5,
-        defaultSeed,
-        defaultImagePath
-      );
-      expect(mockSaveFrameDebugImage).toHaveBeenCalledTimes(1);
-
-      mockSaveFrameDebugImage.mockClear();
-      delete process.env.DEBUG;
-      await service.generateFrameFromSeed(
-        original as any,
-        scaled as any,
-        0.5,
-        defaultSeed,
-        defaultImagePath
-      );
-      expect(mockSaveFrameDebugImage).not.toHaveBeenCalled();
     });
   });
 
