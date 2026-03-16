@@ -31,8 +31,10 @@ export const FrameInfo: React.FC<FrameInfoProps> = ({
         };
       case 90:
         return {
-          transform: `scale(${moveableZoom}) rotate(${orientation}deg) translateY(-100%)`,
-          transformOrigin: 'top left',
+          transform: `scale(${moveableZoom}) rotate(270deg) translateX(100%)`,
+          transformOrigin: 'bottom right',
+          right: 0,
+          bottom: 0,
         };
 
       case 180:
@@ -44,10 +46,8 @@ export const FrameInfo: React.FC<FrameInfoProps> = ({
         };
       case 270:
         return {
-          transform: `scale(${moveableZoom}) rotate(${orientation}deg) translateX(100%)`,
-          transformOrigin: 'bottom right',
-          right: 0,
-          bottom: 0,
+          transform: `scale(${moveableZoom}) rotate(90deg) translateY(-100%)`,
+          transformOrigin: 'top left',
         };
     }
 
