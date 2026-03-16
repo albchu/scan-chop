@@ -1,54 +1,32 @@
 /**
  * Adapter layer isolating all direct image-js usage.
  * Every other module imports from here instead of 'image-js' directly.
- *
- * Note: image-js's read() and write() use process.getBuiltinModule() to detect
- * Node.js, which requires Node.js 22.3+ (available from Electron 38+). We
- * implement read/write directly using fs + decode/encode to bypass that check.
  */
 import {
   Image,
+  read as ijsRead,
+  write as ijsWrite,
   encode as ijsEncode,
   decode as ijsDecode,
   encodeDataURL as ijsEncodeDataURL,
 } from 'image-js';
-import { readFile, writeFile } from 'fs/promises';
-import { extname } from 'path';
 
 // Re-export the Image class for type and value usage
 export { Image };
 export type { Image as ImageType };
 
 // ---------------------------------------------------------------------------
-// I/O: implemented directly with fs to avoid image-js's getBuiltinModule() check
+// I/O
 // ---------------------------------------------------------------------------
 
-/**
- * Load an image from a file path.
- *
- * WORKAROUND: Uses fs.readFile + ijsDecode instead of image-js's read() because
- * image-js detects Node.js via process.getBuiltinModule (requires Node.js 22.3+,
- * available from Electron 38+). This can be replaced with image-js's read()
- * once the project upgrades to Electron 38+.
- */
+/** Load an image from a file path. */
 export async function read(filePath: string): Promise<Image> {
-  const data = await readFile(filePath);
-  return ijsDecode(data);
+  return ijsRead(filePath);
 }
 
-/**
- * Write an image to a file path (format inferred from extension).
- *
- * WORKAROUND: Same getBuiltinModule issue as read() above — uses
- * ijsEncode + fs.writeFile instead of image-js's write(). Can be replaced
- * with image-js's write() once the project upgrades to Electron 38+.
- */
+/** Write an image to a file path (format inferred from extension). */
 export async function write(filePath: string, image: Image): Promise<void> {
-  const ext = extname(filePath).slice(1).toLowerCase();
-  const format =
-    ext === 'jpg' || ext === 'jpeg' ? 'jpeg' : ext === 'bmp' ? 'bmp' : 'png';
-  const data = ijsEncode(image, { format });
-  await writeFile(filePath, data);
+  await ijsWrite(filePath, image);
 }
 
 /** Encode an image to a buffer (synchronous) */

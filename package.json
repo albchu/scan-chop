@@ -33,7 +33,7 @@
     "find-unused": "knip"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.0.0",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.0.3",
     "typescript-eslint": "^8.57.0",
@@ -43,7 +43,7 @@
     "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=22.0.0",
+    "node": ">=24.0.0",
     "pnpm": ">=8.0.0"
   }
 }
