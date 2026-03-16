@@ -2,8 +2,7 @@
  * Adapter layer isolating all direct image-js usage behind v1-shaped function signatures.
  * Every other module imports from here instead of 'image-js' directly.
  *
- * Phase 3: Now delegates to image-js v1 via the 'image-js-v1' package alias.
- * The alias will be replaced with the real 'image-js' package name in Phase 4.
+ * Now delegates to image-js v1 (the 'image-js' package).
  *
  * Note: v1's read() and write() use process.getBuiltinModule() to detect Node.js,
  * which requires Node.js 22.3+. Electron 28 bundles Node.js 18.x, so we implement
@@ -14,7 +13,7 @@ import {
   encode as v1Encode,
   decode as v1Decode,
   encodeDataURL as v1EncodeDataURL,
-} from 'image-js-v1';
+} from 'image-js';
 import { readFile, writeFile } from 'fs/promises';
 import { extname } from 'path';
 

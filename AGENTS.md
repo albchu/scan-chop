@@ -28,7 +28,7 @@ packages/
 - **Dual-resolution image strategy**: Images are cached at both full resolution and scaled down (max 1920px via `MAX_SCALED_DIMENSION`). Bounding box detection runs on the scaled version for performance, then coordinates are scaled up and cropping is performed on the full-resolution original for output quality.
 - **In-memory persistence**: Frames exist only in memory during a session. There is no database; closing the app loses unsaved frame state.
 
-**Build formats**: `shared` produces dual CJS/ESM output (three separate tsconfig files). `backend` is CJS-only (required by Electron main process). `ui` is ESM.
+**Build formats**: `shared` produces dual CJS/ESM output (three separate tsconfig files). `backend` is ESM. `ui` is ESM. The Electron main process runs as ESM (Electron 28+); the preload script remains CJS (bundled by Vite as `.cjs`).
 
 ## Dependency Graph
 

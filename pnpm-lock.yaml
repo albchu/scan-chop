@@ -107,11 +107,8 @@ importers:
   packages/shared:
     dependencies:
       image-js:
-        specifier: ^0.37.0
-        version: 0.37.0
-      image-js-v1:
-        specifier: npm:image-js@^1.4.0
-        version: image-js@1.4.0
+        specifier: ^1.4.0
+        version: 1.4.0
     devDependencies:
       tsx:
         specifier: ^4.21.0
@@ -913,9 +910,6 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@swiftcarrot/color-fns@3.2.0':
-    resolution: {integrity: sha512-6SCpc4LwmGGqWHpBY9WaBzJwPF4nfgvFfejOX7Ub0kTehJysFkLUAvGID8zEx39n0pGlfr9pTiQE/7/buC7X5w==}
-
   '@szmarczak/http-timer@4.0.6':
     resolution: {integrity: sha512-4BAffykYOgO+5nzBWYwE3W90sBgLJoUPRWWcL8wlyiM8IB8ipJz3UMJ9KXQd1RKQXpKp8Tutn80HZtWsu2u76w==}
     engines: {node: '>=10'}
@@ -1091,9 +1085,6 @@ packages:
 
   '@types/node@20.19.1':
     resolution: {integrity: sha512-jJD50LtlD2dodAEO653i3YF04NWak6jN3ky+Ri3Em3mGR39/glWiboM/IePaRbgwSfqM1TpGXfAg8ohn/4dTgA==}
-
-  '@types/pako@2.0.3':
-    resolution: {integrity: sha512-bq0hMV9opAcrmE0Byyo0fY3Ew4tgOevJmQ9grUhpXQhYfyLJ1Kqg3P33JT5fdbT2AjeAjR51zqqVjAL/HMkx7Q==}
 
   '@types/plist@3.0.5':
     resolution: {integrity: sha512-E6OCaRmAe4WDmWNsL/9RMqdkkzDCY1etutkflWk4c+AcjDU07Pcz1fQwTX0TQz+Pxqn9i4L1TU3UFpjnrcDgxA==}
@@ -1361,9 +1352,6 @@ packages:
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
 
-  blob-util@2.0.2:
-    resolution: {integrity: sha512-T7JQa+zsXXEa6/8ZhHcQEW1UFfVM49Ts65uBkFL6fz2QmrElqmbajIDJvuA0tEhRe5eIjpV9ZF+0RfZR9voJFQ==}
-
   bluebird-lst@1.0.9:
     resolution: {integrity: sha512-7B1Rtx82hjnSD4PGLAjVWeYH3tHAcVUmChh85a3lltKQm6FresXh9ErQo6oAv6CqxttczC3/kEg8SY5NluPuUw==}
 
@@ -1431,9 +1419,6 @@ packages:
   caniuse-lite@1.0.30001779:
     resolution: {integrity: sha512-U5og2PN7V4DMgF50YPNtnZJGWVLFjjsN3zb6uMT5VGYIewieDj1upwfuVNXf4Kor+89c3iCRJnSzMD5LmTvsfA==}
 
-  canny-edge-detector@1.0.0:
-    resolution: {integrity: sha512-SpewmkHDE1PbJ1/AVAcpvZKOufYpUXT0euMvhb5C4Q83Q9XEOmSXC+yR7jl3F4Ae1Ev6OtQKbFgdcPrOdHjzQg==}
-
   chai@6.2.2:
     resolution: {integrity: sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==}
     engines: {node: '>=18'}
@@ -1444,9 +1429,6 @@ packages:
 
   cheminfo-types@1.10.0:
     resolution: {integrity: sha512-lDoOWfctAQPQrrhydtdb2vV3S8RDuRNp62lzs/gIjNqMNubhsvqr+hI8XQJSy8X1ZXpGvzIQNGBYy4SVrKQNaQ==}
-
-  cheminfo-types@1.8.1:
-    resolution: {integrity: sha512-FRcpVkox+cRovffgqNdDFQ1eUav+i/Vq/CUd1hcfEl2bevntFlzznL+jE8g4twl6ElB7gZjCko6pYpXyMn+6dA==}
 
   chownr@2.0.0:
     resolution: {integrity: sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==}
@@ -1789,9 +1771,6 @@ packages:
     resolution: {integrity: sha512-Wrk35e8ydCKDj/ArClo1VrPVmN8zph5V4AtHwIuHhvMXsKf73UT3BOD+azBIW+3wOJ4FhEH7zyaJCFvChjYvMA==}
     engines: {'0': node >=0.6.0}
 
-  fast-bmp@2.0.1:
-    resolution: {integrity: sha512-MOSG2rHYJCjIfL3/Llseuj39yl5U3d3XLtWFLFm5ZSTublGEXyvNcwi4Npyv6nzDPRSbAP53rvVRUswgftWCcQ==}
-
   fast-bmp@4.0.1:
     resolution: {integrity: sha512-+KtMijJj+uA8Sl6EXAnhza7US7EXSY5Z9NeiJwT1wopVUksyLMXL5iFmn9FjY8FdkstOkpJI9RuEVXkGpIPSwg==}
 
@@ -1802,9 +1781,6 @@ packages:
     resolution: {integrity: sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==}
     engines: {node: '>=8.6.0'}
 
-  fast-jpeg@1.0.1:
-    resolution: {integrity: sha512-nyoYDzmdxgLOBfEhJGwYRsRLqGKziG/wic0SMct17dTVHkseTPvNwHCfihE47tcpGA1cTJO2MNsYYHezmkuA6w==}
-
   fast-jpeg@3.0.1:
     resolution: {integrity: sha512-1r4CO4rgRY1CeqaHlXVBPhdGC+rbNwWFJvV9s3HTUC+svqTE7hC1cEH9srp5MPgAmhDdsZ/WtU3WGM8zVobFCA==}
 
@@ -1813,12 +1789,6 @@ packages:
 
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
-
-  fast-list@1.0.3:
-    resolution: {integrity: sha512-Lm56Ci3EqefHNdIneRFuzhpPcpVVBz9fgqVmG3UQIxAefJv1mEYsZ1WQLTWqmdqeGEwbI2t6fbZgp9TqTYARuA==}
-
-  fast-png@6.4.0:
-    resolution: {integrity: sha512-kAqZq1TlgBjZcLr5mcN6NP5Rv4V2f22z00c3g8vRrwkcqjerx7BEhPbOnWCPqaHUl2XWQBJQvOT/FQhdMT7X/Q==}
 
   fast-png@8.0.0:
     resolution: {integrity: sha512-gCysNasJ8KEMgfdYIKd/wTDo6ENK1PWT0RJO7O+0pgmuHPw2O6tA1WvdxFRJoLf9V8yFYpG0FA1YgI8X97OhJA==}
@@ -1997,9 +1967,6 @@ packages:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
 
-  has-own@1.0.1:
-    resolution: {integrity: sha512-RDKhzgQTQfMaLvIFhjahU+2gGnRBK6dYOd5Gd9BzkmnBneOCRYjRC003RIMrdAbH52+l+CnMS4bBCXGer8tEhg==}
-
   has-property-descriptors@1.0.2:
     resolution: {integrity: sha512-55JNKuIW+vq4Ke1BjOTjM2YctQIvCT7GFzHwmfZPGo5wnrgkid0YQtnAleFSqumZm4az3n2BS+erby5ipJdgrg==}
 
@@ -2062,10 +2029,6 @@ packages:
     resolution: {integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==}
     engines: {node: '>= 4'}
 
-  image-js@0.37.0:
-    resolution: {integrity: sha512-t/6CE+H0mT9TKFhlm1h84e9Y1W/ZNAgLUvYH+ogWSZOMUWXLdtUPVJH3EppCCR+EgwSqxbcuiVlPqDPEa9dNtw==}
-    engines: {node: '>= 16.0.0'}
-
   image-js@1.4.0:
     resolution: {integrity: sha512-X3CGc5t936NUME2yfJvEyvkVHc5Kbwvt6VxufIQf5o53nlRBxp1OpatdxDdvRPkArqUw3qRA1HxOIvUE/nniXA==}
 
@@ -2091,20 +2054,11 @@ packages:
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
-  iobuffer@2.1.0:
-    resolution: {integrity: sha512-0XZfU0STJ6NVHBZdMRPjF7jtkDEC5f4AxM/n5DSZOu11SQ+7tAl1csuEnEPoSPYWdaGZ/HOfn5Q837IEHddL2w==}
-
-  iobuffer@5.4.0:
-    resolution: {integrity: sha512-DRebOWuqDvxunfkNJAlc3IzWIPD5xVxwUNbHr7xKB8E6aLJxIPfNX3CoMJghcFjpv6RWQsrcJbghtEwSPoJqMA==}
-
   iobuffer@6.0.1:
     resolution: {integrity: sha512-SZWYkWNfjIXIBYSDpXDYIgshqtbOPsi4lviawAEceR1Kqk+sHDlcQjWrzNQsii80AyBY0q5c8HCTNjqo74ul+Q==}
 
   is-any-array@2.0.1:
     resolution: {integrity: sha512-UtilS7hLRu++wb/WBAw9bNuP1Eg04Ivn1vERJck8zJthEvXCBEBpGR/33u/xLKWEQf95803oalHrVDptcAvFdQ==}
-
-  is-array-type@1.0.0:
-    resolution: {integrity: sha512-LLwKQdMAO/XUkq4XTed1VYqwR2OahiwkBg+yUtZT88LXX4MLXP28qGsVfSNVP8X0wc7fzDhcZD3nns/IK8UfKw==}
 
   is-ci@3.0.1:
     resolution: {integrity: sha512-ZYvCgrefwqoQ6yTyYUbQu64HsITZ3NfKX1lzaEYdkTDcfKzzCI/wthRRYKkdjHKFVgNiXKAKm65Zo1pk2as/QQ==}
@@ -2114,10 +2068,6 @@ packages:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
     engines: {node: '>=0.10.0'}
 
-  is-finite@1.1.0:
-    resolution: {integrity: sha512-cdyMtqX/BOqqNBBiKlIVkytNHm49MtMlYyn1zxzvJKWmFMlGzm+ry5BBfYyeY9YmNKbRSo/o7OX9w9ale0wg3w==}
-    engines: {node: '>=0.10.0'}
-
   is-fullwidth-code-point@3.0.0:
     resolution: {integrity: sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==}
     engines: {node: '>=8'}
@@ -2125,9 +2075,6 @@ packages:
   is-glob@4.0.3:
     resolution: {integrity: sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==}
     engines: {node: '>=0.10.0'}
-
-  is-integer@1.0.7:
-    resolution: {integrity: sha512-RPQc/s9yBHSvpi+hs9dYiJ2cuFeU6x3TyyIp8O2H6SKEltIvJOzRj9ToyvcStDvPR/pS4rxgr1oBFajQjZ2Szg==}
 
   is-number@7.0.0:
     resolution: {integrity: sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==}
@@ -2171,9 +2118,6 @@ packages:
 
   js-priority-queue@0.1.5:
     resolution: {integrity: sha512-2dPmJT4GbXUpob7AZDR1wFMKz3Biy6oW69mwt5PTtdeoOgDin1i0p5gUV9k0LFeUxDpwkfr+JGMZDpcprjiY5w==}
-
-  js-quantities@1.8.0:
-    resolution: {integrity: sha512-swDw9RJpXACAWR16vAKoSojAsP6NI7cZjjnjKqhOyZSdybRUdmPr071foD3fejUKSU2JMHz99hflWkRWvfLTpQ==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -2531,35 +2475,8 @@ packages:
   ml-array-rescale@1.3.7:
     resolution: {integrity: sha512-48NGChTouvEo9KBctDfHC3udWnQKNKEWN0ziELvY3KG25GR5cA8K8wNVzracsqSW1QEkAXjTNx+ycgAv06/1mQ==}
 
-  ml-convolution@0.2.0:
-    resolution: {integrity: sha512-km5f81jFVnEWG0eFEKAwt00X3xGUIAcUqZZlUk+w0q2sZOz1vkEYhIKOXAlmaEi9rnrTknxW//Ttm399zPzDPg==}
-
   ml-convolution@2.0.0:
     resolution: {integrity: sha512-ExW6zVmN2YGuyO3aBiS1ymybme3nVgv2ccCfynSdgtW5sNp4DOHnfow4K/ErTDMQ1s9tINjv7kvzjnVhQHXJBA==}
-
-  ml-disjoint-set@1.0.0:
-    resolution: {integrity: sha512-UcEzgvRzVhsKpT66syfdhaK8R+av6GxDFmU37t+6WClT/kHDIN6OMRfO7OPwQIV8+L8FSc2E6lNKpvdqf6OgLw==}
-
-  ml-distance-euclidean@2.0.0:
-    resolution: {integrity: sha512-yC9/2o8QF0A3m/0IXqCTXCzz2pNEzvmcE/9HFKOZGnTjatvBbsn4lWYJkxENkA4Ug2fnYl7PXQxnPi21sgMy/Q==}
-
-  ml-fft@1.3.5:
-    resolution: {integrity: sha512-laAATDyUuWPbIlX57thIds41wqFLsB+Zl7i1yrLRo/4CFg+hFaF9Xle8InblQseyiaVtt1KSlDG+6lgUMPOj3g==}
-
-  ml-kernel-gaussian@2.0.2:
-    resolution: {integrity: sha512-5MBrH2g9MBO53I6mcyXvMhyOLsmO2w21+26A1ZV/vYoxqpsov2PWkT8bhdFCEe0kgDupmAb6u81iOID/rhnarA==}
-
-  ml-kernel-polynomial@2.0.1:
-    resolution: {integrity: sha512-aGDNRPHDiKeJmBxB0L9wTxKNLfp5JytbdRIo5K+FTcmFjkWDe3YZPo6R6wBB5mxaJ5eqTRawzeV4RoIWHbakyQ==}
-
-  ml-kernel-sigmoid@1.0.1:
-    resolution: {integrity: sha512-mSbYOSbNQ7GsUAGrHuUHNsLgM3bZGpXkotw/FBdKZD9YMXfVOgQb1LvvvVeSlOR/ZdmX23qqaV0RnKSYWBF8og==}
-
-  ml-kernel@3.0.0:
-    resolution: {integrity: sha512-R+ZR0Kl5xJ7vnxtlDqjZ26xVk7mAw7ctK4NlzRHviBFXxp7keC9+hWirMOdzi2DOQA0t6CaRwjElZ6SdirOmow==}
-
-  ml-matrix-convolution@0.4.3:
-    resolution: {integrity: sha512-B4AATOjxDw4J0oVcoeYHsXrhMr31x9SWhVKZjWucDU+brwXLR0enMdqb1OuRy/REdpL5/iSshA46sS2B1dO2OQ==}
 
   ml-matrix@6.12.1:
     resolution: {integrity: sha512-TJ+8eOFdp+INvzR4zAuwBQJznDUfktMtOB6g/hUcGh3rcyjxbz4Te57Pgri8Q9bhSQ7Zys4IYOGhFdnlgeB6Lw==}
@@ -2570,17 +2487,8 @@ packages:
   ml-ransac@1.0.0:
     resolution: {integrity: sha512-fGi45s7T5+BEqdb5JqZC699w2riy6j0tzuZ2ZP63xavRa/yVKQIbUbj4XiE4XMr9T7HSiq1D9y0uybiyikDPvA==}
 
-  ml-regression-base@2.1.6:
-    resolution: {integrity: sha512-yTckvEc8szc6VrUTJSgAClShvCoPZdNt8pmyRe8aGsIWGjg6bYFotp9mDUwAB0snvKAbQWd6A4trL/PDCASLug==}
-
-  ml-regression-base@3.0.0:
-    resolution: {integrity: sha512-qkQWvNk8VU1LIytjid/+YHOSx8GnEU9dCUPsAQ8AzCh4saijrsni/XA6x7r+N1UrHMDHeSEUBtRZTsl2syyu/A==}
-
   ml-regression-base@4.0.0:
     resolution: {integrity: sha512-V2VjB+K/BcgXaX450xvYw36TLOB+piD9G1pHU3VE+ggQUApsVGkYco6UMQykFOwBydHnDTbOiybH/lwrkqFT4g==}
-
-  ml-regression-exponential@2.1.3:
-    resolution: {integrity: sha512-TE7xIlsHqKdLIgJ5d2rYVrGTd+NkjSBH8bLf1umLFiQI5hR7mUPmMoX+LalVJMd8NhlOwQzufOHqaPewMJ7S6g==}
 
   ml-regression-multivariate-linear@2.0.4:
     resolution: {integrity: sha512-/vShPAlP+mB7P2mC5TuXwObSJNl/UBI71/bszt9ilTg6yLKy6btDLpAYyJNa6t+JnL5a7q+Yy4dCltfpvqXRIw==}
@@ -2588,41 +2496,14 @@ packages:
   ml-regression-polynomial-2d@1.0.0:
     resolution: {integrity: sha512-r34kaawZKMwjORIdzpa/o5fnjlTXkkaLJ3B4vvFNeKlvEGPtApqFxbDRmw07e2CjUH2MhGIChpMeXp/XB3Iogg==}
 
-  ml-regression-polynomial@2.2.0:
-    resolution: {integrity: sha512-WxFsEmi6oLxgq9TeaVoAA+vVUJFp1kGarX6WWClR8OmlanoIW5iLMnaeXfQcYuH8xNq4R1Cax2N9hYYmeWWkLg==}
-
-  ml-regression-power@2.0.0:
-    resolution: {integrity: sha512-u8O9Fy45+OeYm/4ZBcNDn5w3w+MHc6kZz/AWSJIwmJcyjz6PRkTZnNfgGYdVKwKKDlAOS7G/AFvMKSTWRNO4RQ==}
-
-  ml-regression-robust-polynomial@2.0.1:
-    resolution: {integrity: sha512-WkxA224Cil1G3Ug/T1O8H/2IDADlca21oC5WDplcM+gQRTqtueT/Su4ubH70tG6s79XHM046HfO8xQSpDQxqqg==}
-
-  ml-regression-simple-linear@2.0.5:
-    resolution: {integrity: sha512-7DBYru8GvWLaYo4LUF9vU2DjzHuM6i6WGnVbEP9wq8nUFUZ2DlwN46m8Z/hNhTSR7+3T+RvhaSY+OqdBpaz8zw==}
-
-  ml-regression-simple-linear@3.0.1:
-    resolution: {integrity: sha512-SF2oxA+034Co9GVQSFuS3vtACaRAFrEwHi9oX6VTaSY/KtXxseL3d4GApj4jWXMoAgrP7VMoIO1PH0RoZaMR1g==}
-
-  ml-regression-theil-sen@2.0.0:
-    resolution: {integrity: sha512-RO//tYzo69XbWDO5LIPdGp8ef1MSTPPJY0bXNlmOLMSay7YR9FQqtNgqn29T9DSYTa863VAafRlCeXwDQNXkBw==}
-
-  ml-regression@5.0.0:
-    resolution: {integrity: sha512-mBn0LpfEWV3Dk0dj+8PRNUqIHvO87rUY0PmCUTYv3MKfECx7TtlKyeacJeOBLZ4YAVixX8U5hn4HwRL6TpTYaw==}
-
   ml-spectra-processing@14.22.0:
     resolution: {integrity: sha512-rafMp7ny4J96mMM7AUmRKKXYhNw7J4keolHaYZjiQbqSqknlAntHlng1H0O30KpsOnqHH2XBPFIlGAaQruQAxw==}
-
-  ml-stat@1.3.3:
-    resolution: {integrity: sha512-F6plydFIKFZA+7j/pRsRrfRu4nwsruQvYD9QxHWc4hFUdASVznsKUL2hgAwgMVizY/P0+b1L9bVQexKES5y/uw==}
 
   ml-xsadd@2.0.0:
     resolution: {integrity: sha512-VoAYUqmPRmzKbbqRejjqceGFp3VF81Qe8XXFGU0UXLxB7Mf4GGvyGq5Qn3k4AiQgDEV6WzobqlPOd+j0+m6IrA==}
 
   ml-xsadd@3.0.1:
     resolution: {integrity: sha512-Fz2q6dwgzGM8wYKGArTUTZDGa4lQFA2Vi6orjGeTVRy22ZnQFKlJuwS9n8NRviqz1KHAHAzdKJwbnYhdo38uYg==}
-
-  monotone-chain-convex-hull@1.1.0:
-    resolution: {integrity: sha512-iZGaoO2qtqIWaAfscTtsH2LolE06U4JzTw8AgtjT/yzYIA0aoAHDdwBtsesnQXfVRvS375Wu0Y1+FqdI5Y22GA==}
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -2638,9 +2519,6 @@ packages:
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
-
-  new-array@1.0.0:
-    resolution: {integrity: sha512-K5AyFYbuHZ4e/ti52y7k18q8UHsS78FlRd85w2Fmsd6AkuLipDihPflKC0p3PN5i8II7+uHxo+CtkLiJDfmS5A==}
 
   next-power-of-two@1.0.0:
     resolution: {integrity: sha512-+z6QY1SxkDk6CQJAeaIZKmcNubBCRP7J8DMQUBglz/sSkNsZoJ1kULjqk9skNPPplzs4i9PFhYrvNDdtQleF/A==}
@@ -2696,9 +2574,6 @@ packages:
 
   package-json-from-dist@1.0.1:
     resolution: {integrity: sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==}
-
-  pako@2.1.0:
-    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
 
   parenthesis@3.1.8:
     resolution: {integrity: sha512-KF/U8tk54BgQewkJPvB4s/US3VQY68BRDpH638+7O/n58TpnwiwnOtGIOsT2/i+M78s61BBpeC83STB88d8sqw==}
@@ -3069,12 +2944,6 @@ packages:
   temp-file@3.4.0:
     resolution: {integrity: sha512-C5tjlC/HCtVUOi3KWVokd4vHVViOmGjtLwIh4MuzPo/nMYTV/p1urt3RnMz2IWXDdKEGJH3k5+KPxtqRsUYGtg==}
 
-  tiff@2.1.0:
-    resolution: {integrity: sha512-Q4zLT4+Csn/ZhFVacYCAl+w/1J51NW/m2y2yx7Qxp/bsHYOEsK7+5JOID2kfk+EvsaF0LbA6ccAkqiuXOmAbYw==}
-
-  tiff@5.0.3:
-    resolution: {integrity: sha512-R0WckwRGhawWDNdha8iPQCjHyOiaEEmfFjhmalUVCIEELsON7Y/XO3eeGmBkoCXQp0Gg2nmTozN92Z4hlwbsow==}
-
   tiff@7.1.3:
     resolution: {integrity: sha512-YEEq3fT++2pdta/9P/vGG4QRMdZQoe6W6JNaWnIi6NvAsbeNITwFCtmWwL/BZvOi+uo2I3ohyOkD3sZfme+c6g==}
 
@@ -3342,9 +3211,6 @@ packages:
   walk-up-path@4.0.0:
     resolution: {integrity: sha512-3hu+tD8YzSLGuFYtPRb48vdhKMi0KQV5sn+uWr8+7dMEq/2G/dtLrdDinkLjqq5TIbIBjYJ4Ax/n3YiaW7QM8A==}
     engines: {node: 20 || >=22}
-
-  web-worker-manager@0.2.0:
-    resolution: {integrity: sha512-WmGabA4GLth1ju9VLm/oMDcPMhMngHoBSdY1OMhrEJvNsPl7z2p+7RBOXjEi5zlP0dK+Shd3Wm+BdD5WZrNYBA==}
 
   webidl-conversions@8.0.1:
     resolution: {integrity: sha512-BMhLD/Sw+GbJC21C/UgyaZX41nPt8bUTg+jWyDeg7e7YN4xOM05YPSIXceACnXVtqyEw/LMClUQMtMZ+PGGpqQ==}
@@ -3994,10 +3860,6 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@swiftcarrot/color-fns@3.2.0':
-    dependencies:
-      '@babel/runtime': 7.27.6
-
   '@szmarczak/http-timer@4.0.6':
     dependencies:
       defer-to-connect: 2.0.1
@@ -4164,8 +4026,6 @@ snapshots:
   '@types/node@20.19.1':
     dependencies:
       undici-types: 6.21.0
-
-  '@types/pako@2.0.3': {}
 
   '@types/plist@3.0.5':
     dependencies:
@@ -4509,8 +4369,6 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
 
-  blob-util@2.0.2: {}
-
   bluebird-lst@1.0.9:
     dependencies:
       bluebird: 3.7.2
@@ -4605,8 +4463,6 @@ snapshots:
 
   caniuse-lite@1.0.30001779: {}
 
-  canny-edge-detector@1.0.0: {}
-
   chai@6.2.2: {}
 
   chalk@4.1.2:
@@ -4615,8 +4471,6 @@ snapshots:
       supports-color: 7.2.0
 
   cheminfo-types@1.10.0: {}
-
-  cheminfo-types@1.8.1: {}
 
   chownr@2.0.0: {}
 
@@ -5031,10 +4885,6 @@ snapshots:
   extsprintf@1.4.1:
     optional: true
 
-  fast-bmp@2.0.1:
-    dependencies:
-      iobuffer: 5.4.0
-
   fast-bmp@4.0.1:
     dependencies:
       iobuffer: 6.0.1
@@ -5049,11 +4899,6 @@ snapshots:
       merge2: 1.4.1
       micromatch: 4.0.8
 
-  fast-jpeg@1.0.1:
-    dependencies:
-      iobuffer: 2.1.0
-      tiff: 2.1.0
-
   fast-jpeg@3.0.1:
     dependencies:
       iobuffer: 6.0.1
@@ -5062,14 +4907,6 @@ snapshots:
   fast-json-stable-stringify@2.1.0: {}
 
   fast-levenshtein@2.0.6: {}
-
-  fast-list@1.0.3: {}
-
-  fast-png@6.4.0:
-    dependencies:
-      '@types/pako': 2.0.3
-      iobuffer: 5.4.0
-      pako: 2.1.0
 
   fast-png@8.0.0:
     dependencies:
@@ -5280,8 +5117,6 @@ snapshots:
 
   has-flag@4.0.0: {}
 
-  has-own@1.0.1: {}
-
   has-property-descriptors@1.0.2:
     dependencies:
       es-define-property: 1.0.1
@@ -5352,34 +5187,6 @@ snapshots:
 
   ignore@7.0.5: {}
 
-  image-js@0.37.0:
-    dependencies:
-      '@swiftcarrot/color-fns': 3.2.0
-      blob-util: 2.0.2
-      canny-edge-detector: 1.0.0
-      fast-bmp: 2.0.1
-      fast-jpeg: 1.0.1
-      fast-list: 1.0.3
-      fast-png: 6.4.0
-      has-own: 1.0.1
-      image-type: 4.1.0
-      is-array-type: 1.0.0
-      is-integer: 1.0.7
-      jpeg-js: 0.4.4
-      js-priority-queue: 0.1.5
-      js-quantities: 1.8.0
-      median-quickselect: 1.0.1
-      ml-convolution: 0.2.0
-      ml-disjoint-set: 1.0.0
-      ml-matrix: 6.12.1
-      ml-matrix-convolution: 0.4.3
-      ml-regression: 5.0.0
-      monotone-chain-convex-hull: 1.1.0
-      new-array: 1.0.0
-      robust-point-in-polygon: 1.0.3
-      tiff: 5.0.3
-      web-worker-manager: 0.2.0
-
   image-js@1.4.0:
     dependencies:
       bresenham-zingl: 0.2.5
@@ -5425,15 +5232,9 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  iobuffer@2.1.0: {}
-
-  iobuffer@5.4.0: {}
-
   iobuffer@6.0.1: {}
 
   is-any-array@2.0.1: {}
-
-  is-array-type@1.0.0: {}
 
   is-ci@3.0.1:
     dependencies:
@@ -5441,17 +5242,11 @@ snapshots:
 
   is-extglob@2.1.1: {}
 
-  is-finite@1.1.0: {}
-
   is-fullwidth-code-point@3.0.0: {}
 
   is-glob@4.0.3:
     dependencies:
       is-extglob: 2.1.1
-
-  is-integer@1.0.7:
-    dependencies:
-      is-finite: 1.1.0
 
   is-number@7.0.0: {}
 
@@ -5492,8 +5287,6 @@ snapshots:
   jpeg-js@0.4.4: {}
 
   js-priority-queue@0.1.5: {}
-
-  js-quantities@1.8.0: {}
 
   js-tokens@4.0.0: {}
 
@@ -5812,42 +5605,10 @@ snapshots:
       ml-array-max: 1.2.4
       ml-array-min: 1.2.3
 
-  ml-convolution@0.2.0:
-    dependencies:
-      fft.js: 4.0.4
-      next-power-of-two: 1.0.0
-
   ml-convolution@2.0.0:
     dependencies:
       fft.js: 4.0.4
       next-power-of-two: 1.0.0
-
-  ml-disjoint-set@1.0.0: {}
-
-  ml-distance-euclidean@2.0.0: {}
-
-  ml-fft@1.3.5: {}
-
-  ml-kernel-gaussian@2.0.2:
-    dependencies:
-      ml-distance-euclidean: 2.0.0
-
-  ml-kernel-polynomial@2.0.1: {}
-
-  ml-kernel-sigmoid@1.0.1: {}
-
-  ml-kernel@3.0.0:
-    dependencies:
-      ml-distance-euclidean: 2.0.0
-      ml-kernel-gaussian: 2.0.2
-      ml-kernel-polynomial: 2.0.1
-      ml-kernel-sigmoid: 1.0.1
-      ml-matrix: 6.12.1
-
-  ml-matrix-convolution@0.4.3:
-    dependencies:
-      ml-fft: 1.3.5
-      ml-stat: 1.3.3
 
   ml-matrix@6.12.1:
     dependencies:
@@ -5864,24 +5625,10 @@ snapshots:
       ml-matrix: 6.12.1
       ml-random: 0.5.0
 
-  ml-regression-base@2.1.6:
-    dependencies:
-      is-any-array: 2.0.1
-
-  ml-regression-base@3.0.0:
-    dependencies:
-      cheminfo-types: 1.8.1
-      is-any-array: 2.0.1
-
   ml-regression-base@4.0.0:
     dependencies:
-      cheminfo-types: 1.8.1
+      cheminfo-types: 1.10.0
       is-any-array: 2.0.1
-
-  ml-regression-exponential@2.1.3:
-    dependencies:
-      ml-regression-base: 3.0.0
-      ml-regression-simple-linear: 3.0.1
 
   ml-regression-multivariate-linear@2.0.4:
     dependencies:
@@ -5889,52 +5636,10 @@ snapshots:
 
   ml-regression-polynomial-2d@1.0.0:
     dependencies:
-      cheminfo-types: 1.8.1
+      cheminfo-types: 1.10.0
       is-any-array: 2.0.1
       ml-matrix: 6.12.1
       ml-regression-base: 4.0.0
-
-  ml-regression-polynomial@2.2.0:
-    dependencies:
-      ml-matrix: 6.12.1
-      ml-regression-base: 2.1.6
-
-  ml-regression-power@2.0.0:
-    dependencies:
-      ml-regression-base: 2.1.6
-      ml-regression-simple-linear: 2.0.5
-
-  ml-regression-robust-polynomial@2.0.1:
-    dependencies:
-      ml-matrix: 6.12.1
-      ml-regression-base: 2.1.6
-
-  ml-regression-simple-linear@2.0.5:
-    dependencies:
-      ml-regression-base: 2.1.6
-
-  ml-regression-simple-linear@3.0.1:
-    dependencies:
-      cheminfo-types: 1.8.1
-      ml-regression-base: 4.0.0
-
-  ml-regression-theil-sen@2.0.0:
-    dependencies:
-      ml-array-median: 1.1.6
-      ml-regression-base: 2.1.6
-
-  ml-regression@5.0.0:
-    dependencies:
-      ml-kernel: 3.0.0
-      ml-matrix: 6.12.1
-      ml-regression-base: 2.1.6
-      ml-regression-exponential: 2.1.3
-      ml-regression-multivariate-linear: 2.0.4
-      ml-regression-polynomial: 2.2.0
-      ml-regression-power: 2.0.0
-      ml-regression-robust-polynomial: 2.0.1
-      ml-regression-simple-linear: 2.0.5
-      ml-regression-theil-sen: 2.0.0
 
   ml-spectra-processing@14.22.0:
     dependencies:
@@ -5945,13 +5650,9 @@ snapshots:
       ml-matrix: 6.12.1
       ml-xsadd: 3.0.1
 
-  ml-stat@1.3.3: {}
-
   ml-xsadd@2.0.0: {}
 
   ml-xsadd@3.0.1: {}
-
-  monotone-chain-convex-hull@1.1.0: {}
 
   mri@1.2.0: {}
 
@@ -5960,8 +5661,6 @@ snapshots:
   nanoid@3.3.11: {}
 
   natural-compare@1.4.0: {}
-
-  new-array@1.0.0: {}
 
   next-power-of-two@1.0.0: {}
 
@@ -6032,8 +5731,6 @@ snapshots:
       p-limit: 3.1.0
 
   package-json-from-dist@1.0.1: {}
-
-  pako@2.1.0: {}
 
   parenthesis@3.1.8: {}
 
@@ -6439,15 +6136,6 @@ snapshots:
       async-exit-hook: 2.0.1
       fs-extra: 10.1.0
 
-  tiff@2.1.0:
-    dependencies:
-      iobuffer: 2.1.0
-
-  tiff@5.0.3:
-    dependencies:
-      iobuffer: 5.4.0
-      pako: 2.1.0
-
   tiff@7.1.3:
     dependencies:
       fflate: 0.8.2
@@ -6659,8 +6347,6 @@ snapshots:
       - debug
 
   walk-up-path@4.0.0: {}
-
-  web-worker-manager@0.2.0: {}
 
   webidl-conversions@8.0.1: {}
 

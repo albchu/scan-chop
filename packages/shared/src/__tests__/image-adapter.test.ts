@@ -19,22 +19,6 @@ import {
   clone,
 } from '../image-adapter.js';
 
-// Guard that the adapter's Image is the v1 constructor during migration.
-// Remove this import and the test block below in Phase 4 when the alias is eliminated.
-import { Image as ImageV1 } from 'image-js-v1';
-
-// ---------------------------------------------------------------------------
-// Dual-version resolution (temporary — remove in Phase 4)
-// ---------------------------------------------------------------------------
-
-describe('dual-version resolution', () => {
-  it('adapter exports the v1 Image constructor', () => {
-    expect(Image).toBeDefined();
-    expect(ImageV1).toBeDefined();
-    expect(Image).toBe(ImageV1);
-  });
-});
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
