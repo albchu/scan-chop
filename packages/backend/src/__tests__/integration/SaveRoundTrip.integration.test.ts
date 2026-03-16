@@ -67,14 +67,14 @@ describe('Save round-trip integration', () => {
       expect(reloaded.height).toBeGreaterThan(0);
 
       // With orientation 0 the saved image dimensions should match the source
-      const sourceImage = await decode(frame.imageData!);
+      const sourceImage = decode(frame.imageData!);
       expect(reloaded.width).toBe(sourceImage.width);
       expect(reloaded.height).toBe(sourceImage.height);
     });
 
     it('should swap dimensions when saving with orientation 90', async () => {
       const frame = await generateRealFrame();
-      const sourceImage = await decode(frame.imageData!);
+      const sourceImage = decode(frame.imageData!);
       frame.orientation = 90;
 
       const outputPath = path.join(tmpDir, 'rotated90.png');
@@ -88,7 +88,7 @@ describe('Save round-trip integration', () => {
 
     it('should preserve dimensions when saving with orientation 180', async () => {
       const frame = await generateRealFrame();
-      const sourceImage = await decode(frame.imageData!);
+      const sourceImage = decode(frame.imageData!);
       frame.orientation = 180;
 
       const outputPath = path.join(tmpDir, 'rotated180.png');
@@ -102,7 +102,7 @@ describe('Save round-trip integration', () => {
 
     it('should swap dimensions when saving with orientation 270', async () => {
       const frame = await generateRealFrame();
-      const sourceImage = await decode(frame.imageData!);
+      const sourceImage = decode(frame.imageData!);
       frame.orientation = 270;
 
       const outputPath = path.join(tmpDir, 'rotated270.png');

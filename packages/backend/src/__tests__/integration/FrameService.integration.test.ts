@@ -130,7 +130,7 @@ describe('FrameService integration (real processing pipeline)', () => {
       expect(frame.imageData).toBeDefined();
 
       // Verify the base64 can be decoded back into a valid image
-      const reloaded = await decode(frame.imageData!);
+      const reloaded = decode(frame.imageData!);
       expect(reloaded.width).toBeGreaterThan(0);
       expect(reloaded.height).toBeGreaterThan(0);
     });
@@ -153,7 +153,7 @@ describe('FrameService integration (real processing pipeline)', () => {
         '/test/scan.jpg'
       );
 
-      const reloaded = await decode(frame.imageData!);
+      const reloaded = decode(frame.imageData!);
       const actualRatio = reloaded.width / reloaded.height;
       const expectedRatio = 300 / 200; // 1.5
 

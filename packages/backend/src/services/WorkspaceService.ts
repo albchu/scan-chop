@@ -218,7 +218,7 @@ export class WorkspaceService {
     }
 
     // Decode base64 data URL to image
-    const image = await decode(frameData.imageData);
+    const image = decode(frameData.imageData);
 
     // Apply orientation rotation if needed
     let rotatedImage: Image = image;

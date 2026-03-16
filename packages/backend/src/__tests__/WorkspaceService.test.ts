@@ -853,7 +853,7 @@ describe('WorkspaceService', () => {
       const mockLoadedImage = { width: 800, height: 600 };
       const mockRotatedImage = { width: 600, height: 800 };
 
-      mockDecode.mockResolvedValue(mockLoadedImage as any);
+      mockDecode.mockReturnValue(mockLoadedImage as any);
       mockRotateRightAngle.mockReturnValue(mockRotatedImage as any);
       mockEncode.mockReturnValue(new Uint8Array([1, 2, 3]));
 

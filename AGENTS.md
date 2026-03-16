@@ -17,7 +17,7 @@ Scan Chop is an Electron desktop app for automatically detecting and extracting 
 ```
 apps/electron-app/     → Electron main/preload/renderer entry points
 packages/
-  shared/              → Types, image processing algorithms (image-js)
+  shared/              → Types, image processing algorithms (image-js v1)
   ui/                  → React components (view-only, no business logic)
   backend/             → Electron IPC handlers, services
 ```
@@ -56,6 +56,9 @@ pnpm build:electron   # Production Electron build
 | ----------------------------------------------- | ---------------------------------------------------------------------- |
 | `packages/shared/src/types.ts`                  | Core types: `FrameData`, `PageData`, `BoundingBox`, `ProcessingConfig` |
 | `packages/shared/src/constants.ts`              | Shared constants: `MIN_FRAME_SIZE`, `DEFAULT_FRAME_SIZE_RATIO`         |
+| `packages/shared/src/image-adapter.ts`          | Adapter isolating all direct image-js usage; single import point       |
+| `packages/shared/src/index.ts`                  | Renderer-safe barrel export (types, geometry, constants)               |
+| `packages/shared/src/index-node.ts`             | Node.js-only barrel export (image adapter + processing modules)        |
 | `packages/shared/src/image-processing.ts`       | Main image processing pipeline                                         |
 | `packages/shared/src/region-extraction.ts`      | Flood-fill region detection                                            |
 | `packages/shared/src/flood-fill.ts`             | BFS flood fill with color predicate and pixel cap                      |

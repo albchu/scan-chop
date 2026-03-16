@@ -1,18 +1,16 @@
 /**
- * Adapter layer isolating all direct image-js usage behind v1-shaped function signatures.
+ * Adapter layer isolating all direct image-js usage.
  * Every other module imports from here instead of 'image-js' directly.
  *
- * Now delegates to image-js v1 (the 'image-js' package).
- *
- * Note: v1's read() and write() use process.getBuiltinModule() to detect Node.js,
- * which requires Node.js 22.3+. Electron 28 bundles Node.js 18.x, so we implement
- * read/write directly using fs + decode/encode to bypass that check.
+ * Note: image-js's read() and write() use process.getBuiltinModule() to detect
+ * Node.js, which requires Node.js 22.3+ (available from Electron 38+). We
+ * implement read/write directly using fs + decode/encode to bypass that check.
  */
 import {
   Image,
-  encode as v1Encode,
-  decode as v1Decode,
-  encodeDataURL as v1EncodeDataURL,
+  encode as ijsEncode,
+  decode as ijsDecode,
+  encodeDataURL as ijsEncodeDataURL,
 } from 'image-js';
 import { readFile, writeFile } from 'fs/promises';
 import { extname } from 'path';
@@ -22,35 +20,34 @@ export { Image };
 export type { Image as ImageType };
 
 // ---------------------------------------------------------------------------
-// I/O: implemented directly with fs to avoid v1's getBuiltinModule() check
+// I/O: implemented directly with fs to avoid image-js's getBuiltinModule() check
 // ---------------------------------------------------------------------------
 
 /**
  * Load an image from a file path.
  *
- * WORKAROUND: Uses fs.readFile + v1Decode instead of v1's read() because v1
- * detects Node.js via process.getBuiltinModule (requires Node.js 22.3+).
- * Electron 28 bundles Node.js 18.x which lacks that API, so v1's read()
- * throws "read is only implemented for Node.js". Once the project upgrades
- * to Electron 38+ (Node.js 22+), this can be replaced with v1's read().
+ * WORKAROUND: Uses fs.readFile + ijsDecode instead of image-js's read() because
+ * image-js detects Node.js via process.getBuiltinModule (requires Node.js 22.3+,
+ * available from Electron 38+). This can be replaced with image-js's read()
+ * once the project upgrades to Electron 38+.
  */
 export async function read(filePath: string): Promise<Image> {
   const data = await readFile(filePath);
-  return v1Decode(data);
+  return ijsDecode(data);
 }
 
 /**
  * Write an image to a file path (format inferred from extension).
  *
  * WORKAROUND: Same getBuiltinModule issue as read() above — uses
- * v1Encode + fs.writeFile instead of v1's write(). Can be replaced with
- * v1's write() once the project upgrades to Electron 38+ (Node.js 22+).
+ * ijsEncode + fs.writeFile instead of image-js's write(). Can be replaced
+ * with image-js's write() once the project upgrades to Electron 38+.
  */
 export async function write(filePath: string, image: Image): Promise<void> {
   const ext = extname(filePath).slice(1).toLowerCase();
   const format =
     ext === 'jpg' || ext === 'jpeg' ? 'jpeg' : ext === 'bmp' ? 'bmp' : 'png';
-  const data = v1Encode(image, { format });
+  const data = ijsEncode(image, { format });
   await writeFile(filePath, data);
 }
 
@@ -59,13 +56,13 @@ export function encode(
   image: Image,
   opts?: { format: 'png' | 'jpg' | 'jpeg' | 'bmp' }
 ): Uint8Array {
-  return v1Encode(image, opts ?? { format: 'png' });
+  return ijsEncode(image, opts ?? { format: 'png' });
 }
 
 /**
  * Decode an image from a buffer or data URL string (synchronous).
  *
- * v1's decode() requires an ArrayBufferView — it does not accept data URL strings.
+ * image-js's decode() requires an ArrayBufferView — it does not accept data URL strings.
  * This adapter preserves string acceptance by stripping the data URL prefix and
  * base64-decoding to a buffer internally.
  */
@@ -73,14 +70,14 @@ export function decode(source: ArrayBufferView | string): Image {
   if (typeof source === 'string') {
     const base64 = source.replace(/^data:image\/\w+;base64,/, '');
     const buffer = Buffer.from(base64, 'base64');
-    return v1Decode(buffer);
+    return ijsDecode(buffer);
   }
-  return v1Decode(source);
+  return ijsDecode(source);
 }
 
 /** Encode an image as a base64 data URL string */
 export function encodeDataURL(image: Image): string {
-  return v1EncodeDataURL(image);
+  return ijsEncodeDataURL(image);
 }
 
 // ---------------------------------------------------------------------------
@@ -159,11 +156,11 @@ export function rotateRightAngle(
 /**
  * Rotate by an arbitrary angle (expands canvas to fit the full rotated image).
  *
- * v1 differences corrected here:
- * - Angle convention is opposite to v0: negated to preserve caller expectations.
- * - Canvas expansion requires { fullImage: true } (v0 expanded by default).
- * - Background fill defaults to opaque black in v1; set to transparent to match v0.
- * - borderValue length must match the image's channel count (v1 validates this).
+ * image-js behavioral differences corrected here:
+ * - Positive angles rotate counter-clockwise; negated to match clockwise convention.
+ * - Canvas expansion requires { fullImage: true } (not the default).
+ * - Background fill defaults to opaque black; set to transparent.
+ * - borderValue length must match the image's channel count (image-js validates this).
  */
 export function transformRotate(image: Image, angle: number): Image {
   const borderValue = new Array(image.channels).fill(0);
@@ -174,7 +171,7 @@ export function transformRotate(image: Image, angle: number): Image {
   });
 }
 
-/** v1 resize signature is compatible; passthrough for consistency */
+/** Passthrough to image-js resize for consistency with adapter pattern */
 export function resize(
   image: Image,
   options: { width: number; height?: number }
@@ -182,7 +179,7 @@ export function resize(
   return image.resize(options);
 }
 
-/** Clone is unchanged between versions; included for completeness */
+/** Passthrough to image-js clone for consistency with adapter pattern */
 export function clone(image: Image): Image {
   return image.clone();
 }
