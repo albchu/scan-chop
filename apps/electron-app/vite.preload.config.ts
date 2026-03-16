@@ -18,7 +18,7 @@ export default defineConfig({
       },
     },
     // Target Node.js environment
-    target: 'node16',
+    target: 'node22',
     // Minification off for easier debugging
     minify: false,
   },

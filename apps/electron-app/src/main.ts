@@ -1,10 +1,8 @@
 import { app, BrowserWindow } from 'electron';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 import { ElectronBackend } from '@workspace/backend';
 
-// ESM equivalent of __dirname (import.meta.dirname requires Node 21.2+, unavailable in Electron 28)
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 // Initialize the backend
 const backend = new ElectronBackend();
@@ -30,12 +28,9 @@ const createWindow = (): void => {
   backend.setMainWindow(mainWindow);
 
   // Add console logging for debugging
-  mainWindow.webContents.on(
-    'console-message',
-    (event, level, message, line, sourceId) => {
-      console.log(`[Renderer Console] ${message}`);
-    }
-  );
+  mainWindow.webContents.on('console-message', (event) => {
+    console.log(`[Renderer Console] ${event.message}`);
+  });
 
   // Add preload error handling
   mainWindow.webContents.on('preload-error', (event, preloadPath, error) => {
