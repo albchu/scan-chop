@@ -1,9 +1,18 @@
 /**
  * Adapter layer isolating all direct image-js usage behind v1-shaped function signatures.
  * Every other module imports from here instead of 'image-js' directly.
- * When migrating to image-js v1, only this file needs to change.
+ *
+ * Phase 3: Now delegates to image-js v1 via the 'image-js-v1' package alias.
+ * The alias will be replaced with the real 'image-js' package name in Phase 4.
  */
-import { Image } from 'image-js';
+import {
+  Image,
+  read as v1Read,
+  write as v1Write,
+  encode as v1Encode,
+  decode as v1Decode,
+  encodeDataURL as v1EncodeDataURL,
+} from 'image-js-v1';
 
 // Re-export the Image class for type and value usage
 export { Image };
@@ -13,29 +22,43 @@ export type { Image as ImageType };
 // I/O: standalone functions matching v1 signatures
 // ---------------------------------------------------------------------------
 
-/** v1: read(path) replaces Image.load(path) */
+/** Load an image from a file path */
 export async function read(path: string): Promise<Image> {
-  return Image.load(path);
+  return v1Read(path);
 }
 
-/** v1: write(path, image) replaces image.save(path) */
+/** Write an image to a file path */
 export async function write(path: string, image: Image): Promise<void> {
-  await image.save(path);
+  await v1Write(path, image);
 }
 
-/** v1: encode(image, opts) replaces image.toBuffer(opts) */
-export function encode(image: Image, opts?: { format: string }): Uint8Array {
-  return image.toBuffer(opts ?? { format: 'png' });
+/** Encode an image to a buffer (synchronous) */
+export function encode(
+  image: Image,
+  opts?: { format: 'png' | 'jpg' | 'jpeg' | 'bmp' }
+): Uint8Array {
+  return v1Encode(image, opts ?? { format: 'png' });
 }
 
-/** v1: decode(buffer) replaces Image.load(dataURL) for in-memory data */
-export async function decode(source: string): Promise<Image> {
-  return Image.load(source);
+/**
+ * Decode an image from a buffer or data URL string (synchronous).
+ *
+ * v1's decode() requires an ArrayBufferView — it does not accept data URL strings.
+ * This adapter preserves string acceptance by stripping the data URL prefix and
+ * base64-decoding to a buffer internally.
+ */
+export function decode(source: ArrayBufferView | string): Image {
+  if (typeof source === 'string') {
+    const base64 = source.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64, 'base64');
+    return v1Decode(buffer);
+  }
+  return v1Decode(source);
 }
 
-/** v1: encodeDataURL(image) replaces image.toDataURL() */
+/** Encode an image as a base64 data URL string */
 export function encodeDataURL(image: Image): string {
-  return image.toDataURL();
+  return v1EncodeDataURL(image);
 }
 
 // ---------------------------------------------------------------------------
@@ -48,7 +71,7 @@ export interface CreateImageOptions {
   data?: Uint8Array | Uint16Array;
 }
 
-/** Wraps the Image constructor, translating v1 colorModel to v0 options */
+/** Create a new image with the given dimensions and options */
 export function createImage(
   width: number,
   height: number,
@@ -57,47 +80,30 @@ export function createImage(
   if (!options) {
     return new Image(width, height);
   }
-  const v0Opts: Record<string, unknown> = {};
-  if (options.bitDepth) v0Opts.bitDepth = options.bitDepth;
-  if (options.data) v0Opts.data = options.data;
-  if (options.colorModel) {
-    // v0 separates color components from alpha: components = non-alpha channels
-    const colorModelMap: Record<
-      string,
-      { components: number; alpha: boolean }
-    > = {
-      GREY: { components: 1, alpha: false },
-      GREYA: { components: 1, alpha: true },
-      RGB: { components: 3, alpha: false },
-      RGBA: { components: 3, alpha: true },
-    };
-    const mapping = colorModelMap[options.colorModel] ?? {
-      components: 3,
-      alpha: false,
-    };
-    v0Opts.components = mapping.components;
-    v0Opts.alpha = mapping.alpha;
-  }
-  return new Image(width, height, v0Opts);
+  return new Image(width, height, {
+    colorModel: options.colorModel,
+    bitDepth: options.bitDepth,
+    data: options.data,
+  });
 }
 
 // ---------------------------------------------------------------------------
 // Pixel access
 // ---------------------------------------------------------------------------
 
-/** v1: image.getPixel(column, row) replaces image.getPixelXY(x, y) */
+/** Read the pixel value at (column, row) */
 export function getPixel(image: Image, column: number, row: number): number[] {
-  return image.getPixelXY(column, row);
+  return image.getPixel(column, row);
 }
 
-/** v1: image.setPixel(column, row, value) replaces image.setPixelXY(x, y, value) */
+/** Set the pixel value at (column, row) */
 export function setPixel(
   image: Image,
   column: number,
   row: number,
   value: number[]
 ): void {
-  image.setPixelXY(column, row, value);
+  image.setPixel(column, row, value);
 }
 
 // ---------------------------------------------------------------------------
@@ -110,28 +116,38 @@ export interface CropOptions {
   height: number;
 }
 
-/** v1: image.crop({ origin: {column, row}, width, height }) replaces image.crop({ x, y, width, height }) */
+/** Crop a rectangular region from an image */
 export function crop(image: Image, options: CropOptions): Image {
   return image.crop({
-    x: options.origin.column,
-    y: options.origin.row,
+    origin: { column: options.origin.column, row: options.origin.row },
     width: options.width,
     height: options.height,
   });
 }
 
-/** v1: image.rotate(angle) only accepts 90|180|270. Wraps with a 0-degree no-op guard. */
+/** Rotate by a right angle (90/180/270). Returns the image unchanged for 0. */
 export function rotateRightAngle(
   image: Image,
   angle: 0 | 90 | 180 | 270
 ): Image {
   if (angle === 0) return image;
-  return image.rotate(angle);
+  return image.rotate(angle as 90 | 180 | 270);
 }
 
-/** v1: image.transformRotate(angle) replaces image.rotate(arbitraryAngle) */
+/**
+ * Rotate by an arbitrary angle (expands canvas to fit the full rotated image).
+ *
+ * v1 differences corrected here:
+ * - Angle convention is opposite to v0: negated to preserve caller expectations.
+ * - Canvas expansion requires { fullImage: true } (v0 expanded by default).
+ * - Background fill defaults to opaque black in v1; set to transparent to match v0.
+ */
 export function transformRotate(image: Image, angle: number): Image {
-  return image.rotate(angle);
+  return image.transformRotate(-angle, {
+    fullImage: true,
+    borderType: 'constant',
+    borderValue: [0, 0, 0, 0],
+  });
 }
 
 /** v1 resize signature is compatible; passthrough for consistency */

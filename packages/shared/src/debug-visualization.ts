@@ -314,8 +314,8 @@ export const createCompositeDebugImage = (
     height = images.reduce((sum, img) => sum + img.height, 0) + totalGap;
   }
 
-  // Create composite image
-  const composite = createImage(width, height);
+  // Create composite image — explicit RGBA since source images carry alpha
+  const composite = createImage(width, height, { colorModel: 'RGBA' });
 
   // Copy images manually since paste method may not be available
   let offset = 0;

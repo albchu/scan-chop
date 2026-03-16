@@ -19,6 +19,22 @@ import {
   clone,
 } from '../image-adapter';
 
+// Guard that the adapter's Image is the v1 constructor during migration.
+// Remove this import and the test block below in Phase 4 when the alias is eliminated.
+import { Image as ImageV1 } from 'image-js-v1';
+
+// ---------------------------------------------------------------------------
+// Dual-version resolution (temporary — remove in Phase 4)
+// ---------------------------------------------------------------------------
+
+describe('dual-version resolution', () => {
+  it('adapter exports the v1 Image constructor', () => {
+    expect(Image).toBeDefined();
+    expect(ImageV1).toBeDefined();
+    expect(Image).toBe(ImageV1);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -151,10 +167,9 @@ describe('createImage()', () => {
     expect(img.height).toBe(50);
   });
 
-  it('should default to RGBA (4 channels) when no options given', () => {
+  it('should default to RGB (3 channels) when no options given', () => {
     const img = createImage(10, 10);
-    // v0 default is RGBA: channels = components + alpha = 4
-    expect(img.channels).toBe(4);
+    expect(img.channels).toBe(3);
   });
 
   it('should create RGBA image with 4 channels', () => {
@@ -423,36 +438,30 @@ describe('Roundtrip integration', () => {
 // v1 expected changes (documented for future reference)
 // ---------------------------------------------------------------------------
 
-describe('v1 expected behavioral differences', () => {
-  // These tests document behavior that is expected to change when switching to v1.
-  // When migrating, these assertions should be updated to reflect v1 defaults.
+describe('v1 behavioral confirmations', () => {
+  // These tests confirm v1 behavior after the adapter swap.
 
-  it('createImage(w, h) defaults to RGBA (4 channels) in v0', () => {
-    // v0: new Image(w, h) defaults to RGBA (4 channels)
-    // v1: new Image(w, h) will default to RGB (3 channels)
+  it('createImage(w, h) defaults to RGB (3 channels) in v1', () => {
     const img = createImage(10, 10);
-    expect(img.channels).toBe(4); // Will become 3 in v1
+    expect(img.channels).toBe(3);
   });
 
-  it('decode() accepts string data URLs in v0', async () => {
-    // v0: Image.load() accepts data URL strings directly
-    // v1: decode() requires ArrayBufferView, not strings
+  it('decode() accepts string data URLs via adapter', async () => {
+    // v1's native decode() requires ArrayBufferView, but the adapter
+    // preserves string acceptance by base64-decoding internally.
     const img = createImage(5, 5, { colorModel: 'RGBA' });
     const dataURL = encodeDataURL(img);
 
-    // This works in v0 but will need signature change in v1
     const decoded = await decode(dataURL);
     expect(decoded.width).toBe(5);
   });
 
-  it('decode() is async in v0 but will be sync in v1', async () => {
-    // v0: Image.load() returns Promise<Image>
-    // v1: decode() returns Image (synchronous)
+  it('decode() is synchronous in v1', () => {
     const img = createImage(5, 5, { colorModel: 'RGBA' });
     const dataURL = encodeDataURL(img);
 
     const result = decode(dataURL);
-    // In v0 this is a Promise; in v1 it will be a plain Image
-    expect(result).toBeInstanceOf(Promise);
+    expect(result).not.toBeInstanceOf(Promise);
+    expect(result.width).toBe(5);
   });
 });

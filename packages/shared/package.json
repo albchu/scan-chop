@@ -29,6 +29,7 @@
     "vitest": "^4.1.0"
   },
   "dependencies": {
-    "image-js": "^0.37.0"
+    "image-js": "^0.37.0",
+    "image-js-v1": "npm:image-js@^1.4.0"
   }
 }
